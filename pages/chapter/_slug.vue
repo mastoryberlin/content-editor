@@ -305,7 +305,8 @@ export default {
       const emptyPrompt = {
         who: 'unknown',
         type: 'text',
-        msg: ''
+        msg: '',
+        comment: ''
       }
       this.prompts.splice(at, 0, emptyPrompt)
       this.promptHasChanged.splice(at, 0, true)

@@ -137,6 +137,14 @@
       </v-row>
     </v-container>
 
+    <v-text-field
+      v-model="prompt.comment"
+      solo
+      color="aliceblue"
+      class="prompt-comment"
+      @change="$emit('change')"
+    />
+
     <v-textarea
       v-model="prompt.msg"
       class="prompt-body"
@@ -149,6 +157,8 @@
 </template>
 
 <script>
+/* eslint-ignore vue/no-mutating-props */
+
 export default {
   props: {
     prompt: {
@@ -234,4 +244,7 @@ export default {
         margin-right: 2em
     &-hint
       margin: 3px
+  &-comment
+    margin-bottom: -30px
+    font-style: italic
 </style>
