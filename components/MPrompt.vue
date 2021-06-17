@@ -139,11 +139,28 @@
 
     <v-text-field
       v-model="prompt.comment"
-      solo
+      label="When to send"
       color="aliceblue"
       class="prompt-comment"
       @change="$emit('change')"
     />
+
+    <div v-if="prompt.type !== 'text'">
+      <v-text-field
+        v-model="prompt.attachment"
+        :label="prompt.type + ' URL'"
+        class="prompt-attachment"
+        @change="$emit('change')"
+      />
+      <uploader :type="prompt.type" @uploadComplete="prompt.attachment = $event; $emit('change')" />
+      <img v-if="prompt.type === 'image'" :src="prompt.attachment">
+      <video v-if="prompt.type === 'video'" controls>
+        <source :src="prompt.attachment">
+      </video>
+        <audio v-if="prompt.type === 'audio'" controls>
+          <source :src="prompt.attachment">
+        </audio>
+    </div>
 
     <v-textarea
       v-model="prompt.msg"
@@ -157,7 +174,7 @@
 </template>
 
 <script>
-/* eslint-ignore vue/no-mutating-props */
+/* eslint-disable vue/no-mutating-props */
 
 export default {
   props: {
@@ -185,11 +202,13 @@ export default {
     },
     typeIcons: {
       text: 'mdi-message-text',
+      image: 'mdi-message-image',
       video: 'mdi-youtube',
       audio: 'mdi-microphone'
     },
     typeIconColors: {
       text: 'blue',
+      image: 'purple',
       video: 'red',
       audio: 'green'
     },
@@ -229,7 +248,7 @@ export default {
         `${wordCount} words`,
         `${readTime} mins reading time`
       ]
-    }
+    },
   }
 }
 </script>

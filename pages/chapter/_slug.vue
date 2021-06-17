@@ -261,13 +261,13 @@ export default {
       this.promptHasChanged
         .forEach(async (hasChanged, i) => {
           if (hasChanged) {
+            this.promptHasChanged[i] = false
             await this.$axios.post('prompts', this.prompts[i], {
               params: {
                 chapter: this.$route.params.slug,
                 id: i
               }
             })
-            this.promptHasChanged[i] = false
           }
         })
       //
