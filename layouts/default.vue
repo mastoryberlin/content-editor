@@ -7,14 +7,14 @@
     >
       <v-list>
         <v-list-item
-          v-for="(chapter, i) in chapters"
+          v-for="(story, i) in stories"
           :key="i"
-          :to="'/chapter/' + chapter.id"
+          :to="'/element/' + story.id"
           router
           exact
         >
           <v-list-item-content>
-            <v-list-item-title v-text="chapter.title" />
+            <v-list-item-title v-text="story.title" />
           </v-list-item-content>
         </v-list-item>
       </v-list>
@@ -43,12 +43,12 @@
 import { mapState } from 'vuex'
 export default {
   computed: {
-    ...mapState(['chapters'])
+    ...mapState(['stories'])
   },
   data () {
     return {
       drawer: false,
-      title: 'The Cloud Content Editor'
+      title: 'Mastory Content Editor'
     }
   }
 }

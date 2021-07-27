@@ -1,14 +1,14 @@
 <template lang="html">
   <div class="">
-    <h1>Choose a chapter you want to edit</h1>
+    <h1>Choose a story you want to edit</h1>
     <v-list>
       <v-list-item
-        v-for="c in chapters"
-        :key="c.id"
-        @click="$router.push(`/chapter/${c.id}`)"
+        v-for="s in stories"
+        :key="s.id"
+        @click="$router.push(`/element/${s.id}`)"
       >
         <v-list-item-content>
-          <v-list-item-title v-text="c.title" />
+          <v-list-item-title v-text="s.title" />
         </v-list-item-content>
       </v-list-item>
     </v-list>
@@ -19,7 +19,7 @@
 import { mapState } from 'vuex'
 export default {
   computed: mapState([
-    'chapters'
+    'stories'
   ])
 }
 </script>

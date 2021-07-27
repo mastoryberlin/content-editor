@@ -1,18 +1,18 @@
 export default {
   state: () => ({
-    chapters: []
+    stories: []
   }),
   mutations: {
-    initializeChapters: (state, c) => {
-      state.chapters = c
+    initializeStories: (state, retrievedStories) => {
+      state.stories = retrievedStories
     }
   },
   actions: {
     async nuxtServerInit ({ commit }) {
-      const chapters = (
+      const retrievedStories = (
         await this.$axios.$get('chapters')
       ).chapters
-      commit('initializeChapters', chapters)
+      commit('initializeStories', retrievedStories)
     }
   }
 }

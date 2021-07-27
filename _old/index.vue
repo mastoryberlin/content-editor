@@ -264,7 +264,7 @@ export default {
             this.promptHasChanged[i] = false
             await this.$axios.post('prompts', this.prompts[i], {
               params: {
-                chapter: this.$route.params.slug,
+                chapter: this.$route.params.story,
                 id: i
               }
             })
@@ -320,7 +320,7 @@ export default {
       this.promptHasChanged.splice(at, 1)
       await this.$axios.delete('prompts', {
         params: {
-          chapter: this.$route.params.slug,
+          chapter: this.$route.params.story,
           id: at
         }
       })
