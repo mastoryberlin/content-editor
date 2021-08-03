@@ -3,20 +3,15 @@ name: (DEV) content-editor
 on: workflow_dispatch
 
 jobs:
-  cd:
-    runs-on: ${{ matrix.os }}
+  build:
 
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        node: [14]
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v1
-
-      - id: deploy
-        name: DEV:Deploy content-editor
+        
+      - name: DEV:Deploy content-editor
         uses: vitalyliber/dokku-github-action@v6.0
         env:
           PRIVATE_KEY:  ${{ secrets.SSH_PRIVATE_KEY }}
