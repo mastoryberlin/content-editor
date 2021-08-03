@@ -55,7 +55,7 @@ export default {
   axios: {
     host: 'content.mastory.io',
     port: 80,
-    prefix: '/editor/the-cloud/',
+    prefix: '/editor/',
     https: false,
   },
 

@@ -1,6 +1,6 @@
 <template lang="html">
   <div class="">
-    <h1>Choose a story you want to edit</h1>
+    <h1>Choose a story to edit</h1>
     <v-list>
       <v-list-item
         v-for="s in stories"

@@ -11,7 +11,20 @@
 
     <v-tabs-items v-model="tab">
       <v-tab-item class="content-editor-specs">
+        <v-btn
+          v-if="episodes.length === 0"
+          fab
+          size="12"
+          color="green"
+          @click="addEpisode({after: {id: story + '/'}})"
+        >
+          <v-icon color="white">
+            mdi-plus
+          </v-icon>
+        </v-btn>
+
         <Container
+          v-else
           group-name="story-specs"
           drag-handle-selector=".content-editor-draggable-handle"
           @drop="onDrop"
@@ -20,71 +33,103 @@
             <v-sheet
               elevation="2"
               rounded
-              class="ma-4 pa-3 content-editor-draggable"
+              class="mx-4 my-8 pa-3 content-editor-draggable"
             >
-              <v-container fluid>
-                <div class="content-editor-draggable-sidebar">
-                  <v-icon
-                    class="content-editor-draggable-handle"
-                  >
-                    mdi-drag
-                  </v-icon>
-                </div>
-
-                <div class="content-editor-draggable-content">
-                  <div class="content-editor-draggable-title">
-                    <v-text-field
-                      v-model="episode.title"
-                      class="text-h4"
-                      filled
-                      rounded
-                      :prefix="`Episode ${i+1}: `"
-                      grow
-                      background-color="white"
+              <v-container>
+                <v-row cols="12">
+                  <v-col class="content-editor-draggable-sidebar">
+                    <v-icon
+                      class="content-editor-draggable-handle"
                     >
-                      <template #append-outer>
-                        <v-hover v-slot="{ hover }">
-                          <v-icon
-                            class="ml-2"
-                            :color="hover ? 'blue' : 'grey lighten-2'"
-                          >
-                            mdi-content-duplicate
-                          </v-icon>
-                        </v-hover>
-
-                        <v-hover v-slot="{ hover }">
-                          <v-icon
-                            class="ml-2"
-                            :color="hover ? 'red' : 'grey lighten-2'"
-                          >
-                            mdi-delete
-                          </v-icon>
-                        </v-hover>
-                      </template>
-                    </v-text-field>
-                  </div>
-
-                  <div class="content-editor-draggable-specs">
-                    <v-textarea
-                      v-model="episode.specs"
-                      full-width
-                      outlined
-                      auto-grow
-                      rows="2"
-                    />
-                  </div>
-
-                  <v-btn
-                    fab
-                    size="12"
-                    color="green"
-                    class="content-editor-draggable-add"
-                  >
-                    <v-icon color="white">
-                      mdi-plus
+                      mdi-drag
                     </v-icon>
-                  </v-btn>
-                </div>
+                  </v-col>
+
+                  <v-col class="content-editor-draggable-content">
+                    <div class="content-editor-draggable-title">
+                      <v-text-field
+                        :value="episode.title"
+                        class="text-h4"
+                        filled
+                        rounded
+                        autofocus
+                        :prefix="`Episode ${i+1}: `"
+                        max-width="100%"
+                        background-color="white"
+                        label="Enter a title for this episode"
+                        @input="changeEpisode({id: episode.id, element: 'title', to: $event})"
+                      >
+                        <template #append-outer>
+                          <v-hover v-slot="{ hover }">
+                            <v-icon
+                              class="ml-2"
+                              :color="hover ? 'blue' : 'grey lighten-2'"
+                              @click="addEpisode({after: episode, duplicate: true})"
+                            >
+                              mdi-content-duplicate
+                            </v-icon>
+                          </v-hover>
+
+                          <v-hover v-slot="{ hover }">
+                            <v-icon
+                              class="ml-2"
+                              :color="hover ? 'red' : 'grey lighten-2'"
+                              @click="deleteEpisode(episode)"
+                            >
+                              mdi-delete
+                            </v-icon>
+                          </v-hover>
+                        </template>
+                      </v-text-field>
+                    </div>
+
+                    <div class="content-editor-draggable-specs">
+                      <v-textarea
+                        :value="episode.specs"
+                        full-width
+                        outlined
+                        auto-grow
+                        rows="2"
+                        label="Enter this episode's specs here"
+                        @input="changeEpisode({id: episode.id, element: 'specs', to: $event})"
+                      />
+                    </div>
+                  </v-col><!-- content-editor-draggable-content -->
+
+                  <v-divider
+                    class="mx-4"
+                    vertical
+                  />
+
+                  <v-col class="content-editor-draggable-meta">
+                    <v-container>
+                      <v-row cols="4">
+                        <v-col
+                          v-for="character in ['Professor', 'Alicia', 'Nick', 'VZ']"
+                          :key="character"
+                        >
+                          <mood-selector :npc="character" />
+                        </v-col>
+                      </v-row>
+
+                      <v-row>
+                        <features-selector />
+                      </v-row>
+                    </v-container>
+                  </v-col>
+                </v-row>
+
+                <v-btn
+                  fab
+                  size="12"
+                  color="green"
+                  class="content-editor-draggable-add"
+                  @click="addEpisode({after: episode})"
+                >
+                  <v-icon color="white">
+                    mdi-plus
+                  </v-icon>
+                </v-btn>
               </v-container>
             </v-sheet>
           </Draggable>
@@ -100,6 +145,7 @@
 
 <script>
 import { Container, Draggable } from 'vue-smooth-dnd'
+import { mapMutations } from 'vuex'
 
 export default {
   components: {
@@ -128,29 +174,7 @@ export default {
     //     password: '',
     //     showAccessDeniedAlert: false,
     //     autosaveInterval: 30000,
-    tab: 0,
-    episodes: [
-      {
-        title: 'Title 1',
-        specs: 'Specs for Episode 1'
-      },
-      {
-        title: 'Title 2',
-        specs: 'Specs for Episode 2'
-      },
-      {
-        title: 'Title 3',
-        specs: 'Specs for Episode 3'
-      },
-      {
-        title: 'Title 4',
-        specs: 'Specs for Episode 4'
-      },
-      {
-        title: 'Title 5',
-        specs: 'Specs for Episode 5'
-      }
-    ]
+    tab: 0
   //     currentNPC: '',
   //     npcSpeedDial: false,
   //     npcData: {
@@ -188,7 +212,23 @@ export default {
   //     },
   //   }
   }),
-  // computed: {
+  computed: {
+    story () {
+      return this.$route.params.story
+    },
+    storyInfo () {
+      return this.$store.state.stories.find(s => s.id === this.story)
+    },
+    episodes: {
+      get () {
+        return this.storyInfo ? this.storyInfo.children : []
+      },
+      set (v) {
+        if (this.storyInfo) {
+          this.storyInfo.children = v
+        }
+      }
+    }
   //   npc() {
   //     return this.npcData[this.currentNPC]
   //   },
@@ -198,7 +238,7 @@ export default {
   //   meta() {
   //     return this.content.meta
   //   },
-  // },
+  },
   // mounted () {
   //   setInterval(() => {
   //     this.saveChanges()
@@ -208,12 +248,18 @@ export default {
   //   this.saveChanges()
   // },
   methods: {
+    ...mapMutations([
+      'moveEpisode',
+      'changeEpisode',
+      'addEpisode',
+      'deleteEpisode'
+    ]),
     onDrop ({ removedIndex, addedIndex }) {
-      const draggedItem = this.episodes[removedIndex]
-      const newItems = [...this.episodes]
-      newItems.splice(removedIndex, 1)
-      newItems.splice(addedIndex, 0, draggedItem)
-      this.episodes = newItems
+      this.moveEpisode({
+        story: this.story,
+        fromIndex: removedIndex,
+        toIndex: addedIndex
+      })
     },
     //   checkAccess() {
     //     if (this.password === '8lgebr81') {
@@ -386,14 +432,17 @@ export default {
       &-sidebar
         display: inline-block
         margin-right: 5px
+        max-width: 20px
       &-content
         display: inline-block
-        width: 100%
       &-title
         display: inline-block
       &-specs
         display: inline-block
         width: 100%
+      &-meta
+        display: inline-block
+        max-width: 20em
       &-add
         position: absolute
         bottom: -24px
