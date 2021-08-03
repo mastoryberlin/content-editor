@@ -1,9 +1,6 @@
-name: Deploy content-editor
+name: DEV:Deploy content-editor
 
 on: workflow_dispatch
-  branches:
-    - master
-    - dev
 
 jobs:
   cd:
@@ -24,9 +21,12 @@ jobs:
           node-version: ${{ matrix.node }}
 
       - id: deploy
-        name: Deploy DEV to Dokku
-        uses: idoberko2/dokku-deploy-github-action@v1 
+        name: DEV:Deploy content-editor
+        uses: idoberko2/dokku-deploy-github-action@v1
+        env:
+          NODE_ENV: development
+          NPM_CONFIG_PRODUCTION: false
         with:
             ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
             dokku-host: 'mastory.io'
-            app-name: 'dokku-content-editor'
+            app-name: 'dev-content-editor'
