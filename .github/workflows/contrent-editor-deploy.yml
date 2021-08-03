@@ -1,4 +1,4 @@
-name: DEV:Deploy content-editor
+name: (DEV) content-editor
 
 on: workflow_dispatch
 
