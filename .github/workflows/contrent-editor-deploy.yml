@@ -20,6 +20,6 @@ jobs:
         uses: vitalyliber/dokku-github-action@v6.0
         env:
           PRIVATE_KEY:  ${{ secrets.SSH_PRIVATE_KEY }}
-          HOST: localhost
+          HOST: 217.160.175.41
           PROJECT: dev-content-editor
           APP_CONFIG: NODE_ENV=development NPM_CONFIG_PRODUCTION=false 
