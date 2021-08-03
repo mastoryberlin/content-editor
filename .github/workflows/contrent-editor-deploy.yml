@@ -15,4 +15,4 @@ jobs:
         with:
             ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
             dokku-host: 'mastory.io'
-            app-name: 'dokku-Application-Name-content-editor'
+            app-name: 'dokku-app-content-editor'
