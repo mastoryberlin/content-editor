@@ -17,14 +17,14 @@ jobs:
 
       - name: Setup node env
         uses: actions/setup-node@v2.1.2
-        env:
-          NODE_ENV: development
-          NPM_CONFIG_PRODUCTION: false
         with:
           node-version: ${{ matrix.node }}
 
       - id: deploy
         name: DEV:Deploy content-editor
+        env:
+          NODE_ENV: development
+          NPM_CONFIG_PRODUCTION: false
         uses: idoberko2/dokku-deploy-github-action@v1
         with:
             ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
