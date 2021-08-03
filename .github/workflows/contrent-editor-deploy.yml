@@ -1,6 +1,9 @@
 name: Deploy content-editor
 
 on: workflow_dispatch
+  branches:
+    - master
+    - dev
 
 jobs:
   cd:
@@ -20,15 +23,8 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
-      - name: Install dependencies
-        run: npm install
-      - name: Build for production
-        run: npm run build
-      - name: Generate static project
-        run: npm run generate
-
       - id: deploy
-        name: Deploy to dokku
+        name: Deploy DEV to Dokku
         uses: idoberko2/dokku-deploy-github-action@v1 
         with:
             ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
