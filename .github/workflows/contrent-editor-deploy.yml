@@ -19,7 +19,7 @@ jobs:
         name: DEV:Deploy content-editor
         uses: vitalyliber/dokku-github-action@v6.0
         env:
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          PRIVATE_KEY:  ${{ secrets.SSH_PRIVATE_KEY }}
           HOST: mastory.io
           PROJECT: dev-content-editor
           APP_CONFIG: NODE_ENV=development NPM_CONFIG_PRODUCTION=false 
