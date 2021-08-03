@@ -22,11 +22,9 @@ jobs:
 
       - id: deploy
         name: DEV:Deploy content-editor
-        uses: idoberko2/dokku-deploy-github-action@v1
+        uses: vitalyliber/dokku-github-action@v6.0
         env:
-          NODE_ENV: development
-          NPM_CONFIG_PRODUCTION: false
-        with:
-            ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-            dokku-host: 'mastory.io'
-            app-name: 'dev-content-editor'
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          HOST: mastory.io
+          PROJECT: dev-content-editor
+          APP_CONFIG: NODE_ENV=development NPM_CONFIG_PRODUCTION=false 
