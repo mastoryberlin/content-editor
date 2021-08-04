@@ -16,5 +16,5 @@ jobs:
         env:
           PRIVATE_KEY:  ${{ secrets.SSH_PRIVATE_KEY }}
           HOST: mastory.io
-          PROJECT: devcontenteditor
+          PROJECT: content-editor
           APP_CONFIG: NPM_CONFIG_LOGLEVEL=error NPM_CONFIG_PRODUCTION=false NODE_ENV=development NODE_MODULES_CACHE=true NODE_VERBOSE=false
