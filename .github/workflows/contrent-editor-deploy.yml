@@ -16,4 +16,4 @@ jobs:
             ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
             remote-branch: 'develop'
             dokku-host: 'mastory.io'
-            app-name: 'dev-content-editor'
+            app-name: 'dev-content'
