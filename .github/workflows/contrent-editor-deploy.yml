@@ -14,5 +14,6 @@ jobs:
         uses: idoberko2/dokku-deploy-github-action@v1 
         with:
             ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+            remote-branch: 'develop'
             dokku-host: 'mastory.io'
-            app-name: 'dokku-content-editor'
+            app-name: 'dev-content-editor'
