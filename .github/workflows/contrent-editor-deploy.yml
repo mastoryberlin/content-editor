@@ -17,4 +17,5 @@ jobs:
           PRIVATE_KEY:  ${{ secrets.SSH_PRIVATE_KEY }}
           HOST: mastory.io
           PROJECT: dev-content-editor
+          PORT: 22
           APP_CONFIG: ${{ secrets.APP_CONFIG_DEV }}
