@@ -23,7 +23,7 @@ jobs:
       - name: Letsencrypt
         uses: garygrossgarten/github-action-ssh@release
         with:
-          command: apps:list
+          command: letsencrypt:enable ${{ secrets.DEV_CONTENT_EDITOR_NAME }}.${{ secrets.HOSTNAME }}
           host: ${{ secrets.HOSTNAME }}
           username: ${{ secrets.USERNAME }}
           privateKey: ${{ secrets.SSH_PRIVATE_KEY }}
