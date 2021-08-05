@@ -7,15 +7,26 @@ jobs:
     name: Build APP
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: GIT checkout
         uses: actions/checkout@master
         with:
           fetch-depth: 0
 
       - id: deploy
-        name: Deploy to dokku
+        name: Deploy APP to dokku
         uses: idoberko2/dokku-deploy-github-action@v1 
         with:
             ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
             dokku-host: ${{ secrets.HOSTNAME }}
             app-name: ${{ secrets.DEV_CONTENT_EDITOR_NAME }}
+            
+      - name: Letsencrypt
+        uses: garygrossgarten/github-action-ssh@release
+        with:
+          command: apps:list
+          host: ${{ secrets.HOSTNAME }}
+          username: ${{ secrets.USERNAME }}
+          privateKey: ${{ secrets.SSH_PRIVATE_KEY }}
+        env:
+          CI: true 
+    
