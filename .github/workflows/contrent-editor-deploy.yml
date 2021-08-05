@@ -19,3 +19,7 @@ jobs:
             remote-branch: 'develop'
             dokku-host: 'mastory.io'
             app-name: 'dev-content'
+  destroy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Destroy app in dokku
