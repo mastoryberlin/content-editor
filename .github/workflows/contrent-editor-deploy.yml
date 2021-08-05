@@ -1,9 +1,10 @@
-name: (DEV) content-editor
+name: Content-editor
 
 on: workflow_dispatch
 
 jobs:
-  build-content-editor:
+  build:
+    name: Build APP
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
