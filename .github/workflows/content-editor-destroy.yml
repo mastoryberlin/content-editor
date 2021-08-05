@@ -8,4 +8,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        run: host
+        run: ssh -i ${{ secrets.SSH_PRIVATE_KEY }} dokku@mastory.io 'dokku apps:list'
