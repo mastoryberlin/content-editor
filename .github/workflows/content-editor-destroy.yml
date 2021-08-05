@@ -7,10 +7,10 @@ jobs:
     name: Destroy APP
     runs-on: ubuntu-latest
     steps:
-      - name: executing remote ssh commands using ssh key
+      - name: Destroy APP
         uses: garygrossgarten/github-action-ssh@release
         with:
-          command: apps:destroy ${{ secrets.DEV_CONTENT_EDITOR_NAME }} --force
+          command: apps:destroy ${{ secrets.DEV_CONTENT_EDITOR_NAME }} --force && letsencrypt:cleanup ${{ secrets.DEV_CONTENT_EDITOR_NAME }}
           host: ${{ secrets.HOSTNAME }}
           username: ${{ secrets.USERNAME }}
           privateKey: ${{ secrets.SSH_PRIVATE_KEY }}
