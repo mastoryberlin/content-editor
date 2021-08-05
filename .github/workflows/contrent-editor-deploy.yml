@@ -4,7 +4,6 @@ on: workflow_dispatch
 
 jobs:
   build-app:
-    name: Build APP
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
