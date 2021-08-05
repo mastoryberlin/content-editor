@@ -8,13 +8,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: executing remote ssh commands using ssh key
-        uses: appleboy/ssh-action@master
+        uses: garygrossgarten/github-action-ssh@release
         with:
+          command: ps axf
           host: ${{ secrets.HOSTNAME }}
           username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          script: pwd && ps axf && whoami && docker ps 
+          privateKey: ${{ secrets.SSH_PRIVATE_KEY }}
+        env:
+          CI: true 
 
 
 
