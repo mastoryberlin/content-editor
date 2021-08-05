@@ -23,7 +23,7 @@ jobs:
       - name: Letsencrypt
         uses: garygrossgarten/github-action-ssh@release
         with:
-          command: config:set --no-restart ${{ secrets.DEV_CONTENT_EDITOR_NAME }}  DOKKU_LETSENCRYPT_EMAIL=${{  secrets.DOKKU_LETSENCRYPT_EMAIL }} && letsencrypt:enable ${{ secrets.DEV_CONTENT_EDITOR_NAME }}
+          command: config:set --no-restart ${{ secrets.DEV_CONTENT_EDITOR_NAME }} DOKKU_LETSENCRYPT_EMAIL=${{ secrets.DOKKU_LETSENCRYPT_EMAIL }} && letsencrypt:enable ${{ secrets.DEV_CONTENT_EDITOR_NAME }}
           host: ${{ secrets.HOSTNAME }}
           username: ${{ secrets.USERNAME }}
           privateKey: ${{ secrets.SSH_PRIVATE_KEY }}
