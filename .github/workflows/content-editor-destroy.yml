@@ -15,8 +15,9 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            ps axf  
-            docker ps
+            pwd
+            ps ax
+            whoami
 
 
 
