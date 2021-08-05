@@ -3,7 +3,8 @@ name: (DEV) content-editor
 on: workflow_dispatch
 
 jobs:
-  build:
+  build-app:
+    name: Build APP
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -19,7 +20,10 @@ jobs:
             remote-branch: 'develop'
             dokku-host: 'mastory.io'
             app-name: 'dev-content'
-  destroy:
+ 
+ destroy-app:
+    name: Destroy APP
     runs-on: ubuntu-latest
     steps:
       - name: Destroy app in dokku
+        run: host
