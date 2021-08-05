@@ -15,7 +15,9 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            dokku apps:list    
+           dokku apps
+           dokku apps:list    
+
 
 
         
