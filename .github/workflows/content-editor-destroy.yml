@@ -10,7 +10,7 @@ jobs:
       - name: executing remote ssh commands using ssh key
         uses: garygrossgarten/github-action-ssh@release
         with:
-          command: ps axf
+          command: apps:list
           host: ${{ secrets.HOSTNAME }}
           username: ${{ secrets.USERNAME }}
           privateKey: ${{ secrets.SSH_PRIVATE_KEY }}
