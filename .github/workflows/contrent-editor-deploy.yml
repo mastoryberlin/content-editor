@@ -28,7 +28,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            config:set --no-restart ${{ secrets.DEV_CONTENT_EDITOR_NAME }} DOKKU_LETSENCRYPT_EMAIL=${{ secrets.DOKKU_LETSENCRYPT_EMAIL }}
+            config:set --no-restart ${{ secrets.DEV_CONTENT_EDITOR_NAME }} DOKKU_LETSENCRYPT_EMAIL=${{ secrets.DOKKU_LETSENCRYPT_EMAIL }} && 
             letsencrypt:enable ${{ secrets.DEV_CONTENT_EDITOR_NAME }}
 
     
