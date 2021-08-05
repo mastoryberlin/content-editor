@@ -7,12 +7,14 @@ jobs:
     name: Destroy APP
     runs-on: ubuntu-latest
     steps:
-      - name: SSH
-        run: ssh dokku@mastory.io 'dokku apps:list'
-        
-      - name: SSH Preset
-      - uses: webfactory/ssh-agent@v0.5.3
+      - name: executing remote ssh commands using ssh key
+        uses: appleboy/ssh-action@master
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          host: ${{ secrets.HOSTNAME }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: dokku apps:list    
+
 
         
