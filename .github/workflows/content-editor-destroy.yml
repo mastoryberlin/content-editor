@@ -7,5 +7,10 @@ jobs:
     name: Destroy APP
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        run: ssh -i ${{ secrets.SSH_PRIVATE_KEY }} dokku@mastory.io 'dokku apps:list'
+      - name: SSH Preset
+      - uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: SSH
+        run: ssh dokku@mastory.io 'dokku apps:list'
+        
