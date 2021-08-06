@@ -26,5 +26,3 @@ jobs:
           port: 22
           script: |
             apps:destroy ${{ secrets.PROD_CONTENT_EDITOR_NAME }} --force
-      
-     
