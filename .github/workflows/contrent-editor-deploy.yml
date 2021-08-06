@@ -29,6 +29,7 @@ jobs:
           port: 22
           script: |
             config:set --no-restart ${{ secrets.PROD_CONTENT_EDITOR_NAME }} DOKKU_LETSENCRYPT_EMAIL=${{ secrets.DOKKU_LETSENCRYPT_EMAIL }}
+            
       - name: Letsencrypt set config
         uses: appleboy/ssh-action@master
         with:
