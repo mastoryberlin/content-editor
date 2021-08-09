@@ -18,5 +18,5 @@ jobs:
         with:
             ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
             dokku-host: ${{ secrets.HOSTNAME }}
-            app-name: ${{ secrets.DEV_CONTENT_EDITOR_NAME }}
+            app-name: ${{ secrets.PROD_CONTENT_EDITOR_NAME }}
             git-push-flags: --force
