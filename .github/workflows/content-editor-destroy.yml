@@ -15,17 +15,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            letsencrypt:disable ${{ secrets.DEV_CONTENT_EDITOR_NAME }}   
-            
-      - name: CleanUp Letsencrypt
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOSTNAME }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          script: |
-            letsencrypt:cleanup ${{ secrets.DEV_CONTENT_EDITOR_NAME }}   
+            letsencrypt:disable ${{ secrets.DEV_CONTENT_EDITOR_NAME }}    
             
       - name: Destroy APP
         uses: appleboy/ssh-action@master
