@@ -19,6 +19,7 @@ jobs:
             ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
             dokku-host: ${{ secrets.HOSTNAME }}
             app-name: ${{ secrets.DEV_CONTENT_EDITOR_NAME }}
+            git-push-flags: --force
             
       - name: Letsencrypt set ENV
         uses: appleboy/ssh-action@master
