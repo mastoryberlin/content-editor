@@ -53,10 +53,12 @@ export default {
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
-    host: 'content.mastory.io',
-    port: 80,
-    prefix: '/editor/',
-    https: false,
+    host: process.env.BACKEND === 'local'
+    ? 'localhost'
+    : `${process.env.NODE_ENV === 'development' ? 'dev-proc' : 'proc'}.mastory.io`,
+    port: process.env.BACKEND === 'local' ? 4000 : 443,
+    prefix: '/content/',
+    https: process.env.BACKEND !== 'local',
   },
 
   eslint: {

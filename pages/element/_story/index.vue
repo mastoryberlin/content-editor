@@ -23,13 +23,13 @@
           </v-icon>
         </v-btn>
 
-        <Container
+        <container
           v-else
           group-name="story-specs"
           drag-handle-selector=".content-editor-draggable-handle"
           @drop="onDrop"
         >
-          <Draggable v-for="(episode, i) in episodes" :key="i">
+          <draggable v-for="(episode, i) in episodes" :key="i">
             <v-sheet
               elevation="2"
               rounded
@@ -47,40 +47,83 @@
 
                   <v-col class="content-editor-draggable-content">
                     <div class="content-editor-draggable-title">
-                      <v-text-field
+                      <v-textarea
                         :value="episode.title"
-                        class="text-h4"
+                        class="text-h5"
                         filled
                         rounded
                         autofocus
-                        :prefix="`Episode ${i+1}: `"
-                        max-width="100%"
+                        full-width
+                        rows="1"
+                        auto-grow
+                        :prefix="`E.${i+1}: `"
                         background-color="white"
                         label="Enter a title for this episode"
                         @input="changeEpisode({id: episode.id, element: 'title', to: $event})"
                       >
-                        <template #append-outer>
-                          <v-hover v-slot="{ hover }">
-                            <v-icon
-                              class="ml-2"
-                              :color="hover ? 'blue' : 'grey lighten-2'"
-                              @click="addEpisode({after: episode, duplicate: true})"
-                            >
-                              mdi-content-duplicate
-                            </v-icon>
-                          </v-hover>
-
-                          <v-hover v-slot="{ hover }">
-                            <v-icon
-                              class="ml-2"
-                              :color="hover ? 'red' : 'grey lighten-2'"
-                              @click="deleteEpisode(episode)"
-                            >
-                              mdi-delete
-                            </v-icon>
-                          </v-hover>
+                        <template #append>
+                          <v-tooltip bottom>
+                            <template #activator="{on, attrs}">
+                              <v-hover v-slot="{ hover }">
+                                <v-icon
+                                  v-bind="attrs"
+                                  :color="hover ? 'purple' : 'grey lighten-2'"
+                                  v-on="on"
+                                  @click="$router.push(`/element/${episode.id}`)"
+                                >
+                                  mdi-open-in-new
+                                </v-icon>
+                              </v-hover>
+                            </template>
+                            <span>
+                              Edit episode details
+                            </span>
+                          </v-tooltip>
                         </template>
-                      </v-text-field>
+
+                        <template #append-outer>
+                          <v-tooltip bottom>
+                            <template #activator="{on, attrs}">
+                              <v-hover v-slot="{ hover }">
+                                <v-icon
+                                  v-bind="attrs"
+                                  class="ml-2"
+                                  :color="hover ? 'blue' : 'grey lighten-2'"
+                                  v-on="on"
+                                  @click="addEpisode({after: episode, duplicate: true})"
+                                >
+                                  mdi-content-duplicate
+                                </v-icon>
+                              </v-hover>
+                            </template>
+                            <span>
+                              Duplicate
+                            </span>
+                          </v-tooltip>
+
+                          <v-tooltip
+                            v-if="episodes.length > 1"
+                            bottom
+                          >
+                            <template #activator="{on, attrs}">
+                              <v-hover v-slot="{ hover }">
+                                <v-icon
+                                  v-bind="attrs"
+                                  class="ml-2"
+                                  :color="hover ? 'red' : 'grey lighten-2'"
+                                  v-on="on"
+                                  @click="deleteEpisode(episode)"
+                                >
+                                  mdi-delete
+                                </v-icon>
+                              </v-hover>
+                            </template>
+                            <span>
+                              Delete
+                            </span>
+                          </v-tooltip>
+                        </template>
+                      </v-textarea>
                     </div>
 
                     <div class="content-editor-draggable-specs">
@@ -108,12 +151,17 @@
                           v-for="character in ['Professor', 'Alicia', 'Nick', 'VZ']"
                           :key="character"
                         >
-                          <mood-selector :npc="character" />
+                          <mood-selector
+                            :phase="episode.phases[0]"
+                            :npc="character"
+                          />
                         </v-col>
                       </v-row>
 
                       <v-row>
-                        <features-selector />
+                        <features-selector
+                          :phase="episode.phases[0]"
+                        />
                       </v-row>
                     </v-container>
                   </v-col>
@@ -132,7 +180,7 @@
                 </v-btn>
               </v-container>
             </v-sheet>
-          </Draggable>
+          </draggable>
         </container>
       </v-tab-item>
 
@@ -175,42 +223,11 @@ export default {
     //     showAccessDeniedAlert: false,
     //     autosaveInterval: 30000,
     tab: 0
-  //     currentNPC: '',
-  //     npcSpeedDial: false,
-  //     npcData: {
-  //       prof: {
-  //         name: 'Mr Camarena',
-  //         img: '/test/professor1.jpg',
-  //       },
-  //       alicia: {
-  //         name: 'Alicia',
-  //         img: '/test/alicia.png',
-  //       },
-  //       vz: {
-  //         name: 'VZ',
-  //         img: '/test/vz.png',
-  //       },
-  //       nick: {
-  //         name: 'Nick',
-  //         img: '/test/nick.png',
-  //       },
-  //     },
   //     nlp: null,
   //     intent: '',
   //     response: '',
   //     intentHasChanged: {},
   //     responseHasChanged: {},
-  //     content: {
-  //       meta: {
-  //         title: 'Content Editor - Algebra 1',
-  //       },
-  //       page: {
-  //         intro: {
-  //           header: 'Algebra 1',
-  //         },
-  //       },
-  //     },
-  //   }
   }),
   computed: {
     story () {
@@ -221,11 +238,11 @@ export default {
     },
     episodes: {
       get () {
-        return this.storyInfo ? this.storyInfo.children : []
+        return this.storyInfo ? this.storyInfo.episodes : []
       },
       set (v) {
         if (this.storyInfo) {
-          this.storyInfo.children = v
+          this.storyInfo.episodes = v
         }
       }
     }
@@ -423,35 +440,5 @@ export default {
 }
 </script>
 
-<style lang="sass" scoped>
-.content
-  &-editor
-    padding: 5px
-    &-draggable
-      position: relative
-      &-sidebar
-        display: inline-block
-        margin-right: 5px
-        max-width: 20px
-      &-content
-        display: inline-block
-      &-title
-        display: inline-block
-      &-specs
-        display: inline-block
-        width: 100%
-      &-meta
-        display: inline-block
-        max-width: 20em
-      &-add
-        position: absolute
-        bottom: -24px
-        right: 24px
-    &-prompts
-      display: inline
-      &-buttons
-        text-align: center
-    &-interactions
-      &-npc
-        display: inline
+<style lang="sass">
 </style>

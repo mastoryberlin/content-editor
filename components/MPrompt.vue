@@ -1,6 +1,6 @@
 <template lang="html">
   <div class="prompt">
-    <v-container class="prompt-meta">
+    <!-- <v-container class="prompt-meta">
       <v-row>
         <v-col
           cols="12"
@@ -157,9 +157,9 @@
       <video v-if="prompt.type === 'video'" controls>
         <source :src="prompt.attachment">
       </video>
-        <audio v-if="prompt.type === 'audio'" controls>
-          <source :src="prompt.attachment">
-        </audio>
+      <audio v-if="prompt.type === 'audio'" controls>
+        <source :src="prompt.attachment">
+      </audio>
     </div>
 
     <v-textarea
@@ -169,7 +169,7 @@
       auto-grow
       :background-color="color"
       @change="$emit('change')"
-    />
+    /> -->
   </div>
 </template>
 
@@ -248,7 +248,7 @@ export default {
         `${wordCount} words`,
         `${readTime} mins reading time`
       ]
-    },
+    }
   }
 }
 </script>

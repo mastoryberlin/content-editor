@@ -2,13 +2,15 @@
   <div class="features-selector">
     Available Features:
     <v-chip-group
+      column
       multiple
-      active-class="features-selector-available warning"
     >
       <v-chip
-        v-for="feature in features"
+        v-for="feature in Object.keys(color)"
         :key="feature"
-        :class="active ? null : 'features-selector-unavailable'"
+        class="features-selector-available"
+        :class="available(feature) ? color[feature] : 'features-selector-unavailable'"
+        @click="changeFeatures({ phaseId: phase.id, feature: feature, to: !available(feature)})"
       >
         {{ feature }}
       </v-chip>
@@ -17,19 +19,37 @@
 </template>
 
 <script>
+import { mapMutations } from 'vuex'
+
 export default {
-  data: () => ({
-    features: [
-      'Rover',
-      'AR',
-      'Secret Folder'
-    ],
-    color: {
-      Rover: 'blue',
-      AR: 'amber',
-      'Secret Folder': 'purple'
+  props: {
+    phase: {
+      type: Object,
+      required: true
     }
-  })
+  },
+  data: () => ({
+    color: {
+      CCTV: 'teal',
+      'Secret Folder': 'pink',
+      'Calls From The Future': 'blue lighten-2',
+      Rover: 'indigo'
+    }
+  }),
+  computed: {
+    // availableFeatures () {
+    //   return this.$store.getters.featuresInPhase(this.phase.id)
+    // }
+  },
+  methods: {
+    ...mapMutations([
+      'changeFeatures'
+    ]),
+    available (feature) {
+      const f = [...this.$store.getters.featuresInPhase(this.phase.id)]
+      return f.includes(feature)
+    }
+  }
 }
 </script>
 
@@ -37,6 +57,4 @@ export default {
 .features-selector
   &-unavailable
     text-decoration: line-through
-  &-available
-    text-decoration: none !important
 </style>

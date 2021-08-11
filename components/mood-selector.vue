@@ -54,7 +54,7 @@
         </v-speed-dial>
       </div>
     </template>
-    <span v-text="npc + ' is ' + (available ? mood : 'unavailable')" />
+    <span v-text="npc + ' is ' + (available ? printableMood : 'unavailable')" />
   </v-tooltip>
 </template>
 
@@ -64,12 +64,15 @@ export default {
     npc: {
       type: String,
       required: true
+    },
+    phase: {
+      type: Object,
+      required: true
     }
   },
   data: () => ({
-    available: true,
-    mood: 'happy',
     moods: [
+      'unavailable',
       'disappointed',
       'glad',
       'happy',
@@ -80,7 +83,24 @@ export default {
       'worried'
     ],
     moodSelectorOpen: false
-  })
+  }),
+  computed: {
+    printableMood () {
+      return this.mood.replace('-', ' ')
+    },
+    mood: {
+      get () {
+        const moods = this.phase.moods
+        return moods ? moods[this.npc] : 'happy'
+      },
+      set (v) {
+        this.$store.commit('changeMood', { phaseId: this.phase.id, npc: this.npc, to: v })
+      }
+    },
+    available () {
+      return this.mood !== 'unavailable'
+    }
+  }
 }
 </script>
 
