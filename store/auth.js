@@ -1,5 +1,6 @@
 export const state = () => ({
   loggedIn: false,
+  isRequestingLogin: false,
   invalidCredentials: false,
   user: {
     id: '1',
@@ -48,6 +49,7 @@ export const mutations = {
     }
   },
   login: (state, { user, token }) => {
+    state.isRequestingLogin = false
     state.loggedIn = true
     state.token = token
     state.user = { ...user }
@@ -59,12 +61,17 @@ export const mutations = {
     state.invalidCredentials = false
   },
   invalidCredentials: (state) => {
+    state.isRequestingLogin = false
     state.invalidCredentials = true
+  },
+  beginLoginRequest: (state) => {
+    state.isRequestingLogin = true
   }
 }
 
 export const actions = {
   async requestLogin ({ commit }, [userName, password]) {
+    commit('beginLoginRequest')
     const response = await this.$axios.$post('auth-token', { userName, password })
     if (response.success) {
       commit('openWebSocket', null, { root: true })

@@ -83,17 +83,37 @@
           <v-text-field
             v-model="userName"
             label="Your user name"
+            :disabled="isRequestingLogin"
           />
           <v-text-field
             v-model="password"
             :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
             :type="showPassword ? 'text' : 'password'"
+            :disabled="isRequestingLogin"
             label="Your password"
             @click:append="showPassword = !showPassword"
           />
-          <v-btn @click="login">
-            Log in
-          </v-btn>
+          <div class="text-center">
+            <v-btn
+              :loading="isRequestingLogin"
+              @click="login"
+            >
+              Log in!
+              <template #loader>
+                <v-progress-circular
+                  :width="3"
+                  :size="25"
+                  indeterminate
+                  color="primary"
+                />
+              </template>
+              <style scoped>
+                .v-progress-circular {
+                margin: 1rem;
+                }
+              </style>
+            </v-btn>
+          </div>
         </v-form>
       </v-sheet>
     </template>
@@ -119,6 +139,7 @@ export default {
       'isCommittingChanges'
     ]),
     ...mapState('auth', [
+      'isRequestingLogin',
       'loggedIn',
       'invalidCredentials'
     ]),

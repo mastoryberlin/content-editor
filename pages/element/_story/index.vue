@@ -52,13 +52,13 @@
                         class="text-h5"
                         filled
                         rounded
-                        autofocus
                         full-width
                         rows="1"
                         auto-grow
                         :prefix="`E.${i+1}: `"
                         background-color="white"
                         label="Enter a title for this episode"
+                        @focus="lock(episode)"
                         @input="changeEpisode({id: episode.id, element: 'title', to: $event})"
                       >
                         <template #append>
@@ -277,6 +277,10 @@ export default {
         fromIndex: removedIndex,
         toIndex: addedIndex
       })
+    },
+    lock (element) {
+      const id = element.id
+      console.log('Locking ' + id)
     },
     //   checkAccess() {
     //     if (this.password === '8lgebr81') {

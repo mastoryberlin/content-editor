@@ -73,18 +73,22 @@ export default {
       {
         id: 'demo',
         title: 'Technical Demo',
+        editedBy: null,
         episodes: [
           {
             id: 'demo/episode',
             title: 'Demo Episode',
+            editedBy: null,
             phases: [
               {
                 id: 'demo/episode/p1',
                 title: 'Camarena introduces himself',
                 specs: '',
+                editedBy: null,
                 messages: [
                   {
                     id: 'demo/episode/p1/m1',
+                    editedBy: null,
                     logic: '',
                     type: 'text',
                     from: 'Professor',
@@ -109,20 +113,24 @@ export default {
       },
       {
         id: 'the-cloud',
+        editedBy: null,
         title: 'The Cloud',
         episodes: [
           {
             id: 'the-cloud/e1',
             title: 'Mysterious phenomena',
+            editedBy: null,
             specs: 'The Professor says hi',
             phases: [
               {
                 id: 'the-cloud/e1/p1',
+                editedBy: null,
                 title: 'Camarena introduces himself',
                 specs: '',
                 messages: [
                   {
                     id: 'the-cloud/e1/p1/m1',
+                    editedBy: null,
                     logic: '',
                     type: 'text',
                     from: 'Professor',
@@ -130,6 +138,7 @@ export default {
                   },
                   {
                     id: 'the-cloud/e1/p1/m2',
+                    editedBy: null,
                     logic: '',
                     type: 'video',
                     from: 'Alicia',
@@ -150,11 +159,13 @@ export default {
               {
                 id: 'the-cloud/e1/p2',
                 title: 'Two travellers appear',
+                editedBy: null,
                 specs: '',
                 messages: [
                   {
                     id: 'the-cloud/e1/p2/m1',
                     logic: '',
+                    editedBy: null,
                     type: 'text',
                     from: 'Professor',
                     text: ''
@@ -176,16 +187,19 @@ export default {
           {
             id: 'the-cloud/e2',
             title: 'Aliens',
+            editedBy: null,
             specs: 'Alicia gets kidnapped by aliens',
             phases: [
               {
                 id: 'the-cloud/e2/p1',
                 title: 'Alicia is gone',
+                editedBy: null,
                 specs: '',
                 messages: [
                   {
                     id: 'the-cloud/e2/p1/m1',
                     logic: '',
+                    editedBy: null,
                     type: 'text',
                     from: 'Professor',
                     text: ''
@@ -482,7 +496,8 @@ export default {
       state.ws = ws
     },
     closeWebSocket: (state) => {
-      if (state.ws) {
+      const ws = state.ws
+      if (ws) {
         ws.close()
       }
     }
