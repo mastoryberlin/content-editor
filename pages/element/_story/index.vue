@@ -43,6 +43,24 @@
                     >
                       mdi-drag
                     </v-icon>
+
+                    <v-tooltip
+                      v-if="episode.editedBy"
+                      right
+                    >
+                      <template
+                        #activator="{on, attrs}"
+                      >
+                        <v-icon
+                          v-bind="attrs"
+                          v-on="
+                            on"
+                        >
+                          mdi-lock
+                        </v-icon>
+                      </template>
+                      <span>This episode is currently being edited by {{ episode.editedBy }}</span>
+                    </v-tooltip>
                   </v-col>
 
                   <v-col class="content-editor-draggable-content">
@@ -58,8 +76,10 @@
                         :prefix="`E.${i+1}: `"
                         background-color="white"
                         label="Enter a title for this episode"
-                        @focus="lock(episode)"
-                        @input="changeEpisode({id: episode.id, element: 'title', to: $event})"
+                        :disabled="episode.editedBy"
+                        @focus="lock(episode, 'title')"
+                        @blur="unlock(episode, 'title')"
+                        @input="editEpisode({id: episode.id, element: 'title', to: $event})"
                       >
                         <template #append>
                           <v-tooltip bottom>
@@ -111,6 +131,7 @@
                                   v-bind="attrs"
                                   class="ml-2"
                                   :color="hover ? 'red' : 'grey lighten-2'"
+                                  :disabled="episode.editedBy"
                                   v-on="on"
                                   @click="deleteEpisode(episode)"
                                 >
@@ -134,7 +155,10 @@
                         auto-grow
                         rows="2"
                         label="Enter this episode's specs here"
-                        @input="changeEpisode({id: episode.id, element: 'specs', to: $event})"
+                        :disabled="episode.editedBy"
+                        @focus="lock(episode, 'specs')"
+                        @blur="unlock(episode, 'specs')"
+                        @input="editEpisode({id: episode.id, element: 'specs', to: $event})"
                       />
                     </div>
                   </v-col><!-- content-editor-draggable-content -->
@@ -193,7 +217,7 @@
 
 <script>
 import { Container, Draggable } from 'vue-smooth-dnd'
-import { mapMutations } from 'vuex'
+import { mapMutations, mapActions } from 'vuex'
 
 export default {
   components: {
@@ -271,16 +295,17 @@ export default {
       'addEpisode',
       'deleteEpisode'
     ]),
+    ...mapActions([
+      'lock',
+      'unlock',
+      'editEpisode'
+    ]),
     onDrop ({ removedIndex, addedIndex }) {
       this.moveEpisode({
         story: this.story,
         fromIndex: removedIndex,
         toIndex: addedIndex
       })
-    },
-    lock (element) {
-      const id = element.id
-      console.log('Locking ' + id)
     },
     //   checkAccess() {
     //     if (this.password === '8lgebr81') {

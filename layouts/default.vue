@@ -28,17 +28,36 @@
         <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
         <v-toolbar-title v-text="title" />
         <v-spacer />
-        <v-avatar
-          color="indigo"
-          size="48"
-          class="mx-3"
-          @click="logout"
-        >
-          <span
-            class="white--text text-h6"
-            v-text="loggedIn ? initials : '?'"
-          />
-        </v-avatar>
+        <template>
+          <div class="text-center">
+            <v-menu offset-y>
+              <template #activator="{ on, attrs }">
+                <v-avatar
+                  color="indigo"
+                  size="48"
+                  class="mx-3"
+                  v-bind="attrs"
+                  v-on="on"
+                >
+                  <span
+                    class="white--text text-h6"
+                    v-text="loggedIn ? initials : '?'"
+                  />
+                </v-avatar>
+              </template>
+              <v-list>
+                <v-list-item
+                  v-for="(item, index) in items"
+                  :key="index"
+                  @click="item.action"
+                >
+                  <v-list-item-title>{{ item.title }}</v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-menu>
+          </div>
+        </template>
+
         <v-btn
           color="green"
           elevation="3"
@@ -78,7 +97,9 @@
         class="login-sheet"
         elevation="5"
       >
-        <v-form>
+        <v-form
+          @submit.prevent="login"
+        >
           <h2>Log in</h2>
           <v-text-field
             v-model="userName"
@@ -96,7 +117,8 @@
           <div class="text-center">
             <v-btn
               :loading="isRequestingLogin"
-              @click="login"
+              :disabled="userName === '' || password === ''"
+              type="submit"
             >
               Log in!
               <template #loader>
@@ -129,8 +151,14 @@ export default {
       drawer: false,
       title: 'Mastory Content Editor',
       userName: '',
-      password: '',
-      showPassword: false
+      password: 'TOP SECRET',
+      showPassword: false,
+      items: [
+        {
+          title: 'Log out',
+          action: this.logout
+        }
+      ]
     }
   },
   computed: {

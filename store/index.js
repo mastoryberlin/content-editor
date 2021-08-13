@@ -1,7 +1,7 @@
 
-function sleep (milliseconds) {
-  return new Promise(resolve => setTimeout(resolve, milliseconds))
-}
+// function sleep (milliseconds) {
+//   return new Promise(resolve => setTimeout(resolve, milliseconds))
+// }
 
 function findMessage (id, state, startAt) {
   console.log(`Called findMessage id: ${id}, startAt.id: ${startAt ? startAt.id : '(undefined)'}`)
@@ -69,6 +69,7 @@ function refactorMessageID (state, msg, replace, by) {
 
 export default {
   state: () => ({
+    changes: [],
     stories: [
       {
         id: 'demo',
@@ -257,6 +258,12 @@ export default {
       const st = state.stories.find(s => s.id === story)
       const ep = st.episodes.find(e => e.id === id)
       ep[element] = to
+      const change = {
+        action: 'changeEpisode',
+        where: id + ':' + element,
+        payload: to
+      }
+      state.changes.push(change)
     },
     addEpisode: (state, { after, duplicate }) => {
       const [story] = after.id.split('/')
@@ -461,6 +468,31 @@ export default {
         console.log('Aborting')
       }
     },
+    setEditedBy: (state, { who, element }) => {
+      const parts = element.split('/')
+      const storiesRoot = state.stories
+      const st = storiesRoot.find(s => s.id === parts[0])
+      if (parts.length === 1) {
+        // Story is being edited
+        st.editedBy = who
+        return
+      }
+      const ep = st.episodes.find(e => e.id === `${parts[0]}/${parts[1]}`)
+      if (parts.length === 2) {
+        // Episode is being edited
+        ep.editedBy = who
+        return
+      }
+      const ph = ep.phases.find(p => p.id === `${parts[0]}/${parts[1]}/${parts[2]}`)
+      if (parts.length === 3) {
+        // Phase is being edited
+        ph.editedBy = who
+        return
+      }
+      // parts.length >= 4 -> Message is being edited
+      const msg = findMessage(element, state, ph)
+      msg.editedBy = who
+    },
     setDragIndex: (state, index) => {
       console.log('setDragIndex called with index: ' + index)
       state.dragInfo.removedIndex = index
@@ -471,35 +503,17 @@ export default {
         state.dragInfo.dragSource = dragSource
       }
     },
+    shiftChanges: (state) => {
+      state.changes.shift()
+    },
     beginCommittingChanges: (state) => {
       state.isCommittingChanges = true
     },
     endCommittingChanges: (state) => {
       state.isCommittingChanges = false
     },
-    openWebSocket: (state) => {
-      const url = (
-        process.env.BACKEND === 'local'
-          ? 'ws://localhost:4000'
-          : 'wss://proc.mastory.io'
-      ) + '/content'
-      const ws = new WebSocket(url)
-      ws.onopen = () => {
-        console.log('WebSocket connection established!')
-      }
-      ws.onclose = () => {
-        console.log('WebSocket connection closed!')
-      }
-      ws.onmessage = (msg) => {
-        alert(`WS server says ${msg}`)
-      }
+    setWebSocket: (state, ws) => {
       state.ws = ws
-    },
-    closeWebSocket: (state) => {
-      const ws = state.ws
-      if (ws) {
-        ws.close()
-      }
     }
   },
   actions: {
@@ -509,10 +523,93 @@ export default {
     // ).stories
     // commit('initializeStories', retrievedStories)
     // },
-    async commitChanges ({ commit, state }) {
+    openWebSocket ({ commit }) {
+      // const url = (
+      //   process.env.BACKEND === 'local'
+      //     ? 'ws://localhost:4000'
+      //     : 'wss://proc.mastory.io'
+      // ) + '/content'
+      const url = 'ws://localhost:4000/content'
+      const ws = new WebSocket(url)
+      ws.onopen = () => {
+        console.log('WebSocket connection established!')
+      }
+      ws.onclose = () => {
+        console.log('WebSocket connection closed!')
+      }
+      ws.onmessage = (payload) => {
+        const msg = JSON.parse(payload.data)
+        console.log('WS server says', msg)
+        switch (msg.event) {
+          case 'lock':
+            commit('setEditedBy', { who: msg.editor, element: msg.element })
+            break
+          case 'unlock':
+            commit('setEditedBy', { who: null, element: msg.element })
+            break
+          case 'changeEpisode':
+            commit('changeEpisode', { id: msg.id, element: msg.element, to: msg.to })
+            break
+        }
+      }
+      commit('setWebSocket', ws)
+    },
+    closeWebSocket ({ state, commit }) {
+      const ws = state.ws
+      if (ws) {
+        ws.close()
+        commit('setWebSocket', null)
+      }
+    },
+    lock ({ state }, element) {
+      const ws = state.ws
+      if (ws) {
+        const id = element.id
+        console.log('Locking ' + id)
+        ws.send(JSON.stringify({
+          action: 'lock',
+          where: id,
+          payload: state.auth.user.id,
+          token: state.auth.token
+        }))
+      }
+    },
+    unlock ({ state }, element) {
+      const ws = state.ws
+      if (ws) {
+        const id = element.id
+        console.log('Unlocking ' + id)
+        ws.send(JSON.stringify({
+          action: 'unlock',
+          where: id,
+          payload: state.auth.user.id,
+          token: state.auth.token
+        }))
+      }
+    },
+    editEpisode ({ state, commit }, { id, element, to }) {
+      // const [story] = id.split('/')
+      // const st = state.stories.find(s => s.id === story)
+      // const ep = st.episodes.find(e => e.id === id)
+      // ep[element] = to
+      // const change = {
+      //   action: 'changeEpisode',
+      //   where: id + ':' + element,
+      //   payload: to
+      // }
+      // state.changes.push(change)
+    },
+    commitChanges ({ commit, state }) {
       commit('beginCommittingChanges')
       // alert('Save the following JSON to a file:\n' + JSON.stringify(state.stories))
-      await sleep(500)
+      if (state.ws) {
+        const changes = state.changes
+        while (changes.length > 0) {
+          const change = changes[0]
+          commit('shiftChanges')
+          state.ws.send(JSON.stringify({ token: state.auth.token, ...change }))
+        }
+      }
       commit('endCommittingChanges')
     }
   }

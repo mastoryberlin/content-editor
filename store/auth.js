@@ -70,18 +70,18 @@ export const mutations = {
 }
 
 export const actions = {
-  async requestLogin ({ commit }, [userName, password]) {
+  async requestLogin ({ commit, dispatch }, [userName, password]) {
     commit('beginLoginRequest')
     const response = await this.$axios.$post('auth-token', { userName, password })
     if (response.success) {
-      commit('openWebSocket', null, { root: true })
+      dispatch('openWebSocket', null, { root: true })
       commit('login', response)
     } else {
       commit('invalidCredentials')
     }
   },
-  async requestLogout ({ commit, state }) {
-    commit('closeWebSocket')
+  async requestLogout ({ commit, state, dispatch }) {
+    dispatch('closeWebSocket')
     await this.$axios.$delete('auth-token', { params: { token: state.token } })
     commit('logout')
   }
