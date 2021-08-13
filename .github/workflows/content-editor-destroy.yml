@@ -7,6 +7,16 @@ jobs:
     name: Destroy APP
     runs-on: ubuntu-latest
     steps:
+      - name: Letsencrypt Disable
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOSTNAME }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            letsencrypt:disable ${{ secrets.PROD_CONTENT_EDITOR_NAME }}    
+    
       - name: Destroy APP
         uses: appleboy/ssh-action@master
         with:
@@ -16,13 +26,3 @@ jobs:
           port: 22
           script: |
             apps:destroy ${{ secrets.PROD_CONTENT_EDITOR_NAME }} --force
-      
-      - name: CleanUp Letsencrypt
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOSTNAME }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          script: |
-            letsencrypt:cleanup ${{ secrets.PROD_CONTENT_EDITOR_NAME }}       
