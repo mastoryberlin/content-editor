@@ -16,14 +16,16 @@
       An error occurred!
     </div>
 
-    <!-- <apollo-subscribe-to-more
-      :document="require('~/graphql/StoryChanged')"
-      :update-query="updateStory"
-    /> -->
+    <!-- :update-query="updateStory" -->
     <div
       v-else-if="data"
       class="content-editor"
     >
+      <apollo-subscribe-to-more
+        :document="require('~/graphql/StoryChanged')"
+        :variables="{id: storyId}"
+        :update-query="onStoryChanged"
+      />
       <v-tabs v-model="tab">
         <v-tab>
           Specs
@@ -35,7 +37,13 @@
 
       <v-tabs-items v-model="tab">
         <v-tab-item class="content-editor-specs">
-          {{ data.story[0].title }}
+          <v-text-field
+            :value="data.story[0].title"
+            @change="$apollo.mutate({
+              mutation: require('~/graphql/UpdateStoryTitle'),
+              variables: {id: storyId, newTitle: $event}
+            })"
+          />
         <!-- <container
           group-name="story-specs"
           drag-handle-selector=".content-editor-draggable-handle"
@@ -286,6 +294,18 @@ export default {
   //   },
   },
   methods: {
+    onStoryChanged (previousResult, { subscriptionData }) {
+      console.log('onStoryChanged', { previousResult, subscriptionData })
+      const newResult = {
+        story: [
+          {
+            id: previousResult.story[0].id,
+            ...subscriptionData.data.story[0]
+          }
+        ]
+      }
+      return newResult
+    }
     // ...mapMutations([
     //   'moveEpisode',
     //   'changeEpisode',

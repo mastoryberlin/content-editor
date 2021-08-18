@@ -1,0 +1,5 @@
+mutation UpdateStoryTitle($id: uuid!, $newTitle: String) {
+  update_story(where: {id: {_eq: $id}}, _set: {title: $newTitle}) {
+    affected_rows
+  }
+}
