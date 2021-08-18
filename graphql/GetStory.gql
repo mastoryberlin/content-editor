@@ -1,0 +1,6 @@
+query GetStory($id: uuid = "") {
+  story(where: {id: {_eq: $id}}) {
+    id
+    title
+  }
+}

@@ -74,14 +74,14 @@ export const actions = {
     commit('beginLoginRequest')
     const response = await this.$axios.$post('auth-token', { userName, password })
     if (response.success) {
-      dispatch('openWebSocket', null, { root: true })
+      dispatch('websocket/open', null, { root: true })
       commit('login', response)
     } else {
       commit('invalidCredentials')
     }
   },
   async requestLogout ({ commit, state, dispatch }) {
-    dispatch('closeWebSocket')
+    dispatch('websocket/close', null, { root: true })
     await this.$axios.$delete('auth-token', { params: { token: state.token } })
     commit('logout')
   }

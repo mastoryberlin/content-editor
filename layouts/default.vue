@@ -1,17 +1,31 @@
 <template>
   <v-app>
-    <template v-if="loggedIn">
+    <apollo-query v-if="loggedIn"
+    v-slot="{ result: { loading, error, data } }"
+    :query="require('~/graphql/GetStories')"
+    >
       <v-navigation-drawer
         v-model="drawer"
         fixed
         app
       >
+      <div v-if="loading">
+        <v-skeleton-loader v-for="n in 5" :key="n"
+        type="list-item"
+        />
+      </div>
+
+      <div v-else-if="error">
+        An error occurred!
+      </div>
+
+      <div v-else-if="data">
         <v-treeview
           activatable
           :active="idFromRoute"
           selection-type="independent"
           color="warning"
-          :items="stories"
+          :items="data.story"
           item-text="title"
           item-children="episodes"
           @update:active="navigate"
@@ -20,14 +34,23 @@
             {{ leaf ? `E${episodeIndex(item) + 1}: ` : null }}
           </template>
         </v-treeview>
+      </div>
       </v-navigation-drawer>
       <v-app-bar
         fixed
         app
       >
         <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
-        <v-toolbar-title v-text="title" />
+        <v-toolbar-title>
+          Mastory Content Editor
+        </v-toolbar-title>
         <v-spacer />
+        <v-toolbar-title>
+          <small v-text="statusText" />
+        </v-toolbar-title>
+
+        <v-spacer />
+
         <template>
           <div class="text-center">
             <v-menu offset-y>
@@ -65,7 +88,7 @@
           :disabled="isCommittingChanges"
           @click="commitChanges"
         >
-          Save
+          Commit
         </v-btn>
       </v-app-bar>
       <v-main>
@@ -78,7 +101,7 @@
       >
         <span>&copy; {{ new Date().getFullYear() }} Mastory</span>
       </v-footer>
-    </template>
+    </apollo-query>
 
     <template
       v-else
@@ -149,7 +172,6 @@ export default {
   data () {
     return {
       drawer: false,
-      title: 'Mastory Content Editor',
       userName: '',
       password: 'TOP SECRET',
       showPassword: false,
@@ -170,6 +192,9 @@ export default {
       'isRequestingLogin',
       'loggedIn',
       'invalidCredentials'
+    ]),
+    ...mapGetters('autosave', [
+      'statusText'
     ]),
     ...mapGetters('auth', [
       'initials'

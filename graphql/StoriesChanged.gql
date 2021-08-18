@@ -1,0 +1,6 @@
+subscription StoriesChanged {
+  story {
+    id
+    title
+  }
+}

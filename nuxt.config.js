@@ -48,7 +48,8 @@ export default {
   // Modules: https://go.nuxtjs.dev/config-modules
   modules: [
     // https://go.nuxtjs.dev/axios
-    '@nuxtjs/axios'
+    '@nuxtjs/axios',
+    '@nuxtjs/apollo'
   ],
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
@@ -60,6 +61,12 @@ export default {
     prefix: '/content/',
     https: process.env.BACKEND !== 'local',
   },
+
+  apollo: {
+     clientConfigs: {
+       default: '~/apollo.config.js'
+     }
+   },
 
   eslint: {
     fix: true

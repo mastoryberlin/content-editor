@@ -1,0 +1,6 @@
+query GetStories {
+  story {
+    title
+    id
+  }
+}
