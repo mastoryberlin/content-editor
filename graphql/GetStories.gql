@@ -2,5 +2,12 @@ query GetStories {
   story {
     title
     id
+    chapters {
+      id
+      title
+      story {
+        id
+      }
+    }
   }
 }

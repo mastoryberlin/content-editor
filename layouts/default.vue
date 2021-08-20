@@ -27,11 +27,11 @@
           color="warning"
           :items="data.story"
           item-text="title"
-          item-children="episodes"
+          item-children="chapters"
           @update:active="navigate"
         >
-          <template #prepend="{item, leaf}">
-            {{ leaf ? `E${episodeIndex(item) + 1}: ` : null }}
+          <template #prepend="{item}">
+            {{ item.story ? `E${episodeIndex(item, data.story) + 1}: ` : null }}
           </template>
         </v-treeview>
       </div>
@@ -222,14 +222,10 @@ export default {
     navigate ([selected]) {
       this.$router.push(`/element/${selected}`)
     },
-    episodeIndex (item) {
-      const [storyId] = item.id.split('/')
-      const story = this.$store.state.stories.find(s => s.id === storyId)
-      if (story) {
-        return story.episodes.indexOf(item)
-      } else {
-        return '?'
-      }
+    episodeIndex (episode, stories) {
+      const storyId = episode.story.id
+      const story = stories.find(s => s.id === storyId)
+      return story ? story.chapters.indexOf(episode) : '?'
     },
     login () {
       this.requestLogin([this.userName, this.password])
