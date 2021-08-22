@@ -1,5 +1,5 @@
 export const state = () => ({
-  loggedIn: false,
+  loggedIn: true,
   isRequestingLogin: false,
   invalidCredentials: false,
   user: {
@@ -29,25 +29,6 @@ export const getters = {
 }
 
 export const mutations = {
-  toggleUser: (state) => {
-    if (state.user.name === 'Cameron') {
-      state.user = {
-        id: '1',
-        name: 'Felix Schwarz',
-        email: '',
-        gitName: 'feritarou',
-        gitEmail: 'schwarz.f@web.de'
-      }
-    } else {
-      state.user = {
-        id: '2',
-        name: 'Cameron',
-        email: '',
-        gitName: 'cameron',
-        gitEmail: 'cameron@fake.com'
-      }
-    }
-  },
   login: (state, { user, token }) => {
     state.isRequestingLogin = false
     state.loggedIn = true

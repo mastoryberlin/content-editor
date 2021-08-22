@@ -1,7 +1,3 @@
-// function sleep (milliseconds) {
-//   return new Promise(resolve => setTimeout(resolve, milliseconds))
-// }
-//
 // function findMessage (id, state, startAt) {
 //   console.log(`Called findMessage id: ${id}, startAt.id: ${startAt ? startAt.id : '(undefined)'}`)
 //   const storiesRoot = state.stories
@@ -68,7 +64,6 @@
 
 export default {
   state: () => ({
-    stories: [],
     dragInfo: {
       dragSource: null,
       removedIndex: null
@@ -358,32 +353,32 @@ export default {
     //   const response = await this.app.apolloProvider.defaultClient.query({query: require("~/graphql/GetStories")})
     //   commit("apolloTest", response.data.story)
     // },
-    // lock ({ state }, element) {
-    //   const ws = state.websocket.ws
-    //   if (ws) {
-    //     const id = element.id
-    //     console.log('Locking ' + id)
-    //     ws.send(JSON.stringify({
-    //       action: 'lock',
-    //       where: id,
-    //       payload: state.auth.user.id,
-    //       token: state.auth.token
-    //     }))
-    //   }
-    // },
-    // unlock ({ state }, element) {
-    //   const ws = state.websocket.ws
-    //   if (ws) {
-    //     const id = element.id
-    //     console.log('Unlocking ' + id)
-    //     ws.send(JSON.stringify({
-    //       action: 'unlock',
-    //       where: id,
-    //       payload: state.auth.user.id,
-    //       token: state.auth.token
-    //     }))
-    //   }
-    // },
+    lock (ctx, element) {
+      // const ws = state.websocket.ws
+      // if (ws) {
+      const id = element.id
+      console.log('Locking ' + id)
+      //   ws.send(JSON.stringify({
+      //     action: 'lock',
+      //     where: id,
+      //     payload: state.auth.user.id,
+      //     token: state.auth.token
+      //   }))
+      // }
+    },
+    unlock (ctx, element) {
+      // const ws = state.websocket.ws
+      // if (ws) {
+      const id = element.id
+      console.log('Unlocking ' + id)
+      //   ws.send(JSON.stringify({
+      //     action: 'unlock',
+      //     where: id,
+      //     payload: state.auth.user.id,
+      //     token: state.auth.token
+      //   }))
+      // }
+    }
     // edit ({ commit, dispatch }, [{ id }, element, to]) {
     //   console.log(`edit action: ${id}[${element}] := ${to}`)
     //   const parts = id.split('/')

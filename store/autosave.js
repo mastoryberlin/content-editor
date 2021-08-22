@@ -30,7 +30,7 @@ export const getters = {
 export const mutations = {
   startStatusChecker: (state, commit) => {
     state.statusChecker = setInterval(() => {
-      commit('autosave/refreshSecondsElapsed', null, { root: true })
+      commit('refreshSecondsElapsed')
     }, 1000)
   },
   stopStatusChecker: (state) => {
@@ -52,8 +52,9 @@ export const mutations = {
     const changesCount = state.changes.length
     if (changesCount > 0) {
       const previous = state.changes[changesCount - 1]
-      if (previous.action === change.action && previous.where === change.where) {
-        previous.payload = change.payload
+      if (previous.mutation === change.mutation && previous.variables.id === change.variables.id) {
+        // Avoid queueing multiple edit operations for the same field in a row
+        previous.variables = { ...change.variables }
         return
       }
     }
@@ -61,7 +62,7 @@ export const mutations = {
 
     if (!state.autosaver) {
       state.autosaver = setInterval(() => {
-        dispatch('websocket/sendChanges', null, { root: true })
+        dispatch('autosave/sendChanges')
       }, AUTOSAVE_INTERVAL)
     }
   },
@@ -78,5 +79,19 @@ export const mutations = {
   },
   completedSendingChanges: (state) => {
     state.lastSuccessfulSave = performance.now()
+  }
+}
+
+export const actions = {
+  async sendChanges ({ state, commit }) {
+    const changes = state.changes
+    const apollo = this.app.apolloProvider.defaultClient
+    while (changes.length > 0) {
+      const queuedChange = changes[0]
+      console.log('Sending change to server', queuedChange)
+      await apollo.mutate(queuedChange)
+      commit('shiftChanges')
+    }
+    commit('completedSendingChanges')
   }
 }

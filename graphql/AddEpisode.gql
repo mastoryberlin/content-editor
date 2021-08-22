@@ -1,0 +1,9 @@
+mutation AddEpisode($storyId: uuid!, $number: Int = 1, $title: String = "", $description: String = "", $specs: String = "") {
+  update_story_chapter(where: {story_id: {_eq: $storyId}, _and: {number: {_gte: $number}}}, _inc: {number: 1}) {
+    affected_rows
+  }
+
+  insert_story_chapter_one(object: {story_id: $storyId, number: $number, title: $title, description: $description, specs: $specs}) {
+    id
+  }
+}

@@ -1,0 +1,13 @@
+mutation DeletePhase($id: uuid!, $number: Int!, $episodeId: uuid!) {
+  delete_prompt(where: {section_id: {_eq: $id}}) {
+    affected_rows
+  }
+
+  delete_story_section_by_pk(id: $id) {
+    id
+  }
+
+  update_story_section(where: {chapter_id: {_eq: $episodeId}, _and: {number: {_gt: $number}}}, _inc: {number: -1}) {
+    affected_rows
+  }
+}

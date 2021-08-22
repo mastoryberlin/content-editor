@@ -1,5 +1,0 @@
-subscription StoryChanged($id : uuid!) {
-  story(where: {id: {_eq: $id}}) {
-    title
-  }
-}

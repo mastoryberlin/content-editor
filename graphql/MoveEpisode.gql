@@ -1,0 +1,15 @@
+mutation MoveEpisode($id: uuid!, $from: Int!, $to: Int!, $storyId: uuid!) {
+  moveAhead: update_story_chapter(where: {story_id: {_eq: $storyId}, _and: {number: {_gt: $from}, _and: {number: {_lte: $to}}}}, _inc: {number: -1}) {
+    returning {
+      number
+    }
+  }
+  moveBehind: update_story_chapter(where: {story_id: {_eq: $storyId}, _and: {number: {_gte: $to}, _and: {number: {_lt: $from}}}}, _inc: {number: 1}) {
+    returning {
+      number
+    }
+  }
+  renumberEpisodeInQuestion: update_story_chapter_by_pk(pk_columns: {id: $id}, _set: {number: $to}) {
+    number
+  }
+}

@@ -2,12 +2,14 @@
   <div class="">
     <h1>Choose a story to edit</h1>
     <apollo-query
-    v-slot="{ result: { loading, error, data } }"
-    :query="require('~/graphql/GetStories')"
+      v-slot="{ result: { loading, error, data } }"
+      :query="require('~/graphql/GetStories')"
     >
       <div v-if="loading">
-        <v-skeleton-loader v-for="n in 5" :key="n"
-        type="list-item"
+        <v-skeleton-loader
+          v-for="n in 5"
+          :key="n"
+          type="list-item"
         />
       </div>
 
@@ -17,8 +19,8 @@
 
       <div v-else-if="data">
         <apollo-subscribe-to-more
-          :document="require('~/graphql/StoriesChanged')"
-          :update-query="updateStories"
+          :document="require('~/graphql/RefreshStories')"
+          :update-query="refreshStories"
         />
         <v-list>
           <v-list-item
@@ -37,9 +39,10 @@
 </template>
 
 <script>
+/* eslint-disable */
 export default {
   methods: {
-    updateStories () {
+    refreshStories () {
       console.log(`Stories updated`) // previousResult, { subscriptionData } : previous: ${JSON.stringify(previousResult)}, subscriptionData: ${JSON.stringify(subscriptionData)}
       // const newResult = {
       //   story: [...previousResult.story]

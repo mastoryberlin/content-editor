@@ -1,0 +1,5 @@
+mutation UpdateEpisodeSpecs($id: uuid!, $specs: String = "") {
+  update_story_chapter_by_pk(pk_columns: {id: $id}, _set: {specs: $specs}) {
+    specs
+  }
+}

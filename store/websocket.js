@@ -65,17 +65,4 @@ export const actions = {
       commit('storeConnection', null)
     }
   },
-  sendChanges ({ state, rootState, commit }) {
-    const ws = state.ws
-    if (ws) {
-      const changes = rootState.autosave.changes
-      while (changes.length > 0) {
-        const queuedChange = changes[0]
-        console.log('Sending change to server', queuedChange)
-        ws.send(JSON.stringify({ token: rootState.auth.token, ...queuedChange }))
-        commit('autosave/shiftChanges', null, { root: true })
-      }
-      commit('autosave/completedSendingChanges', null, { root: true })
-    }
-  }
 }

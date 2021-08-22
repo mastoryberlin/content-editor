@@ -1,6 +1,11 @@
 query GetStory($id: uuid!) {
-  story(where: {id: {_eq: $id}}) {
-    id
+  story_by_pk(id: $id) {
     title
+    chapters(order_by: {number: asc_nulls_last}) {
+      id
+      title
+      specs
+      number
+    }
   }
 }

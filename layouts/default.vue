@@ -1,40 +1,48 @@
 <template>
   <v-app>
-    <apollo-query v-if="loggedIn"
-    v-slot="{ result: { loading, error, data } }"
-    :query="require('~/graphql/GetStories')"
+    <apollo-query
+      v-if="loggedIn"
+      v-slot="{ result: { loading, error, data } }"
+      :query="require('~/graphql/GetStories')"
     >
       <v-navigation-drawer
         v-model="drawer"
         fixed
         app
       >
-      <div v-if="loading">
-        <v-skeleton-loader v-for="n in 5" :key="n"
-        type="list-item"
-        />
-      </div>
+        <div v-if="loading">
+          <v-skeleton-loader
+            v-for="n in 5"
+            :key="n"
+            type="list-item"
+          />
+        </div>
 
-      <div v-else-if="error">
-        An error occurred!
-      </div>
+        <div v-else-if="error">
+          An error occurred!
+        </div>
 
-      <div v-else-if="data">
-        <v-treeview
-          activatable
-          :active="idFromRoute"
-          selection-type="independent"
-          color="warning"
-          :items="data.story"
-          item-text="title"
-          item-children="chapters"
-          @update:active="navigate"
-        >
-          <template #prepend="{item}">
-            {{ item.story ? `E${episodeIndex(item, data.story) + 1}: ` : null }}
-          </template>
-        </v-treeview>
-      </div>
+        <div v-else-if="data">
+          <apollo-subscribe-to-more
+            :document="require('~/graphql/RefreshStories')"
+            :update-query="refreshStories"
+          />
+
+          <v-treeview
+            activatable
+            :active="idFromRoute"
+            selection-type="independent"
+            color="warning"
+            :items="data.story"
+            item-text="title"
+            item-children="chapters"
+            @update:active="navigate($event, data.story)"
+          >
+            <template #prepend="{item}">
+              {{ item.story ? `E${episodeIndex(item, data.story) + 1}: ` : null }}
+            </template>
+          </v-treeview>
+        </div>
       </v-navigation-drawer>
       <v-app-bar
         fixed
@@ -202,8 +210,8 @@ export default {
     idFromRoute () {
       const p = this.$route.path
       if (p.startsWith('/element/')) {
-        // Chop that beginning away to obtain the treeview item id
-        return [p.substring(9)]
+        // Last uuid is the treeview item id
+        return [p.substr(p.lastIndexOf('/') + 1)]
       } else {
         return []
       }
@@ -219,8 +227,30 @@ export default {
     ]),
     ...mapMutations('auth', [
     ]),
-    navigate ([selected]) {
-      this.$router.push(`/element/${selected}`)
+    refreshStories (previousResult, { subscriptionData }) {
+      console.log('refreshStories', { previousResult, subscriptionData })
+      const newQueryResult = subscriptionData.data.story
+      const newStories = {
+        story: [
+          ...newQueryResult
+        ]
+      }
+      newStories.story.forEach((s, i) => {
+        s.chapters = [...newQueryResult[i].chapters]
+      })
+      return newStories
+    },
+    navigate ([selected], stories) {
+      const isStory = stories.find(s => s.id === selected)
+      if (isStory) {
+        this.$router.push(`/element/${selected}`)
+      } else {
+        stories.forEach(s => {
+          if (s.chapters.find(c => c.id === selected)) {
+            this.$router.push(`/element/${s.id}/${selected}`)
+          }
+        })
+      }
     },
     episodeIndex (episode, stories) {
       const storyId = episode.story.id

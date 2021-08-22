@@ -1,13 +1,11 @@
-query GetStories {
-  story(order_by: {title: asc}) {
+subscription RefreshStory($id : uuid!) {
+  story_by_pk(id: $id) {
     title
-    id
     chapters(order_by: {number: asc_nulls_last}) {
       id
       title
-      story {
-        id
-      }
+      specs
+      number
     }
   }
 }
