@@ -1,0 +1,8 @@
+mutation UpdatePhaseFeatures($id: uuid = "", $features: jsonb!) {
+  deleteOldMeta: update_story_section_by_pk(pk_columns: {id: $id}, _delete_key: {meta: "features"}) {
+    meta
+  }
+  addNewMeta: update_story_section_by_pk(pk_columns: {id: $id}, _append: {meta: $features}) {
+    meta
+  }
+}

@@ -188,11 +188,11 @@
                           </v-col>
                         </v-row>
 
-                      <!--<v-row>
-                        <features-selector
-                          :phase="phase"
-                        />
-                      </v-row> -->
+                        <v-row>
+                          <features-selector
+                            :phase="phase"
+                          />
+                        </v-row>
                       </v-container>
                     </v-col>
                   </v-row>
@@ -317,7 +317,8 @@ export default {
       const number = after.number ? after.number + 1 : 1
       const variables = {
         episodeId: this.episodeId,
-        number
+        number,
+        meta: JSON.parse(JSON.stringify(after.meta))
       }
       if (duplicate) {
         Object.assign(variables, {

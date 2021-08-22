@@ -36,6 +36,21 @@
 
       <v-tabs-items v-model="tab">
         <v-tab-item class="content-editor-specs">
+          <v-textarea
+            :value="data.story_by_pk.description"
+            label="Free-Flow Description"
+            @input="pushChange({
+              change: {
+                mutation: require('~/graphql/UpdateStoryDescription'),
+                variables: {id: storyId, description: $event}
+              },
+              dispatch: $store.dispatch
+            })"
+            @focus="startEditing('story', 'description')"
+            @blur="stopEditing"
+          />
+
+          <h1>Episodes Breakdown</h1>
           <container
             group-name="story-specs"
             drag-handle-selector=".content-editor-draggable-handle"
@@ -90,8 +105,8 @@
                           background-color="white"
                           label="Enter a title for this episode"
                           :disabled="!!episode.editedBy"
-                          @focus="lock(episode, 'title')"
-                          @blur="unlock(episode, 'title')"
+                          @focus="startEditing(episode, 'title')"
+                          @blur="stopEditing"
                           @input="pushChange({
                             change: {
                               mutation: require('~/graphql/UpdateEpisodeTitle'),
@@ -175,8 +190,8 @@
                           rows="2"
                           label="Enter this episode's specs here"
                           :disabled="!!episode.editedBy"
-                          @focus="lock(episode, 'specs')"
-                          @blur="unlock(episode, 'specs')"
+                          @focus="startEditing(episode, 'specs')"
+                          @blur="stopEditing"
                           @input="pushChange({
                             change: {
                               mutation: require('~/graphql/UpdateEpisodeSpecs'),
@@ -195,13 +210,13 @@
 
                     <v-col class="content-editor-draggable-meta">
                       <v-container>
-                        <!-- <v-row cols="4">
+                        <v-row cols="4">
                           <v-col
                             v-for="character in ['Professor', 'Alicia', 'Nick', 'VZ']"
                             :key="character"
                           >
                             <mood-selector
-                              :phase="episode.phases[0]"
+                              :phase="episode.sections[0]"
                               :npc="character"
                             />
                           </v-col>
@@ -209,9 +224,9 @@
 
                         <v-row>
                           <features-selector
-                            :phase="episode.phases[0]"
+                            :phase="episode.sections[0]"
                           />
-                        </v-row> -->
+                        </v-row>
                       </v-container>
                     </v-col>
                   </v-row>
@@ -249,7 +264,6 @@
 </template>
 
 <script>
-/* eslint-disable */
 import { Container, Draggable } from 'vue-smooth-dnd'
 import { mapActions, mapMutations } from 'vuex'
 
@@ -259,34 +273,58 @@ export default {
     Draggable
   },
   data: () => ({
-    tab: 0
+    tab: 0,
+    noUpdatesFrom: { id: null, field: null }
   }),
   computed: {
     storyId () {
       return this.$route.params.story
-    },
+    }
   },
   methods: {
+    startEditing (element, field) {
+      this.noUpdatesFrom = {
+        id: element ? element.id : null,
+        field
+      }
+      console.log('startEditing', this.noUpdatesFrom)
+    },
+    stopEditing () {
+      this.noUpdatesFrom = null
+    },
     // Handle subscription updates
     refreshStory (previousResult, { subscriptionData }) {
       console.log('refreshStory', { previousResult, subscriptionData })
+      const previous = previousResult.story_by_pk
       const newQueryResult = subscriptionData.data.story_by_pk
-      const newEpisodes = newQueryResult.chapters
+      if (this.noUpdatesFrom) {
+        const { id, field } = this.noUpdatesFrom
+        if (id) {
+          // some episode is being edited
+          const eps = newQueryResult.chapters
+          const ep = eps.find(e => e.id === id)
+          delete ep[field]
+        } else {
+          // story's top level properties are being edited
+          delete newQueryResult[field]
+        }
+      }
       const newStory = {
         story_by_pk: {
-          id: previousResult.story_by_pk.id,
+          id: previous.id,
           ...newQueryResult
         }
       }
-      newStory.story_by_pk.chapters = [...newEpisodes]
+      newStory.story_by_pk.chapters = JSON.parse(JSON.stringify(newQueryResult.chapters))
+      console.log('returning', newStory)
       return newStory
     },
 
     async addEpisode ({ after, duplicate = false }) {
       const number = after.number ? after.number + 1 : 1
-      var variables = {
+      const variables = {
         storyId: this.storyId,
-        number: number
+        number
       }
       if (duplicate) {
         Object.assign(variables, {
@@ -294,29 +332,28 @@ export default {
           description: after.description,
           specs: after.specs
         })
-        // TODO: Duplicate phases as well
       }
       const { data } = await this.$apollo.mutate({
         mutation: require('~/graphql/AddEpisode'),
         variables
       })
-      console.log('mutation AddEpisode returned', data)
-      this.$apollo.mutate({
+      await this.$apollo.mutate({
         mutation: require('~/graphql/AddPhase'),
         variables: {
           episodeId: data.insert_story_chapter_one.id,
-          number: 1
+          number: 1,
+          meta: JSON.parse(JSON.stringify(after.sections[after.sections.length - 1].meta))
         }
       })
     },
-    async deleteEpisode(episode) {
+    async deleteEpisode (episode) {
       if (confirm('Are you sure you want to delete episode ' + episode.number + ', "' + episode.title + '"?')) {
         await this.$apollo.mutate({
           mutation: require('~/graphql/DeleteEpisode'),
           variables: {
             id: episode.id,
             storyId: this.storyId,
-            number: episode.number,
+            number: episode.number
           }
         })
       }
@@ -341,11 +378,11 @@ export default {
             id: payload.episodeId,
             storyId: this.storyId,
             from,
-            to,
+            to
           }
         })
       }
-    },
+    }
   }
 }
 </script>

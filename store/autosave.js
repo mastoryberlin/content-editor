@@ -14,7 +14,7 @@ export const getters = {
       const seconds = state.secondsElapsed
       if (seconds) {
         if (seconds > 3) {
-          return `Saved changes ${seconds}s ago`
+          return 'Saved changes ' + seconds + 's ago'
         } else {
           return 'All changes saved'
         }

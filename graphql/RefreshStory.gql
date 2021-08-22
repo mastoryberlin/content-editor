@@ -1,11 +1,16 @@
 subscription RefreshStory($id : uuid!) {
   story_by_pk(id: $id) {
+    description
     title
     chapters(order_by: {number: asc_nulls_last}) {
       id
       title
       specs
       number
+      sections(order_by: {number: asc_nulls_last}) {
+        id
+        meta
+      }
     }
   }
 }
