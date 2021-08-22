@@ -8,6 +8,7 @@ query GetEpisode($id: uuid!) {
       specs
       number
       title
+      meta
     }
   }
 }

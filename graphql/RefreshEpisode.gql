@@ -8,6 +8,7 @@ subscription RefreshEpisode($id : uuid!) {
       specs
       number
       title
+      meta
     }
   }
 }

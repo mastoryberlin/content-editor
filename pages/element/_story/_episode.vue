@@ -26,21 +26,12 @@
         :update-query="refreshEpisode"
       />
       <v-tabs v-model="tab">
-        <v-tab>
-          Specs
-        </v-tab>
-        <v-tab>
-          Messages
-        </v-tab>
-        <v-tab>
-          Challenge
-        </v-tab>
-        <v-tab>
-          Tests &amp; Feedback
-        </v-tab>
-        <v-tab>
-          Meta
-        </v-tab>
+        <v-tab v-text="'Specs'" />
+        <v-tab v-text="'Message Flow'" />
+        <v-tab v-text="'Chatbot Interaction'" />
+        <v-tab v-text="'Math Challenges'" />
+        <v-tab v-text="'Tests &amp; Feedback'" />
+        <v-tab v-text="'Meta'" />
       </v-tabs>
 
       <v-tabs-items v-model="tab">
@@ -185,19 +176,19 @@
 
                     <v-col class="content-editor-draggable-meta">
                       <v-container>
-                      <!-- <v-row cols="4">
-                        <v-col
-                          v-for="character in ['Professor', 'Alicia', 'Nick', 'VZ']"
-                          :key="character"
-                        >
-                          <mood-selector
-                            :phase="phase"
-                            :npc="character"
-                          />
-                        </v-col>
-                      </v-row>
+                        <v-row cols="4">
+                          <v-col
+                            v-for="character in ['Professor', 'Alicia', 'Nick', 'VZ']"
+                            :key="character"
+                          >
+                            <mood-selector
+                              :phase="phase"
+                              :npc="character"
+                            />
+                          </v-col>
+                        </v-row>
 
-                      <v-row>
+                      <!--<v-row>
                         <features-selector
                           :phase="phase"
                         />
@@ -254,6 +245,10 @@
               />
             </container>
           </template> -->
+        </v-tab-item>
+
+        <v-tab-item class="content-editor-interactions">
+          Episode chatbot interactions for "{{ data.story_chapter_by_pk.title }}"
         </v-tab-item>
 
         <v-tab-item class="content-editor-challenge">
@@ -315,7 +310,7 @@ export default {
           ...newQueryResult
         }
       }
-      newEpisode.story_chapter_by_pk.sections = [...newPhases]
+      newEpisode.story_chapter_by_pk.sections = JSON.parse(JSON.stringify(newPhases))
       return newEpisode
     },
     async addPhase ({ after, duplicate = false }) {
