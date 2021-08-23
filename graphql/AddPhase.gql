@@ -1,0 +1,10 @@
+mutation AddPhase($episodeId: uuid!, $number: Int! = 1, $title: String! = "", $specs: String! = "", $meta: jsonb!) {
+  update_story_section(where: {chapter_id: {_eq: $episodeId}, _and: {number: {_gte: $number}}}, _inc: {number: 1}) {
+    affected_rows
+  }
+
+  insert_story_section_one(object: {chapter_id: $episodeId, number: $number, title: $title, specs: $specs, meta: $meta}) {
+    id
+    number
+  }
+}

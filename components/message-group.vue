@@ -1,0 +1,169 @@
+<template>
+  <draggable>
+    <v-sheet
+      elevation="2"
+      rounded
+      class="mx-4 my-8 pa-3 content-editor-draggable"
+    >
+      <v-container>
+        <v-row cols="12">
+          <v-col v-if="deletable" class="content-editor-draggable-sidebar">
+            <v-icon
+              class="content-editor-draggable-handle"
+            >
+              mdi-drag
+            </v-icon>
+          </v-col>
+
+          <v-col class="content-editor-draggable-content">
+            <div class="content-editor-draggable-header">
+              <v-textarea
+                :value="message.logic"
+                class="content-editor-draggable-logic"
+                filled
+                rounded
+                autofocus
+                single-line
+                full-width
+                rows="1"
+                auto-grow
+                background-color="purple lighten-3"
+                label="Flow control logic"
+                @input="changeMessage({id: message.id, element: 'logic', to: $event})"
+              >
+                <template #append-outer>
+                  <v-tooltip bottom>
+                    <template #activator="{on, attrs}">
+                      <v-hover v-slot="{ hover }">
+                        <v-icon
+                          v-bind="attrs"
+                          class="ml-2"
+                          :color="hover ? 'blue' : 'grey lighten-2'"
+                          v-on="on"
+                          @click="addMessage({after: message, duplicate: true})"
+                        >
+                          mdi-content-duplicate
+                        </v-icon>
+                      </v-hover>
+                    </template>
+                    <span>
+                      Duplicate
+                    </span>
+                  </v-tooltip>
+
+                  <v-tooltip
+                    v-if="deletable"
+                    bottom
+                  >
+                    <template #activator="{on, attrs}">
+                      <v-hover v-slot="{ hover }">
+                        <v-icon
+                          v-bind="attrs"
+                          class="ml-2"
+                          :color="hover ? 'red' : 'grey lighten-2'"
+                          v-on="on"
+                          @click="deleteMessage(message)"
+                        >
+                          mdi-delete
+                        </v-icon>
+                      </v-hover>
+                    </template>
+                    <span>
+                      Delete
+                    </span>
+                  </v-tooltip>
+                </template>
+              </v-textarea>
+            </div>
+
+            <type-selector :message="message" />
+
+            <div
+              v-if="message.type !== 'nestable'"
+              class="content-editor-draggable-message"
+            >
+              <v-textarea
+                :value="message.text"
+                full-width
+                outlined
+                auto-grow
+                rows="2"
+                label="Enter message text"
+                @input="changeMessage({id: message.id, element: 'text', to: $event})"
+              />
+            </div>
+
+            <container
+              v-else
+              group-name="episode-messages"
+              drag-handle-selector=".content-editor-draggable-handle"
+              :get-child-payload="setDragIndex"
+              @drag-start="setDragSource({
+                ...$event,
+                dragSource: message,
+              })"
+              @drop="moveMessage({
+                ...$event,
+                dragTarget: message,
+              })"
+            >
+              <message-group
+                v-for="submessage in message.messages"
+                :key="submessage.id"
+                :message="submessage"
+                :deletable="message.messages.length > 1"
+              />
+            </container>
+          </v-col><!-- content-editor-draggable-content -->
+        </v-row>
+
+        <v-btn
+          fab
+          size="12"
+          color="green"
+          class="content-editor-draggable-add"
+          @click="addMessage({after: message})"
+        >
+          <v-icon color="white">
+            mdi-plus
+          </v-icon>
+        </v-btn>
+      </v-container>
+    </v-sheet>
+  </draggable>
+</template>
+
+<script>
+import { mapMutations } from 'vuex'
+import { Container, Draggable } from 'vue-smooth-dnd'
+
+export default {
+  components: {
+    Container,
+    Draggable
+  },
+  props: {
+    message: {
+      type: Object,
+      required: true
+    },
+    deletable: {
+      type: Boolean,
+      default: true
+    }
+  },
+  methods: {
+    ...mapMutations([
+      'changeMessage',
+      'addMessage',
+      'deleteMessage',
+      'moveMessage',
+      'setDragIndex',
+      'setDragSource'
+    ])
+  }
+}
+</script>
+
+<style lang="css" scoped>
+</style>

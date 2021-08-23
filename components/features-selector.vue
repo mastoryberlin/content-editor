@@ -2,13 +2,15 @@
   <div class="features-selector">
     Available Features:
     <v-chip-group
+      column
       multiple
-      active-class="features-selector-available warning"
     >
       <v-chip
-        v-for="feature in features"
+        v-for="feature in allFeatures"
         :key="feature"
-        :class="active ? null : 'features-selector-unavailable'"
+        class="features-selector-available"
+        :class="availableFeatures.includes(feature) ? color[feature] : 'features-selector-unavailable'"
+        @click="toggle(feature)"
       >
         {{ feature }}
       </v-chip>
@@ -18,18 +20,45 @@
 
 <script>
 export default {
-  data: () => ({
-    features: [
-      'Rover',
-      'AR',
-      'Secret Folder'
-    ],
-    color: {
-      Rover: 'blue',
-      AR: 'amber',
-      'Secret Folder': 'purple'
+  props: {
+    phase: {
+      type: Object,
+      required: true
     }
-  })
+  },
+  data: () => ({
+    color: {
+      CCTV: 'teal',
+      'Secret Folder': 'pink',
+      'Calls From The Future': 'blue lighten-2',
+      Rover: 'indigo'
+    }
+  }),
+  computed: {
+    allFeatures () {
+      return Object.keys(this.color)
+    },
+    availableFeatures () {
+      return this.phase.meta.features
+    }
+  },
+  methods: {
+    toggle (feature) {
+      const f = [...this.availableFeatures]
+      const i = f.indexOf(feature)
+      if (i >= 0) {
+        // Set feature to be unavailable
+        f.splice(i, 1)
+      } else {
+        // Set feature to be available
+        f.push(feature)
+      }
+      this.$apollo.mutate({
+        mutation: require('~/graphql/UpdatePhaseFeatures'),
+        variables: { id: this.phase.id, features: { features: f } }
+      })
+    }
+  }
 }
 </script>
 
@@ -37,6 +66,4 @@ export default {
 .features-selector
   &-unavailable
     text-decoration: line-through
-  &-available
-    text-decoration: none !important
 </style>

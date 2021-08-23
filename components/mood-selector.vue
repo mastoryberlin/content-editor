@@ -54,7 +54,7 @@
         </v-speed-dial>
       </div>
     </template>
-    <span v-text="npc + ' is ' + (available ? mood : 'unavailable')" />
+    <span v-text="npc + ' is ' + (available ? printableMood : 'unavailable')" />
   </v-tooltip>
 </template>
 
@@ -64,12 +64,15 @@ export default {
     npc: {
       type: String,
       required: true
+    },
+    phase: {
+      type: Object,
+      required: true
     }
   },
   data: () => ({
-    available: true,
-    mood: 'happy',
     moods: [
+      'unavailable',
       'disappointed',
       'glad',
       'happy',
@@ -80,7 +83,29 @@ export default {
       'worried'
     ],
     moodSelectorOpen: false
-  })
+  }),
+  computed: {
+    printableMood () {
+      return this.mood.replace('-', ' ')
+    },
+    mood: {
+      get () {
+        const mood = this.phase.meta.mood
+        return mood[this.npc] || 'happy'
+      },
+      set (v) {
+        const mood = this.phase.meta.mood
+        mood[this.npc] = v
+        this.$apollo.mutate({
+          mutation: require('~/graphql/UpdatePhaseMood'),
+          variables: { id: this.phase.id, mood: { mood } }
+        })
+      }
+    },
+    available () {
+      return this.mood !== 'unavailable'
+    }
+  }
 }
 </script>
 

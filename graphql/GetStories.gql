@@ -1,0 +1,13 @@
+query GetStories {
+  story(order_by: {title: asc}) {
+    title
+    id
+    chapters(order_by: {number: asc_nulls_last}) {
+      id
+      title
+      story {
+        id
+      }
+    }
+  }
+}

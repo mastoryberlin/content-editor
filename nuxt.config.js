@@ -48,16 +48,25 @@ export default {
   // Modules: https://go.nuxtjs.dev/config-modules
   modules: [
     // https://go.nuxtjs.dev/axios
-    '@nuxtjs/axios'
+    '@nuxtjs/axios',
+    '@nuxtjs/apollo'
   ],
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
-    host: 'content.mastory.io',
-    port: 80,
-    prefix: '/editor/',
-    https: false,
+    host: process.env.BACKEND === 'local'
+    ? 'localhost'
+    : `${process.env.NODE_ENV === 'development' ? 'dev-proc' : 'proc'}.mastory.io`,
+    port: process.env.BACKEND === 'local' ? 4000 : 443,
+    prefix: '/content/',
+    https: process.env.BACKEND !== 'local',
   },
+
+  apollo: {
+     clientConfigs: {
+       default: '~/apollo.config.js'
+     }
+   },
 
   eslint: {
     fix: true
@@ -84,5 +93,19 @@ export default {
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
+    // babel: {
+    //   presets({isServer}) {
+    //     const targets = isServer ? { node: 'current' } : { ie: 11 }
+    //     return [
+    //       [ require.resolve("@babel/preset-env"), { targets }  ]
+    //     ]
+    //   },
+    //   plugins: [
+    //     ["@babel/plugin-proposal-private-property-in-object", { "loose": true }],
+      //   "@babel/syntax-dynamic-import",
+      //   "@babel/transform-runtime",
+      //   "@babel/transform-async-to-generator"
+    //   ]
+    // },
   }
 }
