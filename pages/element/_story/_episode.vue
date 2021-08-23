@@ -97,7 +97,7 @@
                           :prefix="`#${phaseIndex + 1}: `"
                           background-color="white"
                           label="Enter a title for this phase"
-                          @input="pushChange({
+                          @change="pushChange({
                             change: {
                               mutation: require('~/graphql/UpdatePhaseTitle'),
                               variables: {id: phase.id, title: $event}
@@ -158,7 +158,7 @@
                           auto-grow
                           rows="2"
                           label="Enter the specs for this phase here"
-                          @input="pushChange({
+                          @change="pushChange({
                             change: {
                               mutation: require('~/graphql/UpdatePhaseSpecs'),
                               variables: {id: phase.id, specs: $event}

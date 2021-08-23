@@ -107,7 +107,7 @@
                           :disabled="!!episode.editedBy"
                           @focus="startEditing(episode, 'title')"
                           @blur="stopEditing"
-                          @input="pushChange({
+                          @change="pushChange({
                             change: {
                               mutation: require('~/graphql/UpdateEpisodeTitle'),
                               variables: {id: episode.id, title: $event}
@@ -192,7 +192,7 @@
                           :disabled="!!episode.editedBy"
                           @focus="startEditing(episode, 'specs')"
                           @blur="stopEditing"
-                          @input="pushChange({
+                          @change="pushChange({
                             change: {
                               mutation: require('~/graphql/UpdateEpisodeSpecs'),
                               variables: {id: episode.id, specs: $event}
@@ -296,26 +296,27 @@ export default {
     refreshStory (previousResult, { subscriptionData }) {
       console.log('refreshStory', { previousResult, subscriptionData })
       const previous = previousResult.story_by_pk
-      const newQueryResult = subscriptionData.data.story_by_pk
+      const updated = subscriptionData.data.story_by_pk
       if (this.noUpdatesFrom) {
         const { id, field } = this.noUpdatesFrom
         if (id) {
           // some episode is being edited
-          const eps = newQueryResult.chapters
+          const eps = updated.chapters
           const ep = eps.find(e => e.id === id)
-          delete ep[field]
+          const index = eps.indexOf(ep)
+          eps[index] = JSON.parse(JSON.stringify(previous.chapters[index]))
         } else {
           // story's top level properties are being edited
-          delete newQueryResult[field]
+          delete updated[field]
         }
       }
       const newStory = {
         story_by_pk: {
           id: previous.id,
-          ...newQueryResult
+          ...updated
         }
       }
-      newStory.story_by_pk.chapters = JSON.parse(JSON.stringify(newQueryResult.chapters))
+      newStory.story_by_pk.chapters = JSON.parse(JSON.stringify(updated.chapters))
       console.log('returning', newStory)
       return newStory
     },
