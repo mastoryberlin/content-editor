@@ -10,5 +10,11 @@ query GetEpisode($id: uuid!) {
       title
       meta
     }
+    story {
+      id
+      title
+      edit
+    }
+    edit
   }
 }

@@ -1,0 +1,8 @@
+mutation UpdateEpisodeEditWarnStorySpecsHaveChanged($id: uuid!, $warnStorySpecsHaveChanged: String! = "") {
+  deleteStateField: update_story_chapter_by_pk(pk_columns: {id: $id}, _delete_key: {edit: "warnStorySpecsHaveChanged"}) {
+    edit
+  }
+  addNewStateField: update_story_chapter_by_pk(pk_columns: {id: $id}, _append: {edit: {warnStorySpecsHaveChanged: $warnStorySpecsHaveChanged}}) {
+    edit
+  }
+}

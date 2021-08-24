@@ -36,7 +36,31 @@
 
       <v-tabs-items v-model="tab">
         <v-tab-item class="content-editor-specs">
+          <v-overlay
+            absolute
+            :value="data.story_by_pk.edit.state === 'episodes'"
+          >
+            <p>
+              We are currently editing <strong>individual episodes</strong> of "{{ data.story_by_pk.title }}".
+            </p>
+
+            <p>
+              Click on an episode node in the left navigation pane to edit it.
+            </p>
+
+            <v-btn
+              color="orange"
+              elevation="3"
+              :loading="isReopeningStorySpecs"
+              :disabled="isReopeningStorySpecs"
+              @click="uncommitStorySpecs"
+            >
+              Edit story specs again
+            </v-btn>
+          </v-overlay>
+
           <v-textarea
+            class="my-5"
             :value="data.story_by_pk.description"
             label="Free-Flow Description"
             @input="pushChange({
@@ -246,11 +270,18 @@
               </v-sheet>
             </draggable>
           </container>
+
+          <finish-work-btn
+            v-if="data.story_by_pk.edit.state === 'specs'"
+            label="Mark as finished and enable editing individual episodes"
+            :loading="isCommittingStorySpecs"
+            @click="commitStorySpecs"
+          />
         </v-tab-item>
 
         <v-tab-item class="content-editor-meta">
           <v-text-field
-            label="Title"
+            label="Story Title"
             :value="data.story_by_pk.title"
             @change="$apollo.mutate({
               mutation: require('~/graphql/UpdateStoryTitle'),
@@ -274,7 +305,9 @@ export default {
   },
   data: () => ({
     tab: 0,
-    noUpdatesFrom: { id: null, field: null }
+    noUpdatesFrom: { id: null, field: null },
+    isCommittingStorySpecs: false,
+    isReopeningStorySpecs: false
   }),
   computed: {
     storyId () {
@@ -292,6 +325,7 @@ export default {
     stopEditing () {
       this.noUpdatesFrom = null
     },
+
     // Handle subscription updates
     refreshStory (previousResult, { subscriptionData }) {
       console.log('refreshStory', { previousResult, subscriptionData })
@@ -317,6 +351,7 @@ export default {
         }
       }
       newStory.story_by_pk.chapters = JSON.parse(JSON.stringify(updated.chapters))
+      newStory.story_by_pk.edit.state = updated.edit.state
       console.log('returning', newStory)
       return newStory
     },
@@ -347,8 +382,10 @@ export default {
         }
       })
     },
+
     async deleteEpisode (episode) {
-      if (confirm('Are you sure you want to delete episode ' + episode.number + ', "' + episode.title + '"?')) {
+      const title = episode.title === '' ? '' : ', "' + episode.title + '"'
+      if (confirm('Are you sure you want to delete episode ' + episode.number + title + '?')) {
         await this.$apollo.mutate({
           mutation: require('~/graphql/DeleteEpisode'),
           variables: {
@@ -359,15 +396,7 @@ export default {
         })
       }
     },
-    ...mapMutations('autosave', [
-      'pushChange'
-    ]),
-    ...mapActions([
-      'lock',
-      'unlock'
-    //   'add',
-    //   'edit'
-    ]),
+
     async onDrop ({ removedIndex, addedIndex, payload }) {
       if (removedIndex !== addedIndex) {
         const from = removedIndex + 1
@@ -383,7 +412,40 @@ export default {
           }
         })
       }
-    }
+    },
+
+    async commitStorySpecs () {
+      this.isCommittingStorySpecs = true
+      await this.$apollo.mutate({
+        mutation: require('~/graphql/UpdateStoryEditState'),
+        variables: {
+          id: this.storyId,
+          state: 'episodes'
+        }
+      })
+      this.isCommittingStorySpecs = false
+    },
+
+    async uncommitStorySpecs (currentState) {
+      await this.$apollo.mutate({
+        mutation: require('~/graphql/UpdateStoryEditState'),
+        variables: {
+          id: this.storyId,
+          state: 'specs'
+        }
+      })
+    },
+
+    ...mapMutations('autosave', [
+      'pushChange'
+    ]),
+
+    ...mapActions([
+      'lock',
+      'unlock'
+    //   'add',
+    //   'edit'
+    ])
   }
 }
 </script>

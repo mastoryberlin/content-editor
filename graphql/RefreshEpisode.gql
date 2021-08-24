@@ -10,5 +10,11 @@ subscription RefreshEpisode($id : uuid!) {
       title
       meta
     }
+    story {
+      id
+      title
+      edit
+    }
+    edit
   }
 }
