@@ -1,6 +1,8 @@
 name: REQ)Content-editor
 
-on: workflow_dispatch
+on:
+  push:
+    branches: [ develop ]
 
 jobs:
   build:
@@ -19,4 +21,5 @@ jobs:
             ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
             dokku-host: ${{ secrets.HOSTNAME }}
             app-name: ${{ secrets.DEV_CONTENT_EDITOR_NAME }}
-            git-push-flags: --force
+            remote-branch: develop
+            git-push-flags: --set-upstream --force
