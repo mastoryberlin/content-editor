@@ -1,0 +1,8 @@
+mutation UpdateEpisodeEditState($id: uuid!, $state: String! = "") {
+  deleteStateField: update_story_chapter_by_pk(pk_columns: {id: $id}, _delete_key: {edit: "state"}) {
+    edit
+  }
+  addNewStateField: update_story_chapter_by_pk(pk_columns: {id: $id}, _append: {edit: {state: $state}}) {
+    edit
+  }
+}

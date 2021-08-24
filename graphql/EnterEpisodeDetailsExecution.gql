@@ -1,0 +1,24 @@
+mutation EnterEpisodeDetailsExecution($id: uuid!) {
+  deleteStateField: update_story_chapter_by_pk(pk_columns: {id: $id}, _delete_key: {edit: "state"}) {
+    edit
+  }
+  addStateField: update_story_chapter_by_pk(pk_columns: {id: $id}, _append: {edit: {state: "details"}}) {
+    edit
+  }
+
+  addNarrativeStateField: update_story_chapter_by_pk(pk_columns: {id: $id}, _append: {edit: {narrativeState: null}}) {
+    edit
+  }
+
+  addChatbotStateField: update_story_chapter_by_pk(pk_columns: {id: $id}, _append: {edit: {chatbotState: null}}) {
+    edit
+  }
+
+  addMathStateField: update_story_chapter_by_pk(pk_columns: {id: $id}, _append: {edit: {mathState: null}}) {
+    edit
+  }
+
+  addFeedbackStateField: update_story_chapter_by_pk(pk_columns: {id: $id}, _append: {edit: {feedbackState: null}}) {
+    edit
+  }
+}

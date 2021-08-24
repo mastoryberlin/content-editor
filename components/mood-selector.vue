@@ -112,7 +112,6 @@ export default {
 <style lang="sass" scoped>
 .mood-selector
   position: relative
-  z-index: 10000
   &-image
     &-unavailable
       filter: gray /* IE6-9 */
