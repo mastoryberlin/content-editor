@@ -1,0 +1,5 @@
+mutation AddFirstPhaseForEpisodes($phases: [story_section_insert_input!]!) {
+  insert_story_section(objects: $phases) {
+    affected_rows
+  }
+}

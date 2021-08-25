@@ -1,0 +1,147 @@
+<template lang="html">
+  <div class="">
+    <v-textarea
+      class="ma-5 text-h6"
+      :value="dataObject[field]"
+      :label="labelTextField || 'Free-flow description of the ' + scope + ' specs'"
+      solo
+      rows="1"
+      auto-grow
+      @change="edit"
+      @input="text = $event"
+    />
+
+    <p>
+      Once you are finished writing, I can generate {{ scope === 'story' ? 'an episode' : 'a phase' }} card from each paragraph above.
+    </p>
+
+    <template v-if="text">
+      <p>
+        Please choose a place to insert them:
+        <v-radio-group
+          v-model="appendPrepend"
+          :items="['append', 'prepend']"
+        >
+          <v-radio :label="'Add generated ' + (scope === 'story' ? 'episode' : 'phase') + ' cards to the end of the existing list'" value="append" />
+          <v-radio label="Prepend the existing list with newly generated cards" value="prepend" />
+        </v-radio-group>
+      </p>
+
+      <p class="text-subtitle-2">
+        Your paragraphs will become {{ scope === 'story' ? 'episodes' : 'phases' }} {{ newCardsRange.join('–') }}
+      </p>
+
+      <v-btn @click="generateSpecs">
+        Go!
+      </v-btn>
+    </template>
+  </div>
+</template>
+
+<script>
+import { mapMutations } from 'vuex'
+
+const camelCase = s => s.substr(0, 1).toUpperCase() + s.substr(1)
+
+export default {
+  props: {
+    scope: {
+      type: String,
+      required: true
+    },
+    dataObject: {
+      type: Object,
+      required: true
+    },
+    refId: {
+      type: String,
+      default: null
+    },
+    field: {
+      type: String,
+      required: true
+    },
+    labelTextField: {
+      type: String,
+      default: null
+    }
+  },
+  data: () => ({
+    text: null,
+    appendPrepend: 'append'
+  }),
+  computed: {
+    existingCardsCount () {
+      switch (this.scope) {
+        case 'story': return this.dataObject.chapters.length
+        case 'episode': return this.dataObject.sections.length
+        default: return 0
+      }
+    },
+    paragraphs () {
+      const text = this.text || this.dataObject[this.field]
+      return text.split(/\n+/).filter(s => s && !/^\s+$/.test(s))
+    },
+    newCardsCount () {
+      return this.paragraphs.length
+    },
+    newCardsRange () {
+      const begin = this.appendPrepend === 'append'
+        ? this.existingCardsCount + 1
+        : 1
+      const end = begin + this.newCardsCount - 1
+      return [begin, end]
+    }
+  },
+  methods: {
+    ...mapMutations('autosave', [
+      'pushChange'
+    ]),
+    edit (v) {
+      this.pushChange({
+        change: {
+          mutation: require('~/graphql/Update' + camelCase(this.scope) + camelCase(this.field)),
+          variables: { id: this.refId || this.dataObject.id, [this.field]: v }
+        },
+        dispatch: this.$store.dispatch
+      })
+    },
+    async generateSpecs () {
+      // TODO: Generalize to cover episode specs use case as well
+      const scopeId = this.refId
+      const firstNumber = this.newCardsRange[0]
+      const { data: { insert_story_chapter: { returning } } } = await this.$apollo.mutate({
+        mutation: require('~/graphql/AddEpisodes'),
+        variables: {
+          storyId: scopeId,
+          numberToAdd: this.newCardsCount,
+          insertAtNumber: firstNumber,
+          episodes: this.paragraphs.map((p, i) => ({
+            story_id: scopeId,
+            number: firstNumber + i,
+            title: '',
+            description: '',
+            specs: p
+          }))
+        }
+      })
+      await this.$apollo.mutate({
+        mutation: require('~/graphql/AddFirstPhaseForEpisodes'),
+        variables: {
+          phases: returning.map(episode => ({
+            chapter_id: episode.id,
+            number: 1,
+            title: '',
+            specs: '',
+            meta: { mood: { VZ: 'happy', Nick: 'happy', Alicia: 'unavailable', Professor: 'happy' }, topics: [], features: ['CCTV'], challenges: [] }
+            // TODO: Copy over phase meta, depending on value of appendPrepend
+          }))
+        }
+      })
+    }
+  }
+}
+</script>
+
+<style lang="css" scoped>
+</style>

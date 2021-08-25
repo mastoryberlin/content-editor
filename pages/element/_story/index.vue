@@ -59,22 +59,32 @@
             </v-btn>
           </v-overlay>
 
-          <v-textarea
-            class="my-5"
-            :value="data.story_by_pk.description"
-            label="Free-Flow Description"
-            @input="pushChange({
-              change: {
-                mutation: require('~/graphql/UpdateStoryDescription'),
-                variables: {id: storyId, description: $event}
-              },
-              dispatch: $store.dispatch
-            })"
-            @focus="startEditing('story', 'description')"
-            @blur="stopEditing"
-          />
+          <p>
+            Enter here the story specs for “{{ data.story_by_pk.title }}”
+            by adding a new card for each episode.
+          </p>
 
-          <h1>Episodes Breakdown</h1>
+          <template v-if="showFreeflow">
+            <p>
+              You can also write the specs into this free-flow input field
+              and click one of the options below it to generate episode cards
+              for each paragraph. <a @click.stop.prevent="showFreeflow = false">Hide</a>
+            </p>
+
+            <freeflow-specs-field
+              scope="story"
+              field="description"
+              :data-object="data.story_by_pk"
+              :ref-id="storyId"
+              @generate-specs="generateSpecsFromFreeflow"
+            />
+          </template>
+
+          <p v-else>
+            Click <a @click.stop.prevent="showFreeflow = true">here</a>
+            if you prefer to write the story specs in a free-flow format at first.
+          </p>
+
           <container
             group-name="story-specs"
             drag-handle-selector=".content-editor-draggable-handle"
@@ -307,7 +317,8 @@ export default {
     tab: 0,
     noUpdatesFrom: { id: null, field: null },
     isCommittingStorySpecs: false,
-    isReopeningStorySpecs: false
+    isReopeningStorySpecs: false,
+    showFreeflow: false
   }),
   computed: {
     storyId () {
@@ -315,6 +326,9 @@ export default {
     }
   },
   methods: {
+    generateSpecsFromFreeflow (text) {
+      console.log(text)
+    },
     startEditing (element, field) {
       this.noUpdatesFrom = {
         id: element ? element.id : null,
