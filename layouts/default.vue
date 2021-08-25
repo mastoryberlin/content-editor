@@ -213,6 +213,10 @@ export default {
       showPassword: false,
       items: [
         {
+          title: 'Report an issue or make a suggestion for content editor',
+          action: this.gotoIssuesPage
+        },
+        {
           title: 'Log out',
           action: this.logout
         }
@@ -317,6 +321,9 @@ export default {
     },
     logout () {
       this.requestLogout()
+    },
+    gotoIssuesPage () {
+      window.open('https://github.com/mastoryberlin/content-editor/issues', '_blank')
     },
     selectedStory (stories) {
       return stories.find(s => s.id === this.storyIdFromRoute)
