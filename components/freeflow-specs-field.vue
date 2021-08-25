@@ -45,8 +45,6 @@
 <script>
 import { mapMutations } from 'vuex'
 
-const camelCase = s => s.substr(0, 1).toUpperCase() + s.substr(1)
-
 export default {
   props: {
     scope: {
@@ -111,7 +109,7 @@ export default {
     edit (v) {
       this.pushChange({
         change: {
-          mutation: require('~/graphql/Update' + camelCase(this.scope) + camelCase(this.field)),
+          mutation: require('~/graphql/Update' + this.scope.toCamelCase() + this.field.toCamelCase()),
           variables: { id: this.refId || this.dataObject.id, [this.field]: v }
         },
         dispatch: this.$store.dispatch
