@@ -1,5 +1,9 @@
 <template lang="html">
   <div class="">
+    <p>
+      Write the {{ scope }} specs as you wish, then organize them into paragraphs to reflect the division into {{ subscope }}s
+    </p>
+
     <v-textarea
       class="ma-5 text-h6"
       :value="dataObject[field]"
@@ -11,11 +15,11 @@
       @input="text = $event"
     />
 
-    <p>
-      Once you are finished writing, I can generate {{ scope === 'story' ? 'an episode' : 'a phase' }} card from each paragraph above.
-    </p>
+    <template v-if="newCardsCount > 0">
+      <p>
+        Once you are finished writing, I can generate {{ scope === 'story' ? 'an episode' : 'a phase' }} card from each paragraph above.
+      </p>
 
-    <template v-if="text">
       <p>
         Please choose a place to insert them:
         <v-radio-group
@@ -28,11 +32,11 @@
       </p>
 
       <p class="text-subtitle-2">
-        Your paragraphs will become {{ scope === 'story' ? 'episodes' : 'phases' }} {{ newCardsRange.join('–') }}
+        Your paragraphs will become {{ subscope }}s {{ newCardsDisplayRange }}
       </p>
 
       <v-btn @click="generateSpecs">
-        Go!
+        Generate {{ subscope }}s
       </v-btn>
     </template>
   </div>
@@ -71,6 +75,9 @@ export default {
     appendPrepend: 'append'
   }),
   computed: {
+    subscope () {
+      return this.scope === 'story' ? 'episode' : 'phase'
+    },
     existingCardsCount () {
       switch (this.scope) {
         case 'story': return this.dataObject.chapters.length
@@ -91,6 +98,10 @@ export default {
         : 1
       const end = begin + this.newCardsCount - 1
       return [begin, end]
+    },
+    newCardsDisplayRange () {
+      const rg = this.newCardsRange
+      if (rg[0] >= rg[1]) { return rg[0] } else { return this.newCardsRange.join(' through ') }
     }
   },
   methods: {
@@ -125,6 +136,14 @@ export default {
           }))
         }
       })
+      let meta
+      if (this.appendPrepend === 'append') {
+        const lastEpisode = this.dataObject.chapters[firstNumber - 2]
+        const lastPhase = lastEpisode.sections[lastEpisode.sections.length - 1]
+        meta = JSON.parse(JSON.stringify(lastPhase.meta))
+      } else {
+        meta = { mood: { VZ: 'happy', Nick: 'happy', Alicia: 'happy', Professor: 'happy' }, topics: [], features: [], challenges: [] }
+      }
       await this.$apollo.mutate({
         mutation: require('~/graphql/AddFirstPhaseForEpisodes'),
         variables: {
@@ -133,8 +152,7 @@ export default {
             number: 1,
             title: '',
             specs: '',
-            meta: { mood: { VZ: 'happy', Nick: 'happy', Alicia: 'unavailable', Professor: 'happy' }, topics: [], features: ['CCTV'], challenges: [] }
-            // TODO: Copy over phase meta, depending on value of appendPrepend
+            meta
           }))
         }
       })
