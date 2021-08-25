@@ -320,6 +320,9 @@ export default {
     isReopeningStorySpecs: false,
     showFreeflow: false
   }),
+  head: {
+    title: 'Story View'
+  },
   computed: {
     storyId () {
       return this.$route.params.story

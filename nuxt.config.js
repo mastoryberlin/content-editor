@@ -6,8 +6,8 @@ export default {
 
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
-    titleTemplate: '%s - content-editor',
-    title: 'content-editor',
+    titleTemplate: '%s - Mastory Content Editor',
+    title: 'Story Selection',
     htmlAttrs: {
       lang: 'en'
     },
