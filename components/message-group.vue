@@ -80,9 +80,48 @@
             <type-selector :message="message" />
 
             <div
-              v-if="message.type == 'text'"
+
+              v-if="message.type == 'image'"
+
               class="content-editor-draggable-message"
             >
+              <template>
+                <v-file-input
+                label="File input"
+                filled
+                prepend-icon="mdi-camera"
+                ></v-file-input>
+              </template>
+
+            <div
+              v-else-if="message.type == 'video'"
+              class="content-editor-draggable-message"
+            >
+              <template>
+                <v-file-input
+                label="File input"
+                filled
+                prepend-icon="mdi-youtube"
+                ></v-file-input>
+              </template>
+
+            <div
+              v-else-if="message.type == 'audio'"
+              class="content-editor-draggable-message"
+            >
+              <template>
+                <v-file-input
+                label="File input"
+                filled
+                prepend-icon="mdi-microphone"
+                ></v-file-input>
+              </template>
+
+            <div
+              v-else-if="message.type == 'text'"
+              class="content-editor-draggable-message"
+            >
+
               <v-textarea
                 :value="message.text"
                 full-width
