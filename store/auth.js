@@ -1,5 +1,5 @@
 export const state = () => ({
-  loggedIn: false,
+  loggedIn: true,
   isRequestingLogin: false,
   invalidCredentials: false,
   user: {
