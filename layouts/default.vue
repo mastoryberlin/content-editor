@@ -205,13 +205,15 @@
 import { mapState, mapGetters, mapMutations, mapActions } from 'vuex'
 
 export default {
+  middleware: 'auth',
   data () {
     return {
       drawer: false,
-      userName: '',
-      password: 'TOP SECRET',
-      showPassword: false,
       items: [
+        {
+          title: 'Edit my profile',
+          action: this.editProfile
+        },
         {
           title: 'Report an issue or make a suggestion for content editor',
           action: this.gotoIssuesPage
@@ -242,7 +244,7 @@ export default {
     ...mapGetters('autosave', [
       'statusText'
     ]),
-    ...mapGetters('auth', [
+    ...mapGetters('user', [
       'initials'
     ]),
     idFromRoute () {
@@ -321,6 +323,9 @@ export default {
     },
     logout () {
       this.requestLogout()
+    },
+    editProfile () {
+      this.$router.push('/profile')
     },
     gotoIssuesPage () {
       window.open('https://github.com/mastoryberlin/content-editor/issues', '_blank')

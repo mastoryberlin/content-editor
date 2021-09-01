@@ -59,7 +59,7 @@ export default {
     ? 'localhost'
     : `${process.env.NODE_ENV === 'development' ? 'dev-proc' : 'proc'}.mastory.io`,
     port: process.env.BACKEND === 'local' ? 4000 : 443,
-    prefix: '/content/',
+    prefix: '/content-editor/',
     https: process.env.BACKEND !== 'local',
   },
 
