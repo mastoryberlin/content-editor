@@ -281,10 +281,7 @@
 <script>
 import { mapMutations } from 'vuex'
 import { Container, Draggable } from 'vue-smooth-dnd'
-import LazyYoutube from 'vue-lazytube'
 import Vue from 'vue'
-
-Vue.component('LazyYoutube', LazyYoutube)
 
 export default {
   components: {
