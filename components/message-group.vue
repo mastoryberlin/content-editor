@@ -80,59 +80,6 @@
             <type-selector :message="message" />
 
             <div
-
-              v-if="message.type == 'image'"
-
-              class="content-editor-draggable-message"
-            >
-              <template>
-                <v-file-input
-                label="File input"
-                filled
-                prepend-icon="mdi-camera"
-                ></v-file-input>
-              </template>
-
-            <div
-              v-else-if="message.type == 'video'"
-              class="content-editor-draggable-message"
-            >
-              <template>
-                <v-file-input
-                label="File input"
-                filled
-                prepend-icon="mdi-youtube"
-                ></v-file-input>
-              </template>
-
-            <div
-              v-else-if="message.type == 'audio'"
-              class="content-editor-draggable-message"
-            >
-              <template>
-                <v-file-input
-                label="File input"
-                filled
-                prepend-icon="mdi-microphone"
-                ></v-file-input>
-              </template>
-
-            <div
-              v-else-if="message.type == 'text'"
-              class="content-editor-draggable-message"
-            >
-
-              <v-textarea
-                :value="message.text"
-                full-width
-                auto-grow
-                rows="2"
-                label="Enter message text"
-                @input="changeMessage({id: message.id, element: 'text', to: $event})"
-              />
-            </div>
-
-            <div
               v-if="message.type == 'audio'"
               class="content-editor-draggable-message"
             >
@@ -141,7 +88,10 @@
                 placeholder="Upload your documents"
                 label="File input"
                 multiple
+                show-size
+                accept="audio/mp3"
                 prepend-icon="mdi-microphone"
+                @change="onChange"
               />
               <v-textarea
                 :value="message.audio"
@@ -151,13 +101,30 @@
                 label="Enter URL"
                 @input="changeMessage({id: message.id, element: 'audio', to: $event})"
               />
-              <audio controls>
-                <source :src="message.audio">
+              <div
+                v-if="url"
+              >
+                <audio controls>
+                  <source
+                    :src="url"
+                  >
+                </audio>
+              </div>
+              <div
+                v-else
+              >
+                <audio
+                  controls
+                >
+                  <source :src="message.audio">
+                  />
+                </audio>
+              </div>
+
               </audio>
               </v-textarea>
               </v-file-input>
             </div>
-
             <div
               v-else-if="message.type == 'video'"
               class="content-editor-draggable-message"
@@ -167,8 +134,10 @@
                 placeholder="Upload your documents"
                 label="File input"
                 multiple
+                show-size
                 prepend-icon="mdi-youtube"
                 accept="video/mp4, video/mov"
+                @change="onChange"
               >
                 <template #selection="{ text }">
                   <v-chip
@@ -188,11 +157,38 @@
                 label="Enter URL"
                 @input="changeMessage({id: message.id, element: 'video', to: $event})"
               />
-              <video
-                controls
-                :src="message.video"
-                type="video/mp4"
-              /></video>
+              <div
+                v-if="url"
+              >
+                <video
+                  controls
+                  :src="url"
+                  type="video/mp4"
+                />
+              </div>
+              <div
+                v-else
+              >
+                <video
+                  controls
+                  :src="message.video"
+                  type="video/mp4"
+                />
+              </div>
+            </div>
+
+            <div
+              v-else-if="message.type == 'text'"
+              class="content-editor-draggable-message"
+            >
+              <v-textarea
+                :value="message.text"
+                full-width
+                auto-grow
+                rows="2"
+                label="Enter message"
+                @input="changeMessage({id: message.id, element: 'text', to: $event})"
+              />
             </div>
 
             <div
@@ -200,11 +196,15 @@
               class="content-editor-draggable-message"
             >
               <v-file-input
+                v-model="files"
+                multiple
+                show-size
+                counter
                 type="file"
                 label="File input"
                 prepend-icon="mdi-camera"
                 accept="image/png, image/jpeg, image/bmp, image/gif"
-                @change="onFileSelected"
+                @change="onChange"
               />
               <v-textarea
                 :value="message.text"
@@ -214,10 +214,8 @@
                 label="Enter URL"
                 @input="changeMessage({id: message.id, element: 'text', to: $event})"
               />
-
-              <v-img
-                :src="message.text"
-              />
+              <v-img :src="message.text" />
+              <v-img v-if="url" :src="url" />
             </div>
 
             <container
@@ -241,10 +239,12 @@
                 :deletable="message.messages.length > 1"
               />
             </container>
+            </div>
           </v-col><!-- content-editor-draggable-content -->
         </v-row>
+
         <div v-if="message.type !== 'text'">
-          <div v-if="selectedFile !== null">
+          <div v-if="url !== null">
             <v-btn
               :loading="loading5"
               :disabled="loading5"
@@ -305,12 +305,11 @@ export default {
   data () {
     return {
       loader: null,
-      loading: false,
-      loading2: false,
-      loading3: false,
-      loading4: false,
       loading5: false,
-      selectedFile: null
+      selectedFile: null,
+      url: null,
+      files: null,
+      File
     }
   },
   watch: {
@@ -324,15 +323,17 @@ export default {
     }
   },
   methods: {
-    onFileSelected (event) {
+    onChange (event) {
       console.log(event)
-      this.selectedFile = event
+      this.File = event[0]
+      this.url = URL.createObjectURL(event[0])
     },
     onUpload () {
       this.loader = 'loading5'
+      // --------------------------------------------------------------------------
       const fd = new FormData()
-      fd.append('image', this.selectedFile, this.selectedFile.name)
-      this.$axios.get('https://proc.mastory.io/version')
+      fd.append('image', this.File, this.File.name)
+      this.$axios.post('https://dev-proc.mastory.io/upload', fd)
         .then((res) => {
           console.log(res)
         })
