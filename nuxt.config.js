@@ -6,8 +6,8 @@ export default {
 
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
-    titleTemplate: '%s - content-editor',
-    title: 'content-editor',
+    titleTemplate: '%s - Mastory Content Editor',
+    title: 'Story Selection',
     htmlAttrs: {
       lang: 'en'
     },
@@ -32,6 +32,7 @@ export default {
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
   plugins: [
     '~/plugins/readstat.js',
+    '~/plugins/extensions.js',
   ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components
@@ -48,7 +49,8 @@ export default {
   // Modules: https://go.nuxtjs.dev/config-modules
   modules: [
     // https://go.nuxtjs.dev/axios
-    '@nuxtjs/axios'
+    '@nuxtjs/axios',
+    '@nuxtjs/apollo'
   ],
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
@@ -57,9 +59,15 @@ export default {
     ? 'localhost'
     : `${process.env.NODE_ENV === 'development' ? 'dev-proc' : 'proc'}.mastory.io`,
     port: process.env.BACKEND === 'local' ? 4000 : 443,
-    prefix: '/content/',
+    prefix: '/content-editor/',
     https: process.env.BACKEND !== 'local',
   },
+
+  apollo: {
+     clientConfigs: {
+       default: '~/apollo.config.js'
+     }
+   },
 
   eslint: {
     fix: true
@@ -86,5 +94,19 @@ export default {
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
+    // babel: {
+    //   presets({isServer}) {
+    //     const targets = isServer ? { node: 'current' } : { ie: 11 }
+    //     return [
+    //       [ require.resolve("@babel/preset-env"), { targets }  ]
+    //     ]
+    //   },
+    //   plugins: [
+    //     ["@babel/plugin-proposal-private-property-in-object", { "loose": true }],
+      //   "@babel/syntax-dynamic-import",
+      //   "@babel/transform-runtime",
+      //   "@babel/transform-async-to-generator"
+    //   ]
+    // },
   }
 }

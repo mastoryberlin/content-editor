@@ -1,0 +1,5 @@
+mutation UpdateStoryTitle($id: uuid!, $title: String) {
+  update_story_by_pk(pk_columns: {id: $id}, _set: {title: $title}) {
+    title
+  }
+}

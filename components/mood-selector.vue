@@ -90,11 +90,16 @@ export default {
     },
     mood: {
       get () {
-        const moods = this.phase.moods
-        return moods ? moods[this.npc] : 'happy'
+        const mood = this.phase.meta.mood
+        return mood[this.npc] || 'happy'
       },
       set (v) {
-        this.$store.commit('changeMood', { phaseId: this.phase.id, npc: this.npc, to: v })
+        const mood = this.phase.meta.mood
+        mood[this.npc] = v
+        this.$apollo.mutate({
+          mutation: require('~/graphql/UpdatePhaseMood'),
+          variables: { id: this.phase.id, mood: { mood } }
+        })
       }
     },
     available () {
@@ -107,7 +112,6 @@ export default {
 <style lang="sass" scoped>
 .mood-selector
   position: relative
-  z-index: 10000
   &-image
     &-unavailable
       filter: gray /* IE6-9 */

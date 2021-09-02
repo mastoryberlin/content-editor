@@ -1,0 +1,20 @@
+query GetEpisode($id: uuid!) {
+  story_chapter_by_pk(id: $id) {
+    number
+    title
+    specs
+    sections(order_by: {number: asc_nulls_last}) {
+      id
+      specs
+      number
+      title
+      meta
+    }
+    story {
+      id
+      title
+      edit
+    }
+    edit
+  }
+}

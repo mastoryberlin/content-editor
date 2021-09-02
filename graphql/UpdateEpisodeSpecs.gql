@@ -1,0 +1,12 @@
+mutation UpdateEpisodeSpecs($id: uuid!, $specs: String = "") {
+  update_story_chapter_by_pk(pk_columns: {id: $id}, _set: {specs: $specs}) {
+    specs
+  }
+
+  deleteKeyFromEdit: update_story_chapter(where: {id: {_eq: $id}, _and: {edit: {_has_key: "state"}}}, _delete_key: {edit: "warnStorySpecsHaveChanged"}) {
+    affected_rows
+	}
+  addKeyToEdit: update_story_chapter(where: {id: {_eq: $id}, _and: {edit: {_has_key: "state"}}}, _append: {edit: {warnStorySpecsHaveChanged: true}}) {
+    affected_rows
+  }
+}

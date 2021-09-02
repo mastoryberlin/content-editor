@@ -14,12 +14,13 @@ jobs:
 
       - id: deploy
         name: Deploy APP to dokku
-        uses: idoberko2/dokku-deploy-github-action@v1 
+        uses: idoberko2/dokku-deploy-github-action@v1
         with:
             ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
             dokku-host: ${{ secrets.HOSTNAME }}
-            app-name: ${{ secrets.PROD_CONTENT_EDITOR_NAME }}
-            
+            app-name: ${{ secrets.DEV_CONTENT_EDITOR_NAME }}
+            git-push-flags: --force
+
       - name: Letsencrypt set ENV
         uses: appleboy/ssh-action@master
         with:
@@ -28,8 +29,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            config:set --no-restart ${{ secrets.PROD_CONTENT_EDITOR_NAME }} DOKKU_LETSENCRYPT_EMAIL=${{ secrets.DOKKU_LETSENCRYPT_EMAIL }}
-            
+            config:set --no-restart ${{ secrets.DEV_CONTENT_EDITOR_NAME }} DOKKU_LETSENCRYPT_EMAIL=${{ secrets.DOKKU_LETSENCRYPT_EMAIL }}
+
       - name: Letsencrypt set config
         uses: appleboy/ssh-action@master
         with:
@@ -38,4 +39,4 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            letsencrypt:enable ${{ secrets.PROD_CONTENT_EDITOR_NAME }}
+            letsencrypt:enable ${{ secrets.DEV_CONTENT_EDITOR_NAME }}

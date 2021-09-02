@@ -6,11 +6,11 @@
       multiple
     >
       <v-chip
-        v-for="feature in Object.keys(color)"
+        v-for="feature in allFeatures"
         :key="feature"
         class="features-selector-available"
-        :class="available(feature) ? color[feature] : 'features-selector-unavailable'"
-        @click="changeFeatures({ phaseId: phase.id, feature: feature, to: !available(feature)})"
+        :class="availableFeatures.includes(feature) ? color[feature] : 'features-selector-unavailable'"
+        @click="toggle(feature)"
       >
         {{ feature }}
       </v-chip>
@@ -19,8 +19,6 @@
 </template>
 
 <script>
-import { mapMutations } from 'vuex'
-
 export default {
   props: {
     phase: {
@@ -37,17 +35,28 @@ export default {
     }
   }),
   computed: {
-    // availableFeatures () {
-    //   return this.$store.getters.featuresInPhase(this.phase.id)
-    // }
+    allFeatures () {
+      return Object.keys(this.color)
+    },
+    availableFeatures () {
+      return this.phase.meta.features
+    }
   },
   methods: {
-    ...mapMutations([
-      'changeFeatures'
-    ]),
-    available (feature) {
-      const f = [...this.$store.getters.featuresInPhase(this.phase.id)]
-      return f.includes(feature)
+    toggle (feature) {
+      const f = [...this.availableFeatures]
+      const i = f.indexOf(feature)
+      if (i >= 0) {
+        // Set feature to be unavailable
+        f.splice(i, 1)
+      } else {
+        // Set feature to be available
+        f.push(feature)
+      }
+      this.$apollo.mutate({
+        mutation: require('~/graphql/UpdatePhaseFeatures'),
+        variables: { id: this.phase.id, features: { features: f } }
+      })
     }
   }
 }

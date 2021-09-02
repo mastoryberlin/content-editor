@@ -1,0 +1,13 @@
+mutation DeleteEpisode($id: uuid!, $number: Int!, $storyId: uuid!) {
+  delete_story_section(where: {chapter_id: {_eq: $id}}) {
+    affected_rows
+  }
+
+  delete_story_chapter_by_pk(id: $id) {
+    id
+  }
+
+  update_story_chapter(where: {story_id: {_eq: $storyId}, _and: {number: {_gt: $number}}}, _inc: {number: -1}) {
+    affected_rows
+  }
+}

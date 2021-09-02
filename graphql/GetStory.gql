@@ -1,0 +1,17 @@
+query GetStory($id: uuid!) {
+  story_by_pk(id: $id) {
+    edit
+    description
+    title
+    chapters(order_by: {number: asc_nulls_last}) {
+      id
+      title
+      specs
+      number
+      sections(order_by: {number: asc_nulls_last}) {
+        id
+        meta
+      }
+    }
+  }
+}

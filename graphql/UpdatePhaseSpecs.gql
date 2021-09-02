@@ -1,0 +1,5 @@
+mutation UpdatePhaseSpecs($id: uuid!, $specs: String = "") {
+  update_story_section_by_pk(pk_columns: {id: $id}, _set: {specs: $specs}) {
+    specs
+  }
+}

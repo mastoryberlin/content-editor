@@ -1,0 +1,15 @@
+subscription RefreshStories {
+  story(order_by: {title: asc}) {
+    id
+    title
+    chapters(order_by: {number: asc_nulls_last}) {
+      id
+      title
+      edit
+      story {
+        id
+      }
+    }
+    edit
+  }
+}
