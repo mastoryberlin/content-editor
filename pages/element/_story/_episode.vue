@@ -291,6 +291,11 @@ export default {
     tab: 0,
     isCommittingEpisodeSpecs: false
   }),
+  head () {
+    return {
+      title: 'Episode View' // TODO: Move apollo query into component to make it accessible from here and change title to sth like "Episode 1"
+    }
+  },
   computed: {
     storyId () {
       return this.$route.params.story

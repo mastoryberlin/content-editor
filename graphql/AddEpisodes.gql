@@ -1,0 +1,11 @@
+mutation AddEpisodes($storyId: uuid!, $numberToAdd: Int!, $insertAtNumber: Int = 1, $episodes: [story_chapter_insert_input!]!) {
+  update_story_chapter(where: {story_id: {_eq: $storyId}, _and: {number: {_gte: $insertAtNumber}}}, _inc: {number: $numberToAdd}) {
+    affected_rows
+  }
+
+  insert_story_chapter(objects: $episodes) {
+    returning {
+      id
+    }
+  }
+}
