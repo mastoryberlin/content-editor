@@ -283,9 +283,11 @@
 
           <finish-work-btn
             v-if="data.story_by_pk.edit.state === 'specs'"
-            label="Mark as finished and enable editing individual episodes"
+            :label="privileges.includes('CommitStorySpecs') ?
+              'Mark as finished and enable editing individual episodes' :
+              'Mark as finished and request approvement'"
             :loading="isCommittingStorySpecs"
-            @click="commitStorySpecs"
+            :@click="privileges.includes('CommitStorySpecs') ? commitStorySpecs : issuePullRequest"
           />
         </v-tab-item>
 
@@ -326,6 +328,10 @@ export default {
   computed: {
     storyId () {
       return this.$route.params.story
+    },
+    privileges () {
+      const priv = this.$store.state.user.privileges
+      return priv ? priv[this.storyId] : []
     }
   },
   methods: {
@@ -441,6 +447,10 @@ export default {
         }
       })
       this.isCommittingStorySpecs = false
+    },
+
+    issuePullRequest () {
+      console.log('PULL REQUEST')
     },
 
     async uncommitStorySpecs (currentState) {

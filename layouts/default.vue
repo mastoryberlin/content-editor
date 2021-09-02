@@ -1,7 +1,6 @@
 <template>
   <v-app>
     <apollo-query
-      v-if="loggedIn"
       v-slot="{ result: { loading, error, data } }"
       :query="require('~/graphql/GetStories')"
     >
@@ -70,13 +69,13 @@
                 <v-avatar
                   :key="'avatar' + i"
                   class="content-editor-global-state-indicator"
-                  :color="isGlobalState(state, data.story) ? globalState.color[i] : '#dddddd'"
+                  :color="data && isGlobalState(state, data.story) ? globalState.color[i] : '#dddddd'"
                   v-bind="attrs"
                   v-on="on"
                 >
                   <v-icon
                     :key="'icon' + i"
-                    :color="isGlobalState(state, data.story) ? 'black' : null"
+                    :color="data && isGlobalState(state, data.story) ? 'black' : null"
                   >
                     mdi-{{
                       globalState.icons[i]
@@ -138,66 +137,6 @@
         <span>&copy; {{ new Date().getFullYear() }} Mastory</span>
       </v-footer>
     </apollo-query>
-
-    <template
-      v-else
-    >
-      <v-alert
-        v-if="invalidCredentials"
-        type="error"
-        dismissible
-        class="mt-8 login-failed-message"
-        transition="scale-transition"
-      >
-        Unknown credentials. Please try again
-      </v-alert>
-
-      <v-sheet
-        class="login-sheet"
-        elevation="5"
-      >
-        <v-form
-          @submit.prevent="login"
-        >
-          <h2>Log in</h2>
-          <v-text-field
-            v-model="userName"
-            label="Your user name"
-            :disabled="isRequestingLogin"
-          />
-          <v-text-field
-            v-model="password"
-            :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
-            :type="showPassword ? 'text' : 'password'"
-            :disabled="isRequestingLogin"
-            label="Your password"
-            @click:append="showPassword = !showPassword"
-          />
-          <div class="text-center">
-            <v-btn
-              :loading="isRequestingLogin"
-              :disabled="userName === '' || password === ''"
-              type="submit"
-            >
-              Log in!
-              <template #loader>
-                <v-progress-circular
-                  :width="3"
-                  :size="25"
-                  indeterminate
-                  color="primary"
-                />
-              </template>
-              <style scoped>
-                .v-progress-circular {
-                margin: 1rem;
-                }
-              </style>
-            </v-btn>
-          </div>
-        </v-form>
-      </v-sheet>
-    </template>
   </v-app>
 </template>
 
@@ -323,6 +262,7 @@ export default {
     },
     logout () {
       this.requestLogout()
+      this.$router.replace('/login?r=' + encodeURIComponent(this.$route.path))
     },
     editProfile () {
       this.$router.push('/profile')

@@ -1,5 +1,6 @@
 export const state = () => ({
-  profile: null
+  profile: null,
+  privileges: {}
 })
 
 export const getters = {
@@ -22,6 +23,9 @@ export const mutations = {
   setProfile: (state, profile) => {
     state.profile = { ...profile }
   },
+  setPrivileges: (state, privileges) => {
+    state.privileges = {...privileges}
+  },
   eraseProfile: (state) => {
     state.profile = null
   }
@@ -34,6 +38,12 @@ export const actions = {
       const profile = { ...response }
       delete profile.success
       commit('setProfile', profile)
+    }
+  },
+  async queryPrivileges ({ commit }) {
+    const response = await this.$axios.$get('user-privileges')
+    if (response.success) {
+      commit('setPrivileges', response.privileges)
     }
   },
   async updateProfile ({ commit }, newData) {

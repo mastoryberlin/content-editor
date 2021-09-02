@@ -37,6 +37,7 @@ export const actions = {
       this.$axios.setToken(response.token, 'Bearer')
       commit('login', response.token)
       commit('user/setProfile', response.user, { root: true })
+      commit('user/setPrivileges', response.privileges, { root: true })
     } else {
       this.$apolloHelpers.onLogout()
       this.$axios.setToken(false)

@@ -4,24 +4,27 @@
     <v-alert v-if="!profile" type="error">
       There was a problem retrieving your profile. Please try to log out and log in again.
     </v-alert>
-    <v-form v-else>
+    <v-form v-else @submit="save">
       <v-text-field
         label="Name"
-        :value="profile.name"
+        :value="name"
       />
       <v-text-field
         label="Email address"
-        :value="profile.email"
+        :value="email"
       />
       <v-text-field
         label="GitHub user name"
-        :value="profile.gitName"
+        :value="gitName"
       />
       <v-text-field
         label="The email address used in GitHub"
-        :value="profile.gitEmail"
+        :value="gitEmail"
       />
-      <template v-if="showChangePasswordSection">
+      <v-btn type="submit">
+        Save changes
+      </v-btn>
+      <!-- <template v-if="showChangePasswordSection">
         <v-text-field
           label="Old password"
         />
@@ -35,7 +38,7 @@
       </template>
       <v-btn v-else @click="showChangePasswordSection = true">
         Change Password
-      </v-btn>
+      </v-btn> -->
     </v-form>
   </div>
 </template>
@@ -43,6 +46,22 @@
 <script>
 import { mapState } from 'vuex'
 export default {
+  asyncData ({ store }) {
+    let name, email, gitName, gitEmail
+    const p = store.state.user.profile
+    if (p) {
+      name = p.name
+      email = p.email
+      gitName = p.gitName
+      gitEmail = p.gitEmail
+    } else {
+      name = ''
+      email = ''
+      gitName = ''
+      gitEmail = ''
+    }
+    return { name, email, gitName, gitEmail }
+  },
   data: () => ({
     showChangePasswordSection: false
   }),
@@ -50,6 +69,11 @@ export default {
     ...mapState('user', [
       'profile'
     ])
+  },
+  methods: {
+    save () {
+      console.log('New profile data: ', this.name, this.email, this.gitName, this.gitEmail)
+    }
   }
 }
 </script>
