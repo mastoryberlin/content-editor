@@ -195,36 +195,36 @@
             detail="narrative"
             @goto-episode-specs="activateSpecsTab"
           >
-          <!-- <template v-for="(phase, phaseIndex) in episodeInfo.phases">
-            <div
-              :key="phase.id + '-fixed'"
-              class="my-7 pa-4 content-editor-specs-fixed"
-            >
-              <h2>#{{ phaseIndex + 1 }}: {{ phase.title }}</h2>
-              <p>{{ phase.specs }}</p>
-            </div>
-            <container
-              :key="phase.id + '-messages'"
-              group-name="episode-messages"
-              drag-handle-selector=".content-editor-draggable-handle"
-              :get-child-payload="setDragIndex"
-              @drag-start="setDragSource({
-                ...$event,
-                dragSource: phase
-              })"
-              @drop="moveMessage({
-                ...$event,
-                dragTarget: phase
-              })"
-            >
-              <message-group
-                v-for="message in phase.messages"
-                :key="message.id"
-                :message="message"
-                :deletable="phase.messages.length > 1"
-              />
-            </container>
-          </template> -->
+            <template v-for="(phase, phaseIndex) in episodeInfo.phases">
+              <div
+                :key="phase.id + '-fixed'"
+                class="my-7 pa-4 content-editor-specs-fixed"
+              >
+                <h2>#{{ phaseIndex + 1 }}: {{ phase.title }}</h2>
+                <p>{{ phase.specs }}</p>
+              </div>
+              <container
+                :key="phase.id + '-messages'"
+                group-name="episode-messages"
+                drag-handle-selector=".content-editor-draggable-handle"
+                :get-child-payload="setDragIndex"
+                @drag-start="setDragSource({
+                  ...$event,
+                  dragSource: phase
+                })"
+                @drop="moveMessage({
+                  ...$event,
+                  dragTarget: phase
+                })"
+              >
+                <message-group
+                  v-for="message in phase.messages"
+                  :key="message.id"
+                  :message="message"
+                  :deletable="phase.messages.length > 1"
+                />
+              </container>
+            </template>
           </episode-tab>
         </v-tab-item>
 
