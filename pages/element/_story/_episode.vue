@@ -195,7 +195,7 @@
             detail="narrative"
             @goto-episode-specs="activateSpecsTab"
           >
-            <template v-for="(phase, phaseIndex) in episodeInfo.phases">
+            <template v-for="(phase, phaseIndex) in data.story_chapter_by_pk.sections">
               <div
                 :key="phase.id + '-fixed'"
                 class="my-7 pa-4 content-editor-specs-fixed"
@@ -218,10 +218,10 @@
                 })"
               >
                 <message-group
-                  v-for="message in phase.messages"
+                  v-for="message in phase.prompts"
                   :key="message.id"
                   :message="message"
-                  :deletable="phase.messages.length > 1"
+                  :deletable="phase.prompts.length > 1"
                 />
               </container>
             </template>
@@ -308,7 +308,7 @@ export default {
     refreshEpisode (previousResult, { subscriptionData }) {
       console.log('refreshEpisode', { previousResult, subscriptionData })
       const newQueryResult = subscriptionData.data.story_chapter_by_pk
-      const newPhases = newQueryResult.sections
+      const newsections = newQueryResult.sections
       const newEpisode = {
         story_chapter_by_pk: {
           id: previousResult.story_chapter_by_pk.id,
@@ -316,7 +316,7 @@ export default {
         }
       }
       newEpisode.story_chapter_by_pk.story.edit.state = newQueryResult.story.edit.state
-      newEpisode.story_chapter_by_pk.sections = JSON.parse(JSON.stringify(newPhases))
+      newEpisode.story_chapter_by_pk.sections = JSON.parse(JSON.stringify(newsections))
       return newEpisode
     },
     updateEpisodeEditStateToSpecsIfNull (editField) {

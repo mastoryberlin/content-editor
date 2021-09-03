@@ -30,7 +30,7 @@
                 auto-grow
                 background-color="purple lighten-3"
                 label="Flow control logic"
-                @input="changeMessage({id: message.id, element: 'logic', to: $event})"
+                @input="changeMessageText({id: message.id, element: 'logic', to: $event})"
               >
                 <template #append-outer>
                   <v-tooltip bottom>
@@ -99,7 +99,7 @@
                 auto-grow
                 rows="2"
                 label="Enter URL"
-                @input="changeMessage({id: message.id, element: 'audio', to: $event})"
+                @input="changeMessageText({id: message.id, element: 'audio', to: $event})"
               />
               <div
                 v-if="url"
@@ -155,7 +155,7 @@
                 auto-grow
                 rows="2"
                 label="Enter URL"
-                @input="changeMessage({id: message.id, element: 'video', to: $event})"
+                @input="changeMessageText({id: message.id, element: 'video', to: $event})"
               />
               <div
                 v-if="url"
@@ -187,7 +187,7 @@
                 auto-grow
                 rows="2"
                 label="Enter message"
-                @input="changeMessage({id: message.id, element: 'text', to: $event})"
+                @change="changeMessageText({id: message.id, element: 'text', to: $event})"
               />
             </div>
 
@@ -212,7 +212,7 @@
                 auto-grow
                 rows="2"
                 label="Enter URL"
-                @input="changeMessage({id: message.id, element: 'text', to: $event})"
+                @input="changeMessageText({id: message.id, element: 'text', to: $event})"
               />
               <v-img :src="message.text" />
               <v-img v-if="url" :src="url" />
@@ -281,7 +281,6 @@
 <script>
 import { mapMutations } from 'vuex'
 import { Container, Draggable } from 'vue-smooth-dnd'
-import Vue from 'vue'
 
 export default {
   components: {
@@ -335,8 +334,16 @@ export default {
           console.log(res)
         })
     },
+    changeMessageText () {
+      this.$apollo.mutate({
+        mutation: require('~/graphql/UpdateMessageText'),
+        variables: {
+          id: this.message.id,
+          text: this.message.text
+        }
+      })
+    },
     ...mapMutations([
-      'changeMessage',
       'addMessage',
       'deleteMessage',
       'moveMessage',

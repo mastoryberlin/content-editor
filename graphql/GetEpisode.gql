@@ -9,6 +9,16 @@ query GetEpisode($id: uuid!) {
       number
       title
       meta
+      prompts(order_by: {number: asc}, where: {parent: {_is_null: true}}) {
+        id
+        attachment
+        logic
+        sender_id
+        text
+        type
+        parent
+        number
+      }
     }
     story {
       id
