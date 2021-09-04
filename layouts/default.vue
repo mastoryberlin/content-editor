@@ -96,35 +96,33 @@
 
         <v-spacer />
 
-        <template>
-          <div class="text-center">
-            <v-menu offset-y>
-              <template #activator="{ on, attrs }">
-                <v-avatar
-                  color="indigo"
-                  size="48"
-                  class="mx-3"
-                  v-bind="attrs"
-                  v-on="on"
-                >
-                  <span
-                    class="white--text text-h6"
-                    v-text="loggedIn ? initials : '?'"
-                  />
-                </v-avatar>
-              </template>
-              <v-list>
-                <v-list-item
-                  v-for="(item, index) in items"
-                  :key="index"
-                  @click="item.action"
-                >
-                  <v-list-item-title>{{ item.title }}</v-list-item-title>
-                </v-list-item>
-              </v-list>
-            </v-menu>
-          </div>
-        </template>
+        <div class="text-center">
+          <v-menu offset-y>
+            <template #activator="{ on, attrs }">
+              <v-avatar
+                color="indigo"
+                size="48"
+                class="mx-3"
+                v-bind="attrs"
+                v-on="on"
+              >
+                <span
+                  class="white--text text-h6"
+                  v-text="loggedIn ? initials : '?'"
+                />
+              </v-avatar>
+            </template>
+            <v-list>
+              <v-list-item
+                v-for="(item, index) in items"
+                :key="index"
+                @click="item.action"
+              >
+                <v-list-item-title>{{ item.title }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
+        </div>
       </v-app-bar>
       <v-main>
         <v-container>
@@ -331,13 +329,6 @@ export default {
   &-interactions
     &-npc
       display: inline
-.login
-  &-sheet
-    max-width: 400px
-    margin: auto auto
-    padding: 2em
-  &-failed-message
-    position: fixed
 .v-overlay__content
   text-align: center
   & > p
