@@ -283,11 +283,12 @@
 
           <finish-work-btn
             v-if="data.story_by_pk.edit.state === 'specs'"
-            :label="privileges.includes('CommitStorySpecs') ?
-              'Mark as finished and enable editing individual episodes' :
-              'Mark as finished and request approvement'"
+            :privileges="privileges"
+            privilege-needed-to-commit="CommitStorySpecs"
+            finish-work="to enable editing individual episodes"
             :loading="isCommittingStorySpecs"
-            :@click="privileges.includes('CommitStorySpecs') ? commitStorySpecs : issuePullRequest"
+            @commit="commitStorySpecs"
+            @request-approvement="issuePullRequest"
           />
         </v-tab-item>
 
