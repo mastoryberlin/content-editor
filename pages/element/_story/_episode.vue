@@ -225,6 +225,7 @@
                   :key="message.id"
                   :message="message"
                   :deletable="phase.prompts.length > 1"
+                  :course-name="data.story_chapter_by_pk.story.id"
                 />
               </container>
             </template>

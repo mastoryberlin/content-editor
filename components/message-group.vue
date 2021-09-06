@@ -95,7 +95,7 @@
                 auto-grow
                 rows="2"
                 label="Enter URL"
-                @input="changeMessageText({id: message.id, element: 'attachment', to: $event})"
+                @input="changeMessage({element: 'attachment', to: $event})"
               />
               <audio controls>
                 <source :src="message.audio">
@@ -132,7 +132,7 @@
                 auto-grow
                 rows="2"
                 label="Enter URL"
-                @input="changeMessageText({id: message.id, element: 'attachment', to: $event})"
+                @input="changeMessage({element: 'attachment', to: $event})"
               />
               <video
                 controls
@@ -158,7 +158,7 @@
                 auto-grow
                 rows="2"
                 label="Enter URL"
-                @input="changeMessageText({id: message.id, element: 'attachment', to: $event})"
+                @input="changeMessage({element: 'attachment', to: $event})"
               />
 
               <v-img
@@ -176,7 +176,7 @@
                 auto-grow
                 rows="2"
                 label="Enter URL"
-                @input="changeMessageText({id: message.id, element: 'text', to: $event})"
+                @input="changeMessage({element: 'text', to: $event})"
               />
             </div>
 
@@ -217,6 +217,14 @@
               mdi-cloud-upload
             </v-icon>
           </v-btn>
+          <v-alert
+            v-if="uploadFailedAlert"
+            v-model="uploadFailedAlert.show"
+            type="error"
+            dismissible
+          >
+            There was a problem uploading the file: {{ uploadFailedAlert.errorMessage }}
+          </v-alert>
         </div>
 
         <v-btn
@@ -254,6 +262,10 @@ export default {
     deletable: {
       type: Boolean,
       default: true
+    },
+    courseName: {
+      type: String,
+      required: true
     }
   },
   data () {
@@ -264,7 +276,8 @@ export default {
       loading3: false,
       loading4: false,
       loading5: false,
-      selectedFile: null
+      selectedFile: null,
+      uploadFailedAlert: null
     }
   },
   watch: {
@@ -282,14 +295,32 @@ export default {
       console.log(event)
       this.selectedFile = event
     },
-    onUpload () {
+    async onUpload () {
       this.loader = 'loading5'
       const fd = new FormData()
       fd.append('image', this.selectedFile, this.selectedFile.name)
-      this.$axios.get('https://proc.mastory.io/version')
-        .then((res) => {
-          console.log(res)
-        })
+      try {
+        const result = await this.$axios.$post('upload', fd, { params: { c: this.courseName } })
+        if (result.success) {
+          await this.$apollo.mutate({
+            mutation: require('~/graphql/UpdateMessageAttachment'),
+            variables: {
+              id: this.message.id,
+              attachment: result.url
+            }
+          })
+        } else {
+          this.uploadFailedAlert = {
+            show: true,
+            errorMessage: result.msg
+          }
+        }
+      } catch (ex) {
+        this.uploadFailedAlert = {
+          show: true,
+          errorMessage: JSON.stringify(ex)
+        }
+      }
     },
     ...mapMutations([
       'addMessage',
@@ -298,13 +329,14 @@ export default {
       'setDragIndex',
       'setDragSource'
     ]),
-    changeMessageText () {
+    changeMessage ({ element, to }) {
+      const variables = {
+        id: this.message.id
+      }
+      variables[element] = to
       this.$apollo.mutate({
-        mutation: require('~/graphql/UpdateMessageText'),
-        variables: {
-          id: this.message.id,
-          text: this.message.text
-        }
+        mutation: require('~/graphql/UpdateMessage' + element.toCamelCase()),
+        variables
       })
     }
   }
