@@ -1,0 +1,5 @@
+mutation UpdateMessageText($id: uuid!, $attachment: String= "") {
+  update_prompt_by_pk(pk_columns: {id: $id}, _set: {attachment: $attachment}) {
+    attachment
+  }
+}
