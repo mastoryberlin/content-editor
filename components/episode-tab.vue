@@ -17,7 +17,7 @@
     </v-overlay>
 
     <v-overlay
-      v-if="detail"
+      v-if="detail && story.edit.state !== 'specs'"
       absolute
       :value="episode.edit.state !== 'details'"
     >

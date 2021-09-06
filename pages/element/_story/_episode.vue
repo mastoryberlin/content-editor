@@ -181,9 +181,12 @@
 
               <finish-work-btn
                 v-if="data.story_chapter_by_pk.edit.state === 'specs'"
-                label="Mark as finished and enable editing execution details"
+                :privileges="privileges"
+                privilege-needed-to-commit="CommitEpisodeSpecs"
+                finish-work="to enable editing execution details"
                 :loading="isCommittingEpisodeSpecs"
-                @click="commitEpisodeSpecs"
+                @commit="commitEpisodeSpecs"
+                @request-approvement="issuePullRequestForEpisodeSpecs"
               />
             </container>
           </episode-tab>
@@ -302,6 +305,10 @@ export default {
     },
     episodeId () {
       return this.$route.params.episode
+    },
+    privileges () {
+      const priv = this.$store.state.user.privileges
+      return priv ? priv[this.storyId] : []
     }
   },
   methods: {
@@ -386,13 +393,18 @@ export default {
         dispatch: this.$store.dispatch
       })
     },
-    commitEpisodeSpecs () {
-      this.$apollo.mutate({
+    async commitEpisodeSpecs () {
+      this.isCommittingEpisodeSpecs = true
+      await this.$apollo.mutate({
         mutation: require('~/graphql/EnterEpisodeDetailsExecution'),
         variables: {
           id: this.episodeId
         }
       })
+      this.isCommittingEpisodeSpecs = false
+    },
+    issuePullRequestForEpisodeSpecs () {
+      console.log('PULL REQUEST')
     },
     closeStorySpecsHaveChangedWarning () {
       this.$apollo.mutate({

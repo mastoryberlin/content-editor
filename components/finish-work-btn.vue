@@ -5,7 +5,7 @@
       elevation="7"
       :loading="loading"
       :disabled="loading"
-      @click="onClick"
+      @click="$emit('click', $event)"
     >
       <v-icon color="green">
         mdi-check-bold
@@ -36,10 +36,7 @@ export default {
       default: ''
     }
   },
-  emits: [
-    'commit',
-    'request-approvement'
-  ],
+  emits: ['click'],
   data: () => ({
     label: 'Mark work as finished'
   }),
@@ -53,15 +50,6 @@ export default {
       this.label += ' ' + this.finishWork
     } else {
       this.label += ' and request approval'
-    }
-  },
-  methods: {
-    onClick () {
-      if (this.privileges.includes(this.privilegeNeededToCommit)) {
-        this.$emit('commit')
-      } else {
-        this.$emit('request-approvement')
-      }
     }
   }
 }

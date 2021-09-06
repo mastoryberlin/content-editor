@@ -281,15 +281,46 @@
             </draggable>
           </container>
 
-          <finish-work-btn
-            v-if="data.story_by_pk.edit.state === 'specs'"
-            :privileges="privileges"
-            privilege-needed-to-commit="CommitStorySpecs"
-            finish-work="to enable editing individual episodes"
-            :loading="isCommittingStorySpecs"
-            @commit="commitStorySpecs"
-            @request-approvement="issuePullRequest"
-          />
+          <v-dialog
+            v-model="showCommitMessageDialog"
+            max-width="500px"
+          >
+            <template #activator="{on, attrs}">
+              <finish-work-btn
+                v-if="data.story_by_pk.edit.state === 'specs'"
+                :privileges="privileges"
+                privilege-needed-to-commit="CommitStorySpecs"
+                finish-work="to enable editing individual episodes"
+                :loading="isCommittingStorySpecs"
+                v-bind="attrs"
+                v-on="on"
+              />
+            </template>
+            <v-card>
+              <v-card-title class="text-h5">
+                Commit your work
+              </v-card-title>
+              <v-card-text>
+                <v-form @submit.prevent="commitStorySpecs">
+                  Please enter some words that describe the changes you have made.
+                  <v-text-field
+                    v-model="commitMessage"
+                    autofocus
+                  />
+                </v-form>
+              </v-card-text>
+              <v-card-actions>
+                <v-spacer />
+                <v-btn type="submit" color="green">
+                  OK
+                </v-btn>
+                <v-btn @click="showCommitMessageDialog = false">
+                  Cancel
+                </v-btn>
+                <v-spacer />
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
         </v-tab-item>
 
         <v-tab-item class="content-editor-meta">
@@ -321,7 +352,9 @@ export default {
     noUpdatesFrom: { id: null, field: null },
     isCommittingStorySpecs: false,
     isReopeningStorySpecs: false,
-    showFreeflow: false
+    showFreeflow: false,
+    showCommitMessageDialog: false,
+    commitMessage: ''
   }),
   head: {
     title: 'Story View'
@@ -439,19 +472,23 @@ export default {
     },
 
     async commitStorySpecs () {
+      this.showCommitMessageDialog = false
       this.isCommittingStorySpecs = true
+      const mayCommit = this.privileges.includes('CommitStorySpecs')
+      await this.$axios.post('commit/story-specs', {
+        storyId: this.storyId,
+        commitMessage: this.commitMessage,
+        pullRequest: !mayCommit
+      })
       await this.$apollo.mutate({
         mutation: require('~/graphql/UpdateStoryEditState'),
         variables: {
           id: this.storyId,
-          state: 'episodes'
+          state: mayCommit ? 'episodes' : 'specs-pr'
         }
       })
+      this.commitMessage = ''
       this.isCommittingStorySpecs = false
-    },
-
-    issuePullRequest () {
-      console.log('PULL REQUEST')
     },
 
     async uncommitStorySpecs (currentState) {
