@@ -1,0 +1,10 @@
+mutation AddMessage($phaseId: uuid!, $number: Int! = 1, $logic: String! = "", $type: String! = "text", $text: String! = "", $attachment: String = null, $parent: uuid = null) {
+  update_prompt(where: {section_id: {_eq: $phaseId}, _and: {number: {_gte: $number}}}, _inc: {number: 1}) {
+    affected_rows
+  }
+
+  insert_prompt_one(object: {section_id: $phaseId, number: $number, logic: $logic, type: $type, text: $text, attachment: $attachment, parent: $parent}) {
+    id
+    number
+  }
+}

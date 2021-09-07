@@ -4,6 +4,7 @@
       elevation="2"
       rounded
       class="mx-4 my-8 pa-3 content-editor-draggable"
+      :class="'content-editor-draggable-' + message.type + '-message-bg'"
     >
       <v-container>
         <v-row cols="12">
@@ -29,7 +30,7 @@
                 auto-grow
                 background-color="purple lighten-3"
                 label="Flow control logic"
-                @input="changeMessageText({id: message.id, element: 'logic', to: $event})"
+                @change="changeMessage({element: 'logic', to: $event})"
               >
                 <template #append-outer>
                   <v-tooltip bottom>
@@ -83,25 +84,23 @@
               class="content-editor-draggable-message"
             >
               <v-file-input
-                v-model="files"
-                placeholder="Upload your documents"
+                v-model="file"
+                placeholder="Upload audio file"
                 label="File input"
-                multiple
                 prepend-icon="mdi-microphone"
+                accept="audio/x-mpeg"
               />
               <v-textarea
-                :value="message.audio"
+                :value="message.attachment"
                 full-width
                 auto-grow
                 rows="2"
                 label="Enter URL"
-                @input="changeMessage({element: 'attachment', to: $event})"
+                @change="changeMessage({element: 'attachment', to: $event})"
               />
               <audio controls>
-                <source :src="message.audio">
+                <source :src="message.attachment">
               </audio>
-              </v-textarea>
-              </v-file-input>
             </div>
 
             <div
@@ -109,34 +108,23 @@
               class="content-editor-draggable-message"
             >
               <v-file-input
-                v-model="files"
-                placeholder="Upload your documents"
+                v-model="file"
+                placeholder="Upload video file"
                 label="File input"
-                multiple
                 prepend-icon="mdi-youtube"
-                accept="video/mp4, video/mov"
-              >
-                <template #selection="{ text }">
-                  <v-chip
-                    small
-                    label
-                    color="primary"
-                  >
-                    {{ text }}
-                  </v-chip>
-                </template>
-              </v-file-input>
+                accept="video/mp4"
+              />
               <v-textarea
-                :value="message.video"
+                :value="message.attachment"
                 full-width
                 auto-grow
                 rows="2"
                 label="Enter URL"
-                @input="changeMessage({element: 'attachment', to: $event})"
+                @change="changeMessage({element: 'attachment', to: $event})"
               />
               <video
                 controls
-                :src="message.video"
+                :src="message.attachment"
                 type="video/mp4"
               /></video>
             </div>
@@ -148,21 +136,20 @@
               <v-file-input
                 type="file"
                 label="File input"
-                prepend-icon="mdi-camera"
-                accept="image/png, image/jpeg, image/bmp, image/gif"
-                @change="onFileSelected"
+                prepend-icon="mdi-message-image"
+                accept="image/png, image/jpeg, image/gif"
               />
               <v-textarea
-                :value="message.text"
+                :value="message.attachment"
                 full-width
                 auto-grow
                 rows="2"
                 label="Enter URL"
-                @input="changeMessage({element: 'attachment', to: $event})"
+                @change="changeMessage({element: 'attachment', to: $event})"
               />
 
               <v-img
-                :src="message.text"
+                :src="message.attachment"
               />
             </div>
 
@@ -175,8 +162,8 @@
                 full-width
                 auto-grow
                 rows="2"
-                label="Enter URL"
-                @input="changeMessage({element: 'text', to: $event})"
+                label="Message text"
+                @change="changeMessage({element: 'text', to: $event})"
               />
             </div>
 
@@ -204,10 +191,10 @@
           </v-col><!-- content-editor-draggable-content -->
         </v-row>
 
-        <div v-if="message.type !== 'text' && selectedFile !== null">
+        <div v-if="message.type !== 'text' && file !== null">
           <v-btn
-            :loading="loading5"
-            :disabled="loading5"
+            :loading="loading"
+            :disabled="loading"
             color="blue-grey"
             class="ma-2 white--text"
             fab
@@ -270,13 +257,8 @@ export default {
   },
   data () {
     return {
-      loader: null,
       loading: false,
-      loading2: false,
-      loading3: false,
-      loading4: false,
-      loading5: false,
-      selectedFile: null,
+      file: null,
       uploadFailedAlert: null
     }
   },
@@ -291,14 +273,10 @@ export default {
     }
   },
   methods: {
-    onFileSelected (event) {
-      console.log(event)
-      this.selectedFile = event
-    },
     async onUpload () {
-      this.loader = 'loading5'
+      this.loading = true
       const fd = new FormData()
-      fd.append('image', this.selectedFile, this.selectedFile.name)
+      fd.append('image', this.file, this.file.name)
       try {
         const result = await this.$axios.$post('upload', fd, { params: { c: this.courseName } })
         if (result.success) {
@@ -323,19 +301,31 @@ export default {
       }
     },
     ...mapMutations([
-      'addMessage',
       'deleteMessage',
       'moveMessage',
       'setDragIndex',
       'setDragSource'
     ]),
-    changeMessage ({ element, to }) {
+    async changeMessage ({ element, to }) {
       const variables = {
         id: this.message.id
       }
       variables[element] = to
-      this.$apollo.mutate({
+      await this.$apollo.mutate({
         mutation: require('~/graphql/UpdateMessage' + element.toCamelCase()),
+        variables
+      })
+    },
+    async addMessage ({ after, duplicate = false }) {
+      let variables = {}
+      if (duplicate) {
+        variables = { ...after }
+        delete variables.id
+      }
+      variables.phaseId = after.section_id
+      variables.number = after.number + 1
+      await this.$apollo.mutate({
+        mutation: require('~/graphql/AddMessage'),
         variables
       })
     }

@@ -1,34 +1,22 @@
 <template lang="html">
   <div class="type-selector-wrapper">
-    <v-tooltip
-      class="type-selector-dial"
+    <span>Message type:&nbsp;</span>
+    <v-btn-toggle
+      :value="Object.keys(types).indexOf(type)"
+      @change="type = Object.keys(types)[$event]"
     >
-      <template #activator="{on, attrs}">
-        <v-btn-toggle
-          :value="Object.keys(types).indexOf(type)"
-          v-bind="attrs"
-          @change="type = Object.keys(types)[$event]"
-          v-on="on"
-        >
-          <!-- class="type-selector-type" -->
-          <v-btn
-            v-for="t in Object.keys(types)"
-            :key="t"
-            class="type-selector-option"
-          >
-            <v-icon :color="types[t].color">
-              {{ types[t].icon }}
-            </v-icon>
-            <span v-show="type === t" v-text="types[t].tooltip" />
-          </v-btn>
-        </v-btn-toggle>
-      </template>
-      <span
-        v-if="type"
-        class="type-selector-dial"
-        v-text="types[type].tooltip"
-      />
-    </v-tooltip>
+      <!-- class="type-selector-type" -->
+      <v-btn
+        v-for="t in Object.keys(types)"
+        :key="t"
+        class="type-selector-option"
+      >
+        <v-icon :color="types[t].color">
+          {{ types[t].icon }}
+        </v-icon>
+        <span v-show="type === t" v-text="types[t].tooltip" />
+      </v-btn>
+    </v-btn-toggle>
   </div>
 </template>
 

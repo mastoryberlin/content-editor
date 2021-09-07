@@ -160,6 +160,12 @@
                               :phase="phase"
                             />
                           </v-row>
+
+                          <v-row>
+                            <topics-selector
+                              :phase="phase"
+                            />
+                          </v-row>
                         </v-container>
                       </v-col>
                     </v-row>
@@ -192,45 +198,74 @@
           </episode-tab>
         </v-tab-item>
 
+        <!-- ========================================================================== -->
+
         <v-tab-item class="content-editor-messages">
-          <episode-tab
-            :episode="data.story_chapter_by_pk"
-            detail="narrative"
-            @goto-episode-specs="activateSpecsTab"
+          <apollo-query
+            v-slot="gem"
+            :query="require('~/graphql/GetEpisodeMessages')"
+            :variables="{id: episodeId}"
           >
-            <template v-for="(phase, phaseIndex) in data.story_chapter_by_pk.sections">
-              <div
-                :key="phase.id + '-fixed'"
-                class="my-7 pa-4 content-editor-specs-fixed"
-              >
-                <h2>#{{ phaseIndex + 1 }}: {{ phase.title }}</h2>
-                <p>{{ phase.specs }}</p>
-              </div>
-              <!-- :get-child-payload="setDragIndex" -->
-              <container
-                :key="phase.id + '-messages'"
-                group-name="episode-messages"
-                drag-handle-selector=".content-editor-draggable-handle"
-                @drag-start="setDragSource({
-                  ...$event,
-                  dragSource: phase
-                })"
-                @drop="moveMessage({
-                  ...$event,
-                  dragTarget: phase
-                })"
-              >
-                <message-group
-                  v-for="message in phase.prompts"
-                  :key="message.id"
-                  :message="message"
-                  :deletable="phase.prompts.length > 1"
-                  :course-name="data.story_chapter_by_pk.story.id"
-                />
-              </container>
-            </template>
-          </episode-tab>
+            <div v-if="gem.result.loading">
+              <v-skeleton-loader
+                v-for="n in 5"
+                :key="n"
+                type="list-item"
+              />
+            </div>
+
+            <div v-else-if="gem.result.error">
+              An error occurred!
+            </div>
+
+            <episode-tab
+              v-else-if="gem.result.data"
+              detail="narrative"
+              :episode="data.story_chapter_by_pk"
+              :narrative-data="gem.result.data.story_chapter_by_pk"
+              @goto-episode-specs="activateSpecsTab"
+            >
+              <!-- <apollo-subscribe-to-more
+          :document="require('~/graphql/RefreshEpisodeMessages')"
+          :variables="{id: episodeId}"
+          :update-query="refreshEpisodeMessages"
+          /> -->
+              <template v-for="(phase, phaseIndex) in data.story_chapter_by_pk.sections">
+                <div
+                  :key="phase.id + '-fixed'"
+                  class="my-7 pa-4 content-editor-specs-fixed"
+                >
+                  <h2>#{{ phaseIndex + 1 }}: {{ phase.title }}</h2>
+                  <p>{{ phase.specs }}</p>
+                </div>
+                <!-- :get-child-payload="setDragIndex" -->
+                <container
+                  :key="phase.id + '-messages'"
+                  group-name="episode-messages"
+                  drag-handle-selector=".content-editor-draggable-handle"
+                  @drag-start="setDragSource({
+                    ...$event,
+                    dragSource: phase
+                  })"
+                  @drop="moveMessage({
+                    ...$event,
+                    dragTarget: phase
+                  })"
+                >
+                  <message-group
+                    v-for="message in gem.result.data.story_chapter_by_pk.sections[phaseIndex].prompts"
+                    :key="message.id"
+                    :message="message"
+                    :deletable="gem.result.data.story_chapter_by_pk.sections[phaseIndex].prompts.length > 1"
+                    :course-name="data.story_chapter_by_pk.story.id"
+                  />
+                </container>
+              </template>
+            </episode-tab>
+          </apollo-query>
         </v-tab-item>
+
+        <!-- ========================================================================== -->
 
         <v-tab-item class="content-editor-interactions">
           <episode-tab
@@ -242,6 +277,8 @@
           </episode-tab>
         </v-tab-item>
 
+        <!-- ========================================================================== -->
+
         <v-tab-item class="content-editor-challenge">
           <episode-tab
             :episode="data.story_chapter_by_pk"
@@ -252,6 +289,8 @@
           </episode-tab>
         </v-tab-item>
 
+        <!-- ========================================================================== -->
+
         <v-tab-item class="content-editor-feedback">
           <episode-tab
             :episode="data.story_chapter_by_pk"
@@ -261,6 +300,8 @@
             Episode test &amp; feedback for "{{ data.story_chapter_by_pk.title }}"
           </episode-tab>
         </v-tab-item>
+
+        <!-- ========================================================================== -->
 
         <v-tab-item class="content-editor-meta">
           <v-text-field
@@ -297,7 +338,7 @@ export default {
   }),
   head () {
     return {
-      title: 'Episode View' // TODO: Move apollo query into component to make it accessible from here and change title to sth like "Episode 1"
+      title: 'Episode View' // TODO: One day, move apollo query into <script> to make it accessible from here and change title to sth like "Episode 1"
     }
   },
   computed: {
@@ -314,18 +355,20 @@ export default {
   },
   methods: {
     refreshEpisode (previousResult, { subscriptionData }) {
-      console.log('refreshEpisode', { previousResult, subscriptionData })
-      const newQueryResult = subscriptionData.data.story_chapter_by_pk
-      const newPhases = newQueryResult.sections
-      const newEpisode = {
-        story_chapter_by_pk: {
-          id: previousResult.story_chapter_by_pk.id,
-          ...newQueryResult
+      if (previousResult) {
+        console.log('refreshEpisode', { previousResult, subscriptionData })
+        const newQueryResult = subscriptionData.data.story_chapter_by_pk
+        const newPhases = newQueryResult.sections
+        const newEpisode = {
+          story_chapter_by_pk: {
+            id: previousResult.story_chapter_by_pk.id,
+            ...newQueryResult
+          }
         }
+        newEpisode.story_chapter_by_pk.story.edit.state = newQueryResult.story.edit.state
+        newEpisode.story_chapter_by_pk.sections = JSON.parse(JSON.stringify(newPhases))
+        return newEpisode
       }
-      newEpisode.story_chapter_by_pk.story.edit.state = newQueryResult.story.edit.state
-      newEpisode.story_chapter_by_pk.sections = JSON.parse(JSON.stringify(newPhases))
-      return newEpisode
     },
     updateEpisodeEditStateToSpecsIfNull (editField) {
       if (!('state' in editField)) {

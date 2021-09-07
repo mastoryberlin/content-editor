@@ -319,6 +319,21 @@ export default {
       right: 24px
     &-logic
       font-style: italic
+    &-text-message
+      &-bg
+        background-color: #e6e6ff !important
+    &-image-message
+      &-bg
+        background-color: #fff5e1 !important
+    &-audio-message
+      &-bg
+        background-color: #efffef !important
+    &-video-message
+      &-bg
+        background-color: #fee !important
+    &-nestable-message
+      &-bg
+        background-color: #fff0ff !important
   &-specs
     &-fixed
       background: orange

@@ -9,6 +9,7 @@ query GetEpisode($id: uuid!) {
       number
       title
       meta
+      topic_whitelist
       prompts(order_by: {number: asc}, where: {parent: {_is_null: true}}) {
         id
         attachment
