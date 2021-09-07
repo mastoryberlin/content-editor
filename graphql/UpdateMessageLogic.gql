@@ -1,4 +1,4 @@
-mutation UpdateMessageText($id: uuid!, $logic: String= "") {
+mutation UpdateMessageText($id: uuid!, $logic: String = "") {
   update_prompt_by_pk(pk_columns: {id: $id}, _set: {logic: $logic}) {
     logic
   }

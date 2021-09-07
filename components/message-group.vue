@@ -134,7 +134,7 @@
               class="content-editor-draggable-message"
             >
               <v-file-input
-                type="file"
+                v-model="file"
                 label="File input"
                 prepend-icon="mdi-message-image"
                 accept="image/png, image/jpeg, image/gif"
@@ -279,6 +279,7 @@ export default {
       fd.append('image', this.file, this.file.name)
       try {
         const result = await this.$axios.$post('upload', fd, { params: { c: this.courseName } })
+        this.loading = false
         if (result.success) {
           await this.$apollo.mutate({
             mutation: require('~/graphql/UpdateMessageAttachment'),
@@ -316,7 +317,7 @@ export default {
         variables
       })
     },
-    async addMessage ({ after, duplicate = false }) {
+    async addMessage ({ after, duplicate }) {
       let variables = {}
       if (duplicate) {
         variables = { ...after }
