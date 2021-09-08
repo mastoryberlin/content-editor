@@ -11,6 +11,7 @@
           <h2>Log in</h2>
           <v-text-field
             v-model="userName"
+            autofocus
             label="Your user name"
             :disabled="isRequestingLogin"
             @input="startEntering"

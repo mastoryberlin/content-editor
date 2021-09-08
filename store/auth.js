@@ -1,5 +1,5 @@
 export const state = () => ({
-  loggedIn: true,
+  loggedIn: undefined,
   isRequestingLogin: false,
   token: null
 })
@@ -48,9 +48,9 @@ export const actions = {
     }
   },
   requestLogout ({ commit, state, dispatch }) {
+    this.$axios.$delete('auth-token')
     this.$apolloHelpers.onLogout()
     this.$axios.setToken(false)
     commit('logout')
-    this.$axios.$delete('auth-token')
   }
 }

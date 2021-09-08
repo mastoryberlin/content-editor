@@ -42,15 +42,16 @@
 /* eslint-disable */
 export default {
   methods: {
-    refreshStories () {
-      console.log(`Stories updated`) // previousResult, { subscriptionData } : previous: ${JSON.stringify(previousResult)}, subscriptionData: ${JSON.stringify(subscriptionData)}
+    refreshStories (previousResult, secondArg) {
+      if (previousResult && secondArg) {
+      console.log(`Stories updated`, previousResult, secondArg)
       // const newResult = {
       //   story: [...previousResult.story]
       // }
-      // // Add the question to the list
       // newResult.story.push(subscriptionData.data.story)
       // return newResult
     }
+  }
   }
 }
 </script>

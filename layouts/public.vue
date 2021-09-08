@@ -32,7 +32,7 @@ export default {
 .login
   &-page
     display: table
-    height: 100%
+    height: 100vh
     margin: 0 auto
   &-wrapper
     display: table-cell
