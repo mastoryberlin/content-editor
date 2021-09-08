@@ -6,10 +6,12 @@ export default ({ app, error, redirect, route }) => {
     token = null
   }
   if (!token) {
+    app.store.commit('auth/logout')
     return redirect('/login?r=' + encodeURIComponent(route.path))
   } else if (!app.store.state.user.profile) {
     app.$axios.setToken(token, 'Bearer')
     app.store.dispatch('user/queryProfile')
     app.store.dispatch('user/queryPrivileges')
+    app.store.commit('auth/login', token)
   }
 }
