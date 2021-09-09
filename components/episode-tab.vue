@@ -1,6 +1,6 @@
 <template lang="html">
   <div class="content-editor-episode-tab">
-    <v-overlay
+    <!-- <v-overlay
       absolute
       :value="story.edit.state === 'specs'"
     >
@@ -14,9 +14,9 @@
         </nuxt-link>
         before you can start editing individual episodes.
       </p>
-    </v-overlay>
+    </v-overlay> -->
 
-    <v-overlay
+    <!-- <v-overlay
       v-if="detail && story.edit.state !== 'specs'"
       absolute
       :value="episode.edit.state !== 'details'"
@@ -31,7 +31,7 @@
         </a>
         before you can start editing the {{ detail }} details.
       </p>
-    </v-overlay>
+    </v-overlay> -->
 
     <v-sheet elevation="5" color="amber lighten-4" class="my-7 pa-4 content-editor-specs-fixed">
       <h2>

@@ -78,6 +78,7 @@
             </div>
 
             <type-selector :message="message" />
+            <sender-selector :message="message" />
 
             <div
               v-if="message.type == 'audio'"
@@ -89,6 +90,7 @@
                 label="File input"
                 prepend-icon="mdi-microphone"
                 accept="audio/x-mpeg"
+                @change="onChange"
               />
               <v-textarea
                 :value="message.attachment"
@@ -98,9 +100,25 @@
                 label="Enter URL"
                 @change="changeMessage({element: 'attachment', to: $event})"
               />
-              <audio controls>
-                <source :src="message.attachment">
-              </audio>
+              <div
+                v-if="url"
+              >
+                <audio controls>
+                  <source
+                    :src="url"
+                  >
+                </audio>
+              </div>
+              <div
+                v-else
+              >
+                <audio
+                  controls
+                >
+                  <source :src="message.audio">
+                  />
+                </audio>
+              </div>
             </div>
 
             <div
@@ -113,6 +131,7 @@
                 label="File input"
                 prepend-icon="mdi-youtube"
                 accept="video/mp4"
+                @change="onChange"
               />
               <v-textarea
                 :value="message.attachment"
@@ -122,11 +141,24 @@
                 label="Enter URL"
                 @change="changeMessage({element: 'attachment', to: $event})"
               />
-              <video
-                controls
-                :src="message.attachment"
-                type="video/mp4"
-              /></video>
+              <div
+                v-if="url"
+              >
+                <video
+                  controls
+                  :src="url"
+                  type="video/mp4"
+                />
+              </div>
+              <div
+                v-else
+              >
+                <video
+                  controls
+                  :src="message.video"
+                  type="video/mp4"
+                />
+              </div>
             </div>
 
             <div
@@ -138,6 +170,7 @@
                 label="File input"
                 prepend-icon="mdi-message-image"
                 accept="image/png, image/jpeg, image/gif"
+                @change="onChange"
               />
               <v-textarea
                 :value="message.attachment"
@@ -148,9 +181,8 @@
                 @change="changeMessage({element: 'attachment', to: $event})"
               />
 
-              <v-img
-                :src="message.attachment"
-              />
+              <v-img :src="message.text" />
+              <v-img v-if="url" :src="url" />
             </div>
 
             <div
@@ -228,6 +260,8 @@
         </v-if>
         </div>
       </v-container>
+      </v-col>
+      </v-container>
     </v-sheet>
   </draggable>
 </template>
@@ -259,7 +293,10 @@ export default {
     return {
       loading: false,
       file: null,
-      uploadFailedAlert: null
+      uploadFailedAlert: null,
+      url: null,
+      files: null,
+      File
     }
   },
   watch: {
@@ -301,8 +338,36 @@ export default {
         }
       }
     },
+    onChange (File) {
+      console.log(File)
+      this.File = File
+      this.url = URL.createObjectURL(File)
+    },
+    // updateEpisodeEditStateToSpecsIfNull (editField) {
+    //   if (!('state' in editField)) {
+    //     this.$apollo.mutate({
+    //       mutation: require('~/graphql/UpdateEpisodeEditState'),
+    //       variables: {
+    //         id: this.messageId,
+    //         state: 'specs'
+    //       }
+    //     })
+    //   }
+    // },
+    async deleteMessage () {
+      if (confirm('Are you sure you want to delete this message?')) {
+        // this.updateEpisodeEditStateToSpecsIfNull(editField)
+        await this.$apollo.mutate({
+          mutation: require('~/graphql/DeleteMessage'),
+          variables: {
+            id: this.message.id,
+            number: this.message.number,
+            phaseId: this.message.section_id
+          }
+        })
+      }
+    },
     ...mapMutations([
-      'deleteMessage',
       'moveMessage',
       'setDragIndex',
       'setDragSource'
