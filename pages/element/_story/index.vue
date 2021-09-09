@@ -141,13 +141,7 @@
                           :disabled="!!episode.editedBy"
                           @focus="startEditing(episode, 'title')"
                           @blur="stopEditing"
-                          @change="pushChange({
-                            change: {
-                              mutation: require('~/graphql/UpdateEpisodeTitle'),
-                              variables: {id: episode.id, title: $event}
-                            },
-                            dispatch: $store.dispatch
-                          })"
+                          @change="editEpisodeTitle(episode, $event)"
                         >
                           <template #append>
                             <v-tooltip bottom>
@@ -226,13 +220,7 @@
                           :disabled="!!episode.editedBy"
                           @focus="startEditing(episode, 'specs')"
                           @blur="stopEditing"
-                          @change="pushChange({
-                            change: {
-                              mutation: require('~/graphql/UpdateEpisodeSpecs'),
-                              variables: {id: episode.id, specs: $event}
-                            },
-                            dispatch: $store.dispatch
-                          })"
+                          @change="editEpisodeSpecs(episode, $event)"
                         />
                       </div>
                     </v-col>
@@ -365,6 +353,9 @@ export default {
     },
     privileges () {
       const priv = this.$store.state.user.privileges
+      if (!priv) {
+        this.$store.dispatch('user/queryPrivileges')
+      }
       return priv ? priv[this.storyId] : []
     }
   },
@@ -381,6 +372,40 @@ export default {
     },
     stopEditing () {
       this.noUpdatesFrom = null
+    },
+    editEpisodeTitle (episode, title) {
+      this.pushChange({
+        change: {
+          mutation: require('~/graphql/UpdateEpisodeTitle'),
+          variables: { id: episode.id, title }
+        },
+        dispatch: this.$store.dispatch
+      })
+      if (episode.edit) {
+        const shortcutStoryID = episode.edit.shortcutStoryID
+        if (shortcutStoryID) {
+          this.$shortcut.updateStory(shortcutStoryID, {
+            name: 'Episode ' + episode.number + ': ' + title
+          })
+        }
+      }
+    },
+    editEpisodeSpecs (episode, specs) {
+      this.pushChange({
+        change: {
+          mutation: require('~/graphql/UpdateEpisodeSpecs'),
+          variables: { id: episode.id, specs }
+        },
+        dispatch: this.$store.dispatch
+      })
+      if (episode.edit) {
+        const shortcutStoryID = episode.edit.shortcutStoryID
+        if (shortcutStoryID) {
+          this.$shortcut.updateStory(shortcutStoryID, {
+            description: specs
+          })
+        }
+      }
     },
 
     // Handle subscription updates
@@ -426,6 +451,10 @@ export default {
           specs: after.specs
         })
       }
+      const { id } = await this.$shortcut.createStory({ name: 'Episode ' + number, project_id: 33 })
+      variables.edit = {
+        shortcutStoryID: id, state: 'specs', warnStorySpecsHaveChanged: false, warnEpisodeSpecsHaveChanged: false
+      }
       const { data } = await this.$apollo.mutate({
         mutation: require('~/graphql/AddEpisode'),
         variables
@@ -440,10 +469,10 @@ export default {
       })
     },
 
-    async deleteEpisode (episode) {
+    deleteEpisode (episode) {
       const title = episode.title === '' ? '' : ', "' + episode.title + '"'
       if (confirm('Are you sure you want to delete episode ' + episode.number + title + '?')) {
-        await this.$apollo.mutate({
+        this.$apollo.mutate({
           mutation: require('~/graphql/DeleteEpisode'),
           variables: {
             id: episode.id,
@@ -451,6 +480,14 @@ export default {
             number: episode.number
           }
         })
+        if (episode.edit) {
+          const shortcutStoryID = episode.edit.shortcutStoryID
+          if (shortcutStoryID) {
+            try {
+              this.$shortcut.deleteStory(shortcutStoryID)
+            } catch (err) {}
+          }
+        }
       }
     },
 

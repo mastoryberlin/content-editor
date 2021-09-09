@@ -41,17 +41,19 @@
 <script>
 /* eslint-disable */
 export default {
+  data: () => ({
+  }),
   methods: {
     refreshStories (previousResult, secondArg) {
-      if (previousResult && secondArg) {
-      console.log(`Stories updated`, previousResult, secondArg)
-      // const newResult = {
-      //   story: [...previousResult.story]
+      // if (previousResult && secondArg) {
+      //   console.log(`Stories updated`, previousResult, secondArg)
+        // const newResult = {
+        //   story: [...previousResult.story]
+        // }
+        // newResult.story.push(subscriptionData.data.story)
+        // return newResult
       // }
-      // newResult.story.push(subscriptionData.data.story)
-      // return newResult
-    }
-  }
+    },
   }
 }
 </script>
