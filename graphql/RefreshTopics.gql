@@ -1,0 +1,6 @@
+subscription RefreshTopics {
+  topic {
+    id
+    name
+  }
+}

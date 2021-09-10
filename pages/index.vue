@@ -24,7 +24,10 @@
         />
         <v-list>
           <v-list-item
-            v-for="s in data.story"
+            v-for="s in data.story.filter((s) => {
+              const id = s.id
+              return (privileges && privileges[id] && privileges[id].includes('view'))
+            })"
             :key="s.id"
             @click="$router.push(`/element/${s.id}`)"
           >
@@ -39,21 +42,26 @@
 </template>
 
 <script>
-/* eslint-disable */
+import { mapState } from 'vuex'
 export default {
   data: () => ({
   }),
+  computed: {
+    ...mapState('user', [
+      'privileges'
+    ])
+  },
   methods: {
     refreshStories (previousResult, secondArg) {
       // if (previousResult && secondArg) {
       //   console.log(`Stories updated`, previousResult, secondArg)
-        // const newResult = {
-        //   story: [...previousResult.story]
-        // }
-        // newResult.story.push(subscriptionData.data.story)
-        // return newResult
+      // const newResult = {
+      //   story: [...previousResult.story]
       // }
-    },
+      // newResult.story.push(subscriptionData.data.story)
+      // return newResult
+      // }
+    }
   }
 }
 </script>

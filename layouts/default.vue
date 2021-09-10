@@ -32,7 +32,10 @@
             :active="idFromRoute"
             selection-type="independent"
             color="warning"
-            :items="data.story"
+            :items="data.story.filter((s) => {
+              const id = s.id
+              return (privileges && privileges[id] && privileges[id].includes('view'))
+            })"
             item-text="title"
             item-children="chapters"
             @update:active="navigate($event, data.story)"
@@ -114,7 +117,13 @@
             </template>
             <v-list>
               <v-list-item
-                v-for="(item, index) in items"
+                v-if="Object.keys(privileges).includes('superadmin')"
+                @click="$router.push('/accounts')"
+              >
+                <v-list-item-title>Manage accounts</v-list-item-title>
+              </v-list-item>
+              <v-list-item
+                v-for="(item, index) in menu"
                 :key="index"
                 @click="item.action"
               >
@@ -139,14 +148,14 @@
 </template>
 
 <script>
-import { mapState, mapGetters, mapMutations, mapActions } from 'vuex'
+import { mapState, mapGetters, mapActions } from 'vuex'
 
 export default {
   middleware: 'auth',
   data () {
     return {
       drawer: false,
-      items: [
+      menu: [
         {
           title: 'Edit my profile',
           action: this.editProfile
@@ -178,11 +187,14 @@ export default {
       'loggedIn',
       'invalidCredentials'
     ]),
-    ...mapGetters('autosave', [
-      'statusText'
+    ...mapState('user', [
+      'privileges'
     ]),
     ...mapGetters('user', [
       'initials'
+    ]),
+    ...mapGetters('autosave', [
+      'statusText'
     ]),
     idFromRoute () {
       const p = this.$route.path
@@ -219,8 +231,6 @@ export default {
     ...mapActions('auth', [
       'requestLogin',
       'requestLogout'
-    ]),
-    ...mapMutations('auth', [
     ]),
     refreshStories (previousResult, { subscriptionData }) {
       console.log('refreshStories', { previousResult, subscriptionData })

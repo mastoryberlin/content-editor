@@ -4,6 +4,7 @@ export const state = () => ({
 })
 
 export const getters = {
+  login: state => state.profile ? state.profile.id : null,
   userName: state => state.profile ? state.profile.name : '',
   initials: (state, getters) => {
     const [first, last] = getters.userName.split(' ')

@@ -9,7 +9,7 @@ mutation MovePhase($id: uuid!, $from: Int!, $to: Int!, $episodeId: uuid!) {
       number
     }
   }
-  renumberEpisodeInQuestion: update_story_section_by_pk(pk_columns: {id: $id}, _set: {number: $to}) {
+  renumberPhaseInQuestion: update_story_section_by_pk(pk_columns: {id: $id}, _set: {number: $to}) {
     number
   }
 }

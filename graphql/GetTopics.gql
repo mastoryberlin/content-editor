@@ -1,0 +1,6 @@
+query GetTopics {
+  topic {
+    id
+    name
+  }
+}

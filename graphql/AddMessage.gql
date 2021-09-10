@@ -1,4 +1,4 @@
-mutation AddMessage($phaseId: uuid!, $number: Int! = 1, $sender_id: String! = "Professor", $logic: String! ="", $type: String! = "text", $text: String! = "", $attachment: String! = "", $parent: uuid = null) {
+mutation AddMessage($phaseId: uuid!, $number: Int! = 1, $sender_id: String! = "Professor", $logic: String! ="", $type: String! = "text", $text: String! = "", $attachment: String = null, $parent: uuid = null) {
   update_prompt(where: {section_id: {_eq: $phaseId}, _and: {number: {_gte: $number}}}, _inc: {number: 1}) {
     affected_rows
   }

@@ -36,6 +36,10 @@
 
       <v-tabs-items v-model="tab">
         <v-tab-item class="content-editor-specs">
+          <!-- =============================================================================== -->
+          <!-- SPECS TAB -->
+          <!-- =============================================================================== -->
+
           <episode-tab
             :episode="data.story_chapter_by_pk"
           >
@@ -198,7 +202,9 @@
           </episode-tab>
         </v-tab-item>
 
-        <!-- ========================================================================== -->
+        <!-- =============================================================================== -->
+        <!-- MESSAGE FLOW TAB -->
+        <!-- =============================================================================== -->
 
         <v-tab-item class="content-editor-messages">
           <apollo-query
@@ -265,7 +271,9 @@
           </apollo-query>
         </v-tab-item>
 
-        <!-- ========================================================================== -->
+        <!-- =============================================================================== -->
+        <!-- CHATBOT INTERACTIONS TAB -->
+        <!-- =============================================================================== -->
 
         <v-tab-item class="content-editor-interactions">
           <episode-tab
@@ -277,7 +285,9 @@
           </episode-tab>
         </v-tab-item>
 
-        <!-- ========================================================================== -->
+        <!-- =============================================================================== -->
+        <!-- MATH CHALLENGE TAB -->
+        <!-- =============================================================================== -->
 
         <v-tab-item class="content-editor-challenge">
           <episode-tab
@@ -289,7 +299,9 @@
           </episode-tab>
         </v-tab-item>
 
-        <!-- ========================================================================== -->
+        <!-- =============================================================================== -->
+        <!-- TESTS & FEEDBACK TAB -->
+        <!-- =============================================================================== -->
 
         <v-tab-item class="content-editor-feedback">
           <episode-tab
@@ -301,13 +313,27 @@
           </episode-tab>
         </v-tab-item>
 
-        <!-- ========================================================================== -->
+        <!-- =============================================================================== -->
+        <!-- META TAB -->
+        <!-- =============================================================================== -->
 
         <v-tab-item class="content-editor-meta">
           <v-text-field
             label="Episode Title"
             :value="data.story_chapter_by_pk.title"
             @change="edit('episode', episodeId, 'title', $event, data.story_chapter_by_pk.edit)"
+          />
+
+          <v-text-field
+            label="Promises"
+            :value="data.story_chapter_by_pk.edit.promises || ''"
+            @change="$apollo.mutate({
+              mutation: require('~/graphql/UpdateEpisodePromises'),
+              variables: {
+                id: episodeId,
+                promises: [$event]
+              }
+            })"
           />
         </v-tab-item>
       </v-tabs-items>
@@ -400,13 +426,12 @@ export default {
         variables
       })
       console.log('mutation AddPhase returned', data)
-      // TODO: Add a message block
-      // this.$apollo.mutate({
-      //   mutation: require('~/graphql/AddPhase'),
-      //   variables: {
-      //     episodeId: data.insert_story_chapter_one.id
-      //   }
-      // })
+      this.$apollo.mutate({
+        mutation: require('~/graphql/AddMessage'),
+        variables: {
+          phaseId: data.insert_story_section_one.id
+        }
+      })
     },
     async deletePhase (phase, editField) {
       if (confirm('Are you sure you want to delete phase ' + phase.number + ', "' + phase.title + '"?')) {

@@ -1,0 +1,8 @@
+mutation UpdateEpisodePromises($id: uuid!, $promises: String! = "") {
+  deleteStateField: update_story_chapter_by_pk(pk_columns: {id: $id}, _delete_key: {edit: "promises"}) {
+    edit
+  }
+  addNewStateField: update_story_chapter_by_pk(pk_columns: {id: $id}, _append: {edit: {promises: $promises}}) {
+    edit
+  }
+}

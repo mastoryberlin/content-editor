@@ -1,80 +1,36 @@
 <template lang="html">
-  <div class="">
-    <p>Expected Topics:</p>
-    <v-combobox
-      v-model="topics"
-      :filter="filter"
-      :hide-no-data="!search"
-      :items="items"
-      :search-input.sync="search"
-      hide-selected
-      label="Search for an option"
-      multiple
-      small-chips
-    >
-      <template #no-data>
-        <v-list-item>
-          <span class="subheading">Create</span>
-          <v-chip
-            :color="`${colors[nonce - 1]} lighten-3`"
-            label
-            small
-          >
-            {{ search }}
-          </v-chip>
-        </v-list-item>
-      </template>
-      <template #selection="{ attrs, item, parent, selected }">
-        <v-chip
-          v-if="item === Object(item)"
-          v-bind="attrs"
-          :color="`${item.color} lighten-3`"
-          :input-value="selected"
-          label
-          small
-        >
-          <span class="pr-2">
-            {{ item.text }}
-          </span>
-          <v-icon
-            small
-            @click="parent.selectItem(item)"
-          >
-            $delete
-          </v-icon>
-        </v-chip>
-      </template>
-      <template #item="{ index, item }">
-        <v-text-field
-          v-if="editing === item"
-          v-model="editing.text"
-          autofocus
-          flat
-          background-color="transparent"
-          hide-details
-          solo
-          @keyup.enter="edit(index, item)"
-        />
-        <v-chip
-          v-else
-          :color="`${item.color} lighten-3`"
-          dark
-          label
-          small
-        >
-          {{ item.text }}
-        </v-chip>
-        <v-spacer />
-        <v-list-item-action @click.stop>
-          <v-btn
-            icon
-            @click.stop.prevent="edit(index, item)"
-          >
-            <v-icon>{{ editing !== item ? 'mdi-pencil' : 'mdi-check' }}</v-icon>
-          </v-btn>
-        </v-list-item-action>
-      </template>
-    </v-combobox>
+  <div>
+    <div v-if="$apollo.loading">
+      <v-skeleton-loader
+        v-for="n in 5"
+        :key="n"
+        type="list-item"
+      />
+    </div>
+
+    <div v-else-if="$apollo.error">
+      An error occurred!
+    </div>
+
+    <div v-else>
+      <apollo-subscribe-to-more
+        :document="require('~/graphql/RefreshTopics')"
+        :update-query="refreshAllTopics"
+      />
+      <p>Topics Whitelist:</p>
+      <v-combobox
+        v-model="topics"
+        :filter="filter"
+        :hide-no-data="!search"
+        :items="allTopics"
+        item-text="name"
+        :search-input.sync="search"
+        hide-selected
+        multiple
+        small-chips
+        @change="editTopics"
+      />
+    </div>
   </div>
 </template>
 
@@ -86,76 +42,30 @@ export default {
       required: true
     }
   },
+  apollo: {
+    allTopics: {
+      query: require('~/graphql/GetTopics'),
+      update: data => data.topic
+    }
+  },
   data: () => ({
-    activator: null,
-    attach: null,
-    colors: ['green', 'purple', 'indigo', 'cyan', 'teal', 'orange'],
-    editing: null,
-    editingIndex: -1,
-    items: [
-      { header: 'Select an option or create one' },
-      {
-        text: 'Foo',
-        color: 'blue'
-      },
-      {
-        text: 'Bar',
-        color: 'red'
-      }
-    ],
-    nonce: 1,
-    menu: false,
-    topics: [
-      {
-        text: 'Foo',
-        color: 'blue'
-      }
-    ],
-    x: 0,
-    search: null,
-    y: 0
+    allTopics: [],
+    topics: [],
+    search: null
   }),
   computed: {
-    // topics: {
-    //   get() {
-    //     return phase.topic_whitelist
-    //   },
-    //   set(v) {
-    //
-    //   }
-    // }
-  },
-
-  watch: {
-    topics (val, prev) {
-      if (val.length === prev.length) { return }
-
-      this.topics = val.map((v) => {
-        if (typeof v === 'string') {
-          v = {
-            text: v,
-            color: this.colors[this.nonce - 1]
-          }
-
-          this.items.push(v)
-
-          this.nonce++
-        }
-
-        return v
-      })
-    }
   },
 
   methods: {
-    edit (index, item) {
-      if (!this.editing) {
-        this.editing = item
-        this.editingIndex = index
-      } else {
-        this.editing = null
-        this.editingIndex = -1
-      }
+    refreshAllTopics (previousResult, { subscriptionData }) {
+      console.log('refreshAllTopics', previousResult, subscriptionData)
+      const newResult = { ...previousResult }
+      // if (previousResult && subscriptionData) {
+      //   if (previousResult.length < subscriptionData.)
+      // }
+      // else {
+      // }
+      return newResult
     },
     filter (item, queryText, itemText) {
       if (item.header) { return false }
@@ -168,9 +78,34 @@ export default {
       return text.toString()
         .toLowerCase()
         .includes(query.toString().toLowerCase())
+    },
+    editTopics (value) {
+      console.log('BEGIN editTopics ', this.topics)
+      this.topics = this.topics.map((v) => {
+        if (typeof v === 'string') {
+          this.$apollo.mutate({
+            mutation: require('~/graphql/AddTopic'),
+            variables: { name: v }
+          })
+            .then(({ data: { insert_topic_one: { id } } }) => {
+              const newTopic = this.topics.find(t => t.name === v.name)
+              if (newTopic) {
+                newTopic.id = id
+                console.log('UPDATED newTopic ', this.topics)
+              } else {
+                console.log('FAILED to update newTopic - couldn\'t find the name ' + v.name)
+              }
+            })
+          v = {
+            name: v
+          }
+        }
+        return v
+      })
+      console.log('END editTopics ', this.topics)
     }
   }
 }
 </script>
 
-  <style lang="css" scoped />
+<style lang="css" scoped />
