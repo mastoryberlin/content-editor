@@ -33,7 +33,8 @@ export default {
   plugins: [
     '~/plugins/readstat.js',
     '~/plugins/extensions.js',
-    '~/plugins/shortcut.js'
+    '~/plugins/shortcut.js',
+    '~/plugins/content-mutation.js'
   ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components

@@ -1,0 +1,5 @@
+mutation AddStory($title: String = "", $description: String = "", $edit: jsonb = {state: "specs", contributors: []} ) {
+  insert_story_one(object: {title: $title, description: $description, edit: $edit}) {
+    id
+  }
+}
