@@ -172,7 +172,7 @@
                                     class="ml-2"
                                     :color="hover ? 'blue' : 'grey lighten-2'"
                                     v-on="on"
-                                    @click="addEpisode({ after: episode, duplicate: true })"
+                                    @click="addEpisode({ after: episode, duplicate: true, editField: data.story_by_pk.edit })"
                                   >
                                     mdi-content-duplicate
                                   </v-icon>
@@ -258,7 +258,7 @@
                     size="12"
                     color="green"
                     class="content-editor-draggable-add"
-                    @click="addEpisode({ after: episode })"
+                    @click="addEpisode({ after: episode, editField: data.story_by_pk.edit })"
                   >
                     <v-icon color="white">
                       mdi-plus
@@ -438,7 +438,7 @@ export default {
       return newStory
     },
 
-    async addEpisode ({ after, duplicate = false }) {
+    async addEpisode ({ after, duplicate = false, editField }) {
       const number = after.number ? after.number + 1 : 1
       const variables = {
         storyId: this.storyId,
@@ -451,9 +451,11 @@ export default {
           specs: after.specs
         })
       }
-      const { id } = await this.$shortcut.createStory({ name: 'Episode ' + number, project_id: 33 })
-      variables.edit = {
-        shortcutStoryID: id, state: 'specs', warnStorySpecsHaveChanged: false, warnEpisodeSpecsHaveChanged: false
+      if (editField.shortcutProjectID) {
+        const { id } = await this.$shortcut.createStory({ name: 'Episode ' + number, project_id: editField.shortcutProjectID })
+        variables.edit = {
+          shortcutStoryID: id, state: 'specs', warnStorySpecsHaveChanged: false, warnEpisodeSpecsHaveChanged: false
+        }
       }
       const { data } = await this.$apollo.mutate({
         mutation: require('~/graphql/AddEpisode'),
