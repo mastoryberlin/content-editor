@@ -72,7 +72,6 @@
                             class="text-h5"
                             filled
                             rounded
-                            autofocus
                             single-line
                             full-width
                             rows="1"
@@ -191,12 +190,10 @@
 
               <finish-work-btn
                 v-if="data.story_chapter_by_pk.edit.state === 'specs'"
-                :privileges="privileges"
-                privilege-needed-to-commit="CommitEpisodeSpecs"
-                finish-work="to enable editing execution details"
+                :may-commit="mayCommitEpisodeSpecs"
+                commit-message-ext="to enable editing execution details"
                 :loading="isCommittingEpisodeSpecs"
                 @commit="commitEpisodeSpecs"
-                @request-approvement="issuePullRequestForEpisodeSpecs"
               />
             </container>
           </episode-tab>
@@ -377,6 +374,9 @@ export default {
     privileges () {
       const priv = this.$store.state.user.privileges
       return priv ? priv[this.storyId] : []
+    },
+    mayCommitEpisodeSpecs () {
+      return this.privileges && this.privileges.includes('CommitEpisodeSpecs')
     }
   },
   methods: {
@@ -471,9 +471,6 @@ export default {
         }
       })
       this.isCommittingEpisodeSpecs = false
-    },
-    issuePullRequestForEpisodeSpecs () {
-      console.log('PULL REQUEST')
     },
     closeStorySpecsHaveChangedWarning () {
       this.$apollo.mutate({
