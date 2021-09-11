@@ -53,7 +53,7 @@
       >
         <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
         <v-toolbar-title>
-          Mastory Content Editor
+          Mastory Content Editor <span class="mx-4 text-subtitle-2" v-text="version" />
         </v-toolbar-title>
 
         <v-spacer />
@@ -223,6 +223,11 @@ export default {
     isEpisodeSelected () {
       const episodePattern = /^\/element\/[-0-9a-f]+\/[-0-9a-f]+$/
       return episodePattern.test(this.$route.path)
+    },
+    version () {
+      const packageJSON = require('~/package.json')
+      const version = packageJSON.version
+      return 'v' + version
     }
   },
   methods: {
