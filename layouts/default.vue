@@ -36,6 +36,7 @@
               const id = s.id
               return (privileges && privileges[id] && privileges[id].includes('view'))
             })"
+            :open="[storyIdFromRoute]"
             item-text="title"
             item-children="chapters"
             @update:active="navigate($event, data.story)"
