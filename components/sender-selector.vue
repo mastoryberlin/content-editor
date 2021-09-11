@@ -1,6 +1,6 @@
 <template lang="html">
   <div class="sender-selector-wrapper">
-    <span>Message sender:&nbsp;</span>
+    <span>&nbsp;from&nbsp;</span>
     <v-btn-toggle
       :value="Object.keys(senderIds).indexOf(type)"
       @change="type = Object.keys(senderIds)[$event]"

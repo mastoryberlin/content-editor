@@ -1,13 +1,16 @@
 <template lang="html">
   <div class="type-selector-wrapper">
-    <span>Message type:&nbsp;</span>
+    <span>This block represents a&nbsp;</span>
+    <span v-if="disabled">a nestable logic block</span>
     <v-btn-toggle
-      :value="Object.keys(types).indexOf(type)"
-      @change="type = Object.keys(types)[$event]"
+      v-else
+      :value="indexOfType"
+      :disabled="disabled"
+      @change="type = typeNames[$event]"
     >
       <!-- class="type-selector-type" -->
       <v-btn
-        v-for="t in Object.keys(types)"
+        v-for="t in typeNames"
         :key="t"
         class="type-selector-option"
       >
@@ -26,6 +29,10 @@ export default {
     message: {
       type: Object,
       required: true
+    },
+    disabled: {
+      type: Boolean,
+      default: false
     }
   },
   data: () => ({
@@ -55,23 +62,42 @@ export default {
         icon: 'mdi-arrow-decision',
         color: 'purple lighten-3'
       }
-    },
-    open: false
+    }
   }),
   computed: {
+    typeNames () {
+      return Object.keys(this.types)
+    },
     displayType () {
       return 'This message has the type ' + this.message.type
+    },
+    indexOfType () {
+      return this.typeNames.indexOf(this.type)
     },
     type: {
       get () {
         return this.message.type
       },
       set (v) {
-        if (v && v !== this.message.type) {
+        const my = this.message
+        if (v && v !== my.type) {
+          if (v === 'nestable') {
+            // Change from message type to logic block
+            this.$db.add('message', null, {
+              sender_id: my.sender_id,
+              type: my.type,
+              text: my.text,
+              attachment: my.attachment,
+              parent: my.id
+            }, my.section_id)
+          } else if (my.type === 'nestable') {
+            // Change FROM logic block to some message type
+            // TODO
+          }
           this.$apollo.mutate({
             mutation: require('~/graphql/UpdateMessageType'),
             variables: {
-              id: this.message.id,
+              id: my.id,
               type: v
             }
           })

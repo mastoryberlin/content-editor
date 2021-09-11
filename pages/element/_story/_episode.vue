@@ -25,7 +25,7 @@
         :variables="{id: episodeId}"
         :update-query="refreshEpisode"
       />
-      <v-tabs v-model="tab">
+      <v-tabs v-model="tab" @change="addTabToURL">
         <v-tab v-text="'Specs'" />
         <v-tab v-text="'Message Flow'" />
         <v-tab v-text="'Chatbot Interaction'" />
@@ -228,11 +228,11 @@
               :narrative-data="gem.result.data.story_chapter_by_pk"
               @goto-episode-specs="activateSpecsTab"
             >
-              <!-- <apollo-subscribe-to-more
-          :document="require('~/graphql/RefreshEpisodeMessages')"
-          :variables="{id: episodeId}"
-          :update-query="refreshEpisodeMessages"
-          /> -->
+              <apollo-subscribe-to-more
+                :document="require('~/graphql/RefreshEpisodeMessages')"
+                :variables="{id: episodeId}"
+                :update-query="refreshEpisodeMessages"
+              />
               <template v-for="(phase, phaseIndex) in data.story_chapter_by_pk.sections">
                 <div
                   :key="phase.id + '-fixed'"
@@ -256,8 +256,9 @@
                   })"
                 >
                   <message-group
-                    v-for="message in gem.result.data.story_chapter_by_pk.sections[phaseIndex].prompts"
+                    v-for="message in gem.result.data.story_chapter_by_pk.sections[phaseIndex].prompts.filter(p => p.parent === null)"
                     :key="message.id"
+                    :all-messages-in-this-phase="gem.result.data.story_chapter_by_pk.sections[phaseIndex].prompts"
                     :message="message"
                     :deletable="gem.result.data.story_chapter_by_pk.sections[phaseIndex].prompts.length > 1"
                     :course-name="data.story_chapter_by_pk.story.id"
@@ -355,8 +356,11 @@ export default {
     Container,
     Draggable
   },
+  asyncData ({ route }) {
+    const tab = route.query.t || 0
+    return { tab }
+  },
   data: () => ({
-    tab: 0,
     isCommittingEpisodeSpecs: false
   }),
   head () {
@@ -380,6 +384,19 @@ export default {
     }
   },
   methods: {
+    addTabToURL (index) {
+      console.log('Called addTabToURL ', index)
+      const query = this.$route.query
+      if (index !== query.t) {
+        this.$router.replace({
+          ...this.$route,
+          query: {
+            ...query,
+            t: this.tab
+          }
+        })
+      }
+    },
     refreshEpisode (previousResult, { subscriptionData }) {
       if (previousResult) {
         console.log('refreshEpisode', { previousResult, subscriptionData })
@@ -394,6 +411,21 @@ export default {
         newEpisode.story_chapter_by_pk.story.edit.state = newQueryResult.story.edit.state
         newEpisode.story_chapter_by_pk.sections = JSON.parse(JSON.stringify(newPhases))
         return newEpisode
+      }
+    },
+    refreshEpisodeMessages (previousResult, { subscriptionData }) {
+      if (previousResult) {
+        console.log('refreshEpisodeMessages', { previousResult, subscriptionData })
+        const newQueryResult = subscriptionData.data.story_chapter_by_pk
+        const newPhases = [...newQueryResult.sections]
+        const newEpisodeMsgs = {
+          story_chapter_by_pk: {
+            id: previousResult.story_chapter_by_pk.id,
+            ...newQueryResult
+          }
+        }
+        newEpisodeMsgs.story_chapter_by_pk.sections = JSON.parse(JSON.stringify(newPhases))
+        return newEpisodeMsgs
       }
     },
     updateEpisodeEditStateToSpecsIfNull (editField) {

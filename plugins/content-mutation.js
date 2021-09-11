@@ -21,7 +21,7 @@ export default ({ app }, inject) => {
         if (parentId) {
           variables[parentIdVarName] = parentId
         } else {
-          throw Error.new('Cannot add ' + type + ': parentId parameter must not be null')
+          throw new Error('Cannot add ' + type + ': parentId parameter must not be null')
         }
       }
 

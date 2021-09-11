@@ -1,4 +1,4 @@
-mutation UpdateMessageText($id: uuid!, $senderId: String = "") {
+mutation UpdateMessageSender($id: uuid!, $senderId: String = "") {
   update_prompt_by_pk(pk_columns: {id: $id}, _set: {sender_id: $senderId}) {
     sender_id
   }

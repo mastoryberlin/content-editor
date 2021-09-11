@@ -76,8 +76,8 @@
               </v-textarea>
             </div>
 
-            <type-selector :message="message" />
-            <sender-selector :message="message" />
+            <type-selector :disabled="children.length > 1" :message="message" />
+            <sender-selector v-if="message.type !== 'nestable'" :message="message" />
 
             <template
               v-if="enableFileUpload"
@@ -172,6 +172,7 @@
                 :all-messages-in-this-phase="allMessagesInThisPhase"
                 :message="submessage"
                 :deletable="children.length > 1"
+                :course-name="courseName"
               />
             </container>
           </v-col><!-- content-editor-draggable-content -->
@@ -212,7 +213,7 @@ export default {
       required: true
     },
     allMessagesInThisPhase: {
-      type: Object,
+      type: Array,
       required: true
     },
     deletable: {
