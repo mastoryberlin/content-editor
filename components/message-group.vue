@@ -8,13 +8,13 @@
     >
       <v-container>
         <v-row cols="12">
-          <v-col v-if="deletable" class="content-editor-draggable-sidebar">
+          <!-- <v-col v-if="deletable" class="content-editor-draggable-sidebar">
             <v-icon
-              class="content-editor-draggable-handle"
+            class="content-editor-draggable-handle"
             >
               mdi-drag
             </v-icon>
-          </v-col>
+          </v-col> -->
 
           <v-col class="content-editor-draggable-content">
             <div class="content-editor-draggable-header">

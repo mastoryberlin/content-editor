@@ -57,13 +57,13 @@
                 >
                   <v-container>
                     <v-row cols="12">
-                      <v-col class="content-editor-draggable-sidebar">
+                      <!-- <v-col class="content-editor-draggable-sidebar">
                         <v-icon
                           class="content-editor-draggable-handle"
                         >
                           mdi-drag
                         </v-icon>
-                      </v-col>
+                      </v-col> -->
 
                       <v-col class="content-editor-draggable-content">
                         <div class="content-editor-draggable-title">

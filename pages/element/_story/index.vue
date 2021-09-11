@@ -99,7 +99,7 @@
               >
                 <v-container>
                   <v-row cols="12">
-                    <v-col class="content-editor-draggable-sidebar">
+                    <!-- <v-col class="content-editor-draggable-sidebar">
                       <v-icon
                         class="content-editor-draggable-handle"
                       >
@@ -123,7 +123,7 @@
                         </template>
                         <span>This episode is currently being edited by {{ episode.editedBy }}</span>
                       </v-tooltip>
-                    </v-col>
+                    </v-col> -->
 
                     <v-col class="content-editor-draggable-content">
                       <div class="content-editor-draggable-title">
