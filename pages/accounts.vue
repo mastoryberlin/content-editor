@@ -142,7 +142,7 @@ export default {
         this.userRoles.push({ id: newUserName, roles: {} })
         this.$axios.post('user', {
           userName: newUserName,
-          initialPassword: "TOP SECRET"
+          initialPassword: 'TOP SECRET'
         })
       }
     }

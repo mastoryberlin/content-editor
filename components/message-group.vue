@@ -23,7 +23,6 @@
                 class="content-editor-draggable-logic"
                 filled
                 rounded
-                autofocus
                 single-line
                 full-width
                 rows="1"
@@ -80,124 +79,78 @@
             <type-selector :message="message" />
             <sender-selector :message="message" />
 
-            <div
-              v-if="message.type == 'audio'"
-              class="content-editor-draggable-message"
+            <template
+              v-if="enableFileUpload"
             >
               <v-file-input
                 v-model="file"
-                placeholder="Upload audio file"
-                label="File input"
-                prepend-icon="mdi-microphone"
-                accept="audio/x-mpeg"
-                @change="onChange"
+                :label="'Pick ' + message.type + ' file for upload'"
+                :accept="acceptedFiles"
+                @change="createBlobURL"
               />
-              <v-textarea
+              <!-- <v-textarea
                 :value="message.attachment"
                 full-width
                 auto-grow
                 rows="2"
-                label="Enter URL"
+                label="or enter a URL directly"
                 @change="changeMessage({element: 'attachment', to: $event})"
-              />
-              <div
-                v-if="url"
-              >
+              /> -->
+              <h4 v-if="preview">
+                PREVIEW - press button to upload
+              </h4>
+              <div v-if="file !== null">
+                <v-btn
+                  :loading="loading"
+                  :disabled="loading"
+                  color="blue-grey"
+                  class="ma-2 white--text"
+                  fab
+                  @click="upload"
+                >
+                  <v-icon dark>
+                    mdi-cloud-upload
+                  </v-icon>
+                </v-btn>
+
+                <v-alert
+                  v-if="uploadFailedAlert"
+                  v-model="uploadFailedAlert.show"
+                  type="error"
+                  dismissible
+                >
+                  There was a problem uploading the file: {{ uploadFailedAlert.errorMessage }}
+                </v-alert>
+              </div>
+
+              <div v-if="message.type === 'audio'">
                 <audio controls>
                   <source
-                    :src="url"
+                    :src="url || message.attachment"
                   >
                 </audio>
               </div>
-              <div
-                v-else
-              >
-                <audio
-                  controls
-                >
-                  <source :src="message.audio">
-                  />
-                </audio>
-              </div>
-            </div>
-
-            <div
-              v-else-if="message.type == 'video'"
-              class="content-editor-draggable-message"
-            >
-              <v-file-input
-                v-model="file"
-                placeholder="Upload video file"
-                label="File input"
-                prepend-icon="mdi-youtube"
-                accept="video/mp4"
-                @change="onChange"
-              />
-              <v-textarea
-                :value="message.attachment"
-                full-width
-                auto-grow
-                rows="2"
-                label="Enter URL"
-                @change="changeMessage({element: 'attachment', to: $event})"
-              />
-              <div
-                v-if="url"
-              >
+              <div v-else-if="message.type === 'video'">
                 <video
                   controls
-                  :src="url"
+                  :src="url || message.attachment"
                   type="video/mp4"
                 />
               </div>
-              <div
-                v-else
-              >
-                <video
-                  controls
-                  :src="message.video"
-                  type="video/mp4"
-                />
+              <div v-else-if="message.type === 'image'">
+                <v-img :src="url || message.attachment" />
               </div>
-            </div>
+            </template>
 
-            <div
-              v-else-if="message.type == 'image'"
-              class="content-editor-draggable-message"
-            >
-              <v-file-input
-                v-model="file"
-                label="File input"
-                prepend-icon="mdi-message-image"
-                accept="image/png, image/jpeg, image/gif"
-                @change="onChange"
-              />
-              <v-textarea
-                :value="message.attachment"
-                full-width
-                auto-grow
-                rows="2"
-                label="Enter URL"
-                @change="changeMessage({element: 'attachment', to: $event})"
-              />
-
-              <v-img :src="message.text" />
-              <v-img v-if="url" :src="url" />
-            </div>
-
-            <div
-              v-else-if="message.type === 'text'"
-              class="content-editor-draggable-message"
-            >
-              <v-textarea
-                :value="message.text"
-                full-width
-                auto-grow
-                rows="2"
-                label="Message text"
-                @change="changeMessage({element: 'text', to: $event})"
-              />
-            </div>
+            <v-textarea
+              v-if="showTextField"
+              :value="message.text"
+              full-width
+              auto-grow
+              rows="2"
+              label="Message text"
+              @change="changeMessage({element: 'text', to: $event})"
+            />
 
             <!-- :get-child-payload="setDragIndex" -->
             <container
@@ -214,37 +167,15 @@
               })"
             >
               <message-group
-                v-for="submessage in message.messages"
+                v-for="submessage in children"
                 :key="submessage.id"
+                :all-messages-in-this-phase="allMessagesInThisPhase"
                 :message="submessage"
-                :deletable="message.messages.length > 1"
+                :deletable="children.length > 1"
               />
             </container>
           </v-col><!-- content-editor-draggable-content -->
         </v-row>
-
-        <div v-if="message.type !== 'text' && file !== null">
-          <v-btn
-            :loading="loading"
-            :disabled="loading"
-            color="blue-grey"
-            class="ma-2 white--text"
-            fab
-            @click="onUpload"
-          >
-            <v-icon dark>
-              mdi-cloud-upload
-            </v-icon>
-          </v-btn>
-          <v-alert
-            v-if="uploadFailedAlert"
-            v-model="uploadFailedAlert.show"
-            type="error"
-            dismissible
-          >
-            There was a problem uploading the file: {{ uploadFailedAlert.errorMessage }}
-          </v-alert>
-        </div>
 
         <v-btn
           fab
@@ -280,6 +211,10 @@ export default {
       type: Object,
       required: true
     },
+    allMessagesInThisPhase: {
+      type: Object,
+      required: true
+    },
     deletable: {
       type: Boolean,
       default: true
@@ -295,8 +230,25 @@ export default {
       file: null,
       uploadFailedAlert: null,
       url: null,
-      files: null,
-      File
+      preview: false
+    }
+  },
+  computed: {
+    children () {
+      return this.allMessagesInThisPhase.filter(m => m.parent === this.message.id)
+    },
+    enableFileUpload () {
+      return ['audio', 'video', 'image'].includes(this.message.type)
+    },
+    showTextField () {
+      return ['text', 'image'].includes(this.message.type)
+    },
+    acceptedFiles () {
+      return {
+        image: 'image/png, image/jpeg, image/gif',
+        audio: 'audio/x-mpeg',
+        video: 'video/mp4'
+      }
     }
   },
   watch: {
@@ -310,7 +262,7 @@ export default {
     }
   },
   methods: {
-    async onUpload () {
+    async upload () {
       this.loading = true
       const fd = new FormData()
       fd.append('image', this.file, this.file.name)
@@ -318,6 +270,8 @@ export default {
         const result = await this.$axios.$post('upload', fd, { params: { c: this.courseName } })
         this.loading = false
         if (result.success) {
+          this.url = result.url
+          this.preview = false
           await this.$apollo.mutate({
             mutation: require('~/graphql/UpdateMessageAttachment'),
             variables: {
@@ -338,10 +292,9 @@ export default {
         }
       }
     },
-    onChange (File) {
-      console.log(File)
-      this.File = File
-      this.url = URL.createObjectURL(File)
+    createBlobURL (file) {
+      this.url = URL.createObjectURL(file)
+      this.preview = true
     },
     // updateEpisodeEditStateToSpecsIfNull (editField) {
     //   if (!('state' in editField)) {
@@ -387,6 +340,10 @@ export default {
       if (duplicate) {
         variables = { ...after }
         delete variables.id
+        delete variables.section_id
+        delete variables.__typename
+      } else {
+        variables.parent = after.parent
       }
       variables.phaseId = after.section_id
       variables.number = after.number + 1
