@@ -26,7 +26,7 @@
           <v-list-item
             v-for="s in data.story.filter((s) => {
               const id = s.id
-              return (privileges && privileges[id] && privileges[id].includes('view'))
+              return (privileges && (privileges['superadmin'] || privileges[id] && privileges[id].includes('view')))
             })"
             :key="s.id"
             @click="$router.push(`/element/${s.id}`)"

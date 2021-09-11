@@ -34,7 +34,7 @@
             color="warning"
             :items="data.story.filter((s) => {
               const id = s.id
-              return (privileges && privileges[id] && privileges[id].includes('view'))
+              return (privileges && (privileges['superadmin'] || privileges[id] && privileges[id].includes('view')))
             })"
             :open="[storyIdFromRoute]"
             item-text="title"
