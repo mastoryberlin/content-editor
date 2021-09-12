@@ -24,6 +24,10 @@ export default {
     phase: {
       type: Object,
       required: true
+    },
+    episodeId: {
+      type: String,
+      required: true
     }
   },
   data: () => ({
@@ -53,9 +57,40 @@ export default {
         // Set feature to be available
         f.push(feature)
       }
+      const apolloClient = this.$apollo.provider.defaultClient
+      const data = apolloClient.readQuery({
+        query: require('~/graphql/GetEpisode'),
+        variables: { id: this.episodeId }
+      })
+      data.story_chapter_by_pk.sections
+        .find(section => section.id === this.phase.id)
+        .meta
+        .features = f
+      apolloClient.writeQuery({
+        query: require('~/graphql/GetEpisode'),
+        data
+      })
       this.$apollo.mutate({
         mutation: require('~/graphql/UpdatePhaseFeatures'),
         variables: { id: this.phase.id, features: { features: f } }
+        // update: (store) => {
+        //   const data = store.readQuery({
+        //     query: require('~/graphql/GetEpisode'),
+        //     variables: { id: this.episodeId }
+        //   })
+        //   data.story_chapter_by_pk.sections
+        //     .find(section => section.id === this.phase.id)
+        //     .meta
+        //     .features = f
+        //   store.writeQuery({
+        //     query: require('~/graphql/GetEpisode'),
+        //     data
+        //   })
+        // },
+        // optimisticResponse: {
+        //   addNewMeta: null,
+        //   deleteOldMeta: null
+        // }
       })
     }
   }
