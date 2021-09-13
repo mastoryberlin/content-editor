@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: content-editor-develop
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: content-editor
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  minReadySeconds: 15
+  template:
+    metadata:
+      labels:
+        app: content-editor
+    spec:
+      containers:
+      - name: content-editor
+        image: gcr.io/mastory-323910/content-editor:latest
+        ports:
+          - containerPort: 5000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: content-editor-develop-service
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 5000
+  selector:
+    app: content-editor
