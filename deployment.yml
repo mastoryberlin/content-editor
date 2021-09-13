@@ -19,9 +19,9 @@ spec:
     spec:
       containers:
       - name: content-editor
-        image: gcr.io/mastory-323910/content-editor:latest
+        image: gcr.io/mastory-323910/content:latest
         ports:
-          - containerPort: 5000
+          - containerPort: 8080
 ---
 apiVersion: v1
 kind: Service
@@ -31,6 +31,6 @@ spec:
   type: LoadBalancer
   ports:
     - port: 80
-      targetPort: 5000
+      targetPort: 8080
   selector:
     app: content-editor
