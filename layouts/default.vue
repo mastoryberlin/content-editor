@@ -31,6 +31,7 @@
             activatable
             :active="idFromRoute"
             selection-type="independent"
+            class="nav"
             color="warning"
             :items="data.story.filter((s) => {
               const id = s.id
@@ -39,6 +40,7 @@
             :open="[storyIdFromRoute]"
             item-text="title"
             item-children="chapters"
+            hoverable
             @update:active="navigate($event, data.story)"
           >
             <template #prepend="{item}">
@@ -309,6 +311,8 @@ export default {
 </script>
 
 <style lang="sass">
+.v-treeview-node
+  cursor: pointer
 .content-editor
   padding: 5px
   &-global-state-indicator
@@ -319,6 +323,7 @@ export default {
       display: inline-block
       margin-right: 5px
       max-width: 20px
+      cursor: all-scroll
     &-content
       display: inline-block
     &-title
