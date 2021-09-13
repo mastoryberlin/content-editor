@@ -1,0 +1,5 @@
+mutation UpdateSubsequentPhaseTopics($episode_id: uuid!, $afterNumber: Int!, $topic_whitelist: jsonb!) {
+  update_story_section(where: {chapter_id: {_eq: $episode_id}, _and: {number: {_gt: $afterNumber}}}, _set: {topic_whitelist: $topic_whitelist}) {
+    affected_rows
+  }
+}

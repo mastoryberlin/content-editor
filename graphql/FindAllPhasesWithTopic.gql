@@ -1,0 +1,5 @@
+query FindAllPhasesWithTopic($id: jsonb = "") {
+  story_section(where: {topic_whitelist: {_contains: $id}}) {
+    id
+  }
+}

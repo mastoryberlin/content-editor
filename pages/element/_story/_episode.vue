@@ -165,11 +165,11 @@
                             />
                           </v-row>
 
-                          <v-row>
-                            <topics-selector
-                              :phase="phase"
-                            />
-                          </v-row>
+                          <topics-selector
+                            :phase="phase"
+                            :episode-id="episodeId"
+                            :whitelist="phase.topic_whitelist"
+                          />
                         </v-container>
                       </v-col>
                     </v-row>
@@ -278,10 +278,9 @@
           <episode-tab
             :episode="data.story_chapter_by_pk"
             detail="chatbot"
+            tab="chatbot-interactions"
             @goto-episode-specs="activateSpecsTab"
-          >
-            Episode chatbot interactions for "{{ data.story_chapter_by_pk.title }}"
-          </episode-tab>
+          />
         </v-tab-item>
 
         <!-- =============================================================================== -->

@@ -1,0 +1,5 @@
+mutation DeleteTopic($id: uuid!) {
+  delete_topic_by_pk(id: $id) {
+    id
+  }
+}

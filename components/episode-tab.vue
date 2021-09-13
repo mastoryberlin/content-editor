@@ -57,7 +57,8 @@
       <p v-text="episode.specs" />
     </v-sheet>
 
-    <slot />
+    <component :is="tab" v-if="tab" :episode="episode" />
+    <slot v-else />
 
     <specs-have-changed-warning
       v-if="episode.edit.state === 'detail'
@@ -76,6 +77,10 @@ export default {
     episode: {
       type: Object,
       required: true
+    },
+    tab: {
+      type: String,
+      default: null
     },
     detail: {
       type: String,
