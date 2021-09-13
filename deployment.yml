@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: content-editor-develop
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: content-editor
