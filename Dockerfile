@@ -1,17 +1,10 @@
-FROM node:lts-alpine
-
-# install simple http server for serving static content
-RUN npm install -g http-server
+FROM node:12.2.0-alpine
 
 WORKDIR /app
-
+ENV PATH /app/node_modules/.bin:$PATH
 COPY package*.json ./
-
+COPY . ./app
 RUN npm install
-
-COPY . .
-
-RUN npm run build
-
+RUN npm install @vue/cli@3.7.0 -g
 EXPOSE 8080
-CMD [ "http-server", "dist" ]
+CMD [ "npm", "run", "dev" ]
