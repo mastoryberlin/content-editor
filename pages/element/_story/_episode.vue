@@ -44,9 +44,10 @@
             :episode="data.story_chapter_by_pk"
           >
             <container
+              style="cursor: all-scroll;"
+              behaviour="contain"
+              orientation="vertical"
               group-name="episode-specs"
-              drag-handle-selector=".content-editor-draggable-handle"
-              :get-child-payload="(index) => ({phaseId: data.story_chapter_by_pk.sections[index - 1].id})"
               @drop="onDrop"
             >
               <draggable v-for="(phase, phaseIndex) in data.story_chapter_by_pk.sections" :key="phase.id">
@@ -72,6 +73,7 @@
                             class="text-h5"
                             filled
                             rounded
+                            autofocus
                             single-line
                             full-width
                             rows="1"
@@ -90,7 +92,7 @@
                                       class="ml-2"
                                       :color="hover ? 'blue' : 'grey lighten-2'"
                                       v-on="on"
-                                      @click="addPhase({after: phase, duplicate: true, editField: data.story_chapter_by_pk.edit})"
+                                      @click="addPhase({after: phase, duplicate: true, data})"
                                     >
                                       mdi-content-duplicate
                                     </v-icon>
@@ -112,7 +114,7 @@
                                       class="ml-2"
                                       :color="hover ? 'red' : 'grey lighten-2'"
                                       v-on="on"
-                                      @click="deletePhase(phase, data.story_chapter_by_pk.edit)"
+                                      @click="deletePhase(phase, data)"
                                     >
                                       mdi-delete
                                     </v-icon>
@@ -162,6 +164,7 @@
                             <features-selector
                               :phase="phase"
                               :episode-id="episodeId"
+                              :data="data"
                             />
                           </v-row>
 
@@ -179,7 +182,7 @@
                       size="12"
                       color="green"
                       class="content-editor-draggable-add"
-                      @click="addPhase({after: phase, editField: data.story_chapter_by_pk.edit})"
+                      @click="addPhase({after: phase, data})"
                     >
                       <v-icon color="white">
                         mdi-plus
@@ -440,8 +443,8 @@ export default {
         })
       }
     },
-    async addPhase ({ after, duplicate = false, editField }) {
-      this.updateEpisodeEditStateToSpecsIfNull(editField)
+    async addPhase ({ after, duplicate = false, data }) {
+      this.updateEpisodeEditStateToSpecsIfNull(data.story_chapter_by_pk.edit)
       const number = after.number ? after.number + 1 : 1
       const fakeId = 'zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzz'
       const variables = {
@@ -449,20 +452,13 @@ export default {
         number,
         meta: JSON.parse(JSON.stringify(after.meta))
       }
+      const idxClone = after.number ? after.number - 1 : 0
+      const cloneData = data.story_chapter_by_pk.sections[idxClone]
       if (duplicate) {
         Object.assign(variables, {
           title: after.title,
           specs: after.specs
         })
-      }
-      const apolloClient = this.$apollo.provider.defaultClient
-      const data = apolloClient.readQuery({
-        query: require('~/graphql/GetEpisode'),
-        variables: { id: this.episodeId }
-      })
-      const idxClone = after.number ? after.number - 1 : 0
-      const cloneData = data.story_chapter_by_pk.sections[idxClone]
-      if (duplicate) {
         data.story_chapter_by_pk.sections.push({
           ...cloneData,
           id: fakeId
@@ -476,6 +472,7 @@ export default {
         })
       }
       data.story_chapter_by_pk.sections.sort((a, b) => parseFloat(a.number) - parseFloat(b.number))
+      const apolloClient = this.$apollo.provider.defaultClient
       apolloClient.writeQuery({
         query: require('~/graphql/GetEpisode'),
         data
@@ -483,36 +480,6 @@ export default {
       const request = await this.$apollo.mutate({
         mutation: require('~/graphql/AddPhase'),
         variables
-        // update: (store) => {
-        //   const data = store.readQuery({
-        //     query: require('~/graphql/GetEpisode'),
-        //     variables: { id: this.episodeId }
-        //   })
-        //   const idxClone = after.number ? after.number - 1 : 0
-        //   const cloneData = data.story_chapter_by_pk.sections[idxClone]
-        //   if (duplicate) {
-        //     data.story_chapter_by_pk.sections.push({
-        //       ...cloneData,
-        //       id: fakeId
-        //     })
-        //   } else {
-        //     data.story_chapter_by_pk.sections.push({
-        //       ...cloneData,
-        //       id: fakeId,
-        //       title: '',
-        //       specs: ''
-        //     })
-        //   }
-        //   data.story_chapter_by_pk.sections.sort((a, b) => parseFloat(a.number) - parseFloat(b.number))
-        //   store.writeQuery({
-        //     query: require('~/graphql/GetEpisode'),
-        //     data
-        //   })
-        // },
-        // optimisticResponse: {
-        //   insert_story_section_one: null,
-        //   update_story_section: null
-        // }
       })
       console.log('mutation AddPhase returned', request.data)
       this.$apollo.mutate({
@@ -522,14 +489,9 @@ export default {
         }
       })
     },
-    async deletePhase (phase, editField) {
+    async deletePhase (phase, data) {
       if (confirm('Are you sure you want to delete phase ' + phase.number + ', "' + phase.title + '"?')) {
-        this.updateEpisodeEditStateToSpecsIfNull(editField)
-        const apolloClient = this.$apollo.provider.defaultClient
-        const data = apolloClient.readQuery({
-          query: require('~/graphql/GetEpisode'),
-          variables: { id: this.episodeId }
-        })
+        this.updateEpisodeEditStateToSpecsIfNull(data.story_chapter_by_pk.edit)
         let index = 0
         data.story_chapter_by_pk.sections.every((section, idx) => {
           index = idx
@@ -539,6 +501,7 @@ export default {
           return true
         })
         data.story_chapter_by_pk.sections.splice(index, 1)
+        const apolloClient = this.$apollo.provider.defaultClient
         apolloClient.writeQuery({
           query: require('~/graphql/GetEpisode'),
           data
@@ -550,30 +513,6 @@ export default {
             episodeId: this.episodeId,
             number: phase.number
           }
-          // update: (store) => {
-          //   const data = store.readQuery({
-          //     query: require('~/graphql/GetEpisode'),
-          //     variables: { id: this.episodeId }
-          //   })
-          //   let index = 0
-          //   data.story_chapter_by_pk.sections.every((section, idx) => {
-          //     index = idx
-          //     if (section.id === phase.id) {
-          //       return false
-          //     }
-          //     return true
-          //   })
-          //   data.story_chapter_by_pk.sections.splice(index, 1)
-          //   store.writeQuery({
-          //     query: require('~/graphql/GetEpisode'),
-          //     data
-          //   })
-          // },
-          // optimisticResponse: {
-          //   delete_prompt: null,
-          //   delete_story_section_by_pk: null,
-          //   update_story_section: null
-          // }
         })
       }
     },
@@ -615,22 +554,75 @@ export default {
     activateSpecsTab () {
       this.tab = 0
     },
+    applyDrag (arr, { removedIndex, addedIndex, payload }) {
+      console.log(removedIndex, addedIndex, payload)
+      const result = [...arr]
+      let itemToAdd = payload
+      if (removedIndex !== null) {
+        itemToAdd = result.splice(removedIndex, 1)[0]
+      }
+      if (addedIndex !== null) {
+        result.splice(addedIndex, 0, itemToAdd)
+      }
+      return {
+        item: itemToAdd,
+        arr: result
+      }
+    },
     async onDrop ({ removedIndex, addedIndex, payload }) {
+      const apolloClient = this.$apollo.provider.defaultClient
+      const data = apolloClient.readQuery({
+        query: require('~/graphql/GetEpisode'),
+        variables: { id: this.episodeId }
+      })
       if (removedIndex !== addedIndex) {
-        const from = removedIndex + 1
-        const to = addedIndex + 1
-        console.log('dragdrop phase', from, to)
+        const { item, arr } = this.applyDrag(
+          data.story_chapter_by_pk.sections,
+          { removedIndex, addedIndex, payload }
+        )
+        data.story_chapter_by_pk.sections = arr
+        apolloClient.writeQuery({
+          query: require('~/graphql/GetEpisode'),
+          data
+        })
+        const difference = addedIndex - removedIndex
         await this.$apollo.mutate({
-          mutation: require('~/graphql/MovePhase'),
+          mutation: require('~/graphql/DeletePhase'),
           variables: {
-            id: payload.phaseId,
+            id: item.id,
             episodeId: this.episodeId,
-            from,
-            to
+            number: item.number
+          }
+        })
+        await this.$apollo.mutate({
+          mutation: require('~/graphql/AddPhase'),
+          variables: {
+            episodeId: this.episodeId,
+            number: difference > 0 ? item.number + difference : item.number - Math.abs(difference),
+            meta: JSON.parse(JSON.stringify(item.meta)),
+            title: item.title,
+            specs: item.specs
           }
         })
       }
     }
+    // onDrop ({ removedIndex, addedIndex, payload }) {
+    //   console.log(removedIndex, addedIndex, payload)
+    //   if (removedIndex !== addedIndex) {
+    //     const from = removedIndex + 1
+    //     const to = addedIndex + 1
+    //     console.log('dragdrop phase', from, to)
+    //     await this.$apollo.mutate({
+    //       mutation: require('~/graphql/MovePhase'),
+    //       variables: {
+    //         id: payload.phaseId,
+    //         episodeId: this.episodeId,
+    //         from,
+    //         to
+    //       }
+    //     })
+    //   }
+    // }
   }
 }
 </script>
