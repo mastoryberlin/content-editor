@@ -1,4 +1,0 @@
-type Story {
-  id: uuid!
-  title: String!
-}

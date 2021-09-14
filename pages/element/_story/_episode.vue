@@ -488,9 +488,11 @@ export default {
         }
       })
     },
-    async deletePhase (phase, data) {
+    deletePhase (phase, data) {
       if (confirm('Are you sure you want to delete phase ' + phase.number + ', "' + phase.title + '"?')) {
         this.updateEpisodeEditStateToSpecsIfNull(data.story_chapter_by_pk.edit)
+
+        // Update UI optimistically ...
         let index = 0
         data.story_chapter_by_pk.sections.every((section, idx) => {
           index = idx
@@ -505,14 +507,9 @@ export default {
           query: require('~/graphql/GetEpisode'),
           data
         })
-        await this.$apollo.mutate({
-          mutation: require('~/graphql/DeletePhase'),
-          variables: {
-            id: phase.id,
-            episodeId: this.episodeId,
-            number: phase.number
-          }
-        })
+
+        // ... and perform the changes in the DB
+        this.$db.delete('phase', phase, this.episodeId)
       }
     },
     ...mapMutations('autosave', [

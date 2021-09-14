@@ -1,0 +1,5 @@
+mutation DeleteAllMessages($phaseId: uuid!) {
+  delete_prompt(where: {section_id: {_eq: $phaseId}}) {
+    affected_rows
+  }
+}

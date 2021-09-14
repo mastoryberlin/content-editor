@@ -2,7 +2,7 @@ import colors from 'vuetify/es5/util/colors'
 
 export default {
   // Target: https://go.nuxtjs.dev/config-target
-  target: 'server',
+  target: 'static',
 
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
@@ -34,7 +34,9 @@ export default {
     '~/plugins/readstat.js',
     '~/plugins/extensions.js',
     '~/plugins/shortcut.js',
-    '~/plugins/content-mutation.js'
+    '~/plugins/content-mutation.js',
+    '~/plugins/test.js',
+
   ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components

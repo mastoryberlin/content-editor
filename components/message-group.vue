@@ -294,8 +294,8 @@ export default {
       }
     },
     createBlobURL (file) {
-      this.url = URL.createObjectURL(file)
-      this.preview = true
+      this.url = file ? URL.createObjectURL(file) : ''
+      this.preview = !!file
     },
     // updateEpisodeEditStateToSpecsIfNull (editField) {
     //   if (!('state' in editField)) {

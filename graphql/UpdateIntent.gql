@@ -1,0 +1,5 @@
+mutation UpdateIntent($id: uuid = "", $name: String = "") {
+  update_intent_by_pk(pk_columns: {id: $id}, _set: {name: $name}) {
+    name
+  }
+}

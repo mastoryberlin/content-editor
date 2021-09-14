@@ -1,0 +1,18 @@
+query GetIntentsForTopic($topicId: uuid!) {
+  intent(where: {topic_id: {_eq: $topicId}}) {
+    id
+    name
+    subintents {
+      id
+      name
+      reactions {
+        id
+        message
+      }
+      replicas {
+        id
+        message
+      }
+    }
+  }
+}

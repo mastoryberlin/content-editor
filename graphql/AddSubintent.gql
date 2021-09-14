@@ -1,0 +1,5 @@
+mutation AddSubintent($intent_id: uuid = "", $name: String = "") {
+  insert_subintent_one(object: {intent_id: $intent_id, name: $name}) {
+    id
+  }
+}

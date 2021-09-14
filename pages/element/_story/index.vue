@@ -26,12 +26,9 @@
         :update-query="refreshStory"
       />
       <v-tabs v-model="tab">
-        <v-tab>
-          Specs
-        </v-tab>
-        <v-tab>
-          Meta
-        </v-tab>
+        <v-tab v-text="'Specs'" />
+        <v-tab v-text="'Meta'" />
+        <v-tab v-if="isSuperAdmin" v-text="'Alpha Test'" />
       </v-tabs>
 
       <v-tabs-items v-model="tab">
@@ -290,6 +287,12 @@
             })"
           />
         </v-tab-item>
+
+        <v-tab-item class="content-editor-alpha-test">
+          <v-btn @click="$test.start" v-text="'Start'" />
+          <v-btn @click="$test.reset" v-text="'Reset'" />
+          <v-btn @click="$test.stop" v-text="'Stop'" />
+        </v-tab-item>
       </v-tabs-items>
     </div>
   </apollo-query>
@@ -324,6 +327,10 @@ export default {
         this.$store.dispatch('user/queryPrivileges')
       }
       return priv ? priv[this.storyId] : []
+    },
+    isSuperAdmin () {
+      const priv = this.$store.state.user.privileges
+      return priv ? !!priv.superadmin : false
     },
     mayCommit () {
       return this.privileges && this.privileges.includes('CommitStorySpecs')
@@ -444,14 +451,7 @@ export default {
     deleteEpisode (episode) {
       const title = episode.title === '' ? '' : ', "' + episode.title + '"'
       if (confirm('Are you sure you want to delete episode ' + episode.number + title + '?')) {
-        this.$apollo.mutate({
-          mutation: require('~/graphql/DeleteEpisode'),
-          variables: {
-            id: episode.id,
-            storyId: this.storyId,
-            number: episode.number
-          }
-        })
+        this.$db.delete('episode', episode)
         if (episode.edit) {
           const shortcutStoryID = episode.edit.shortcutStoryID
           if (shortcutStoryID) {
