@@ -155,51 +155,51 @@ import { mapState, mapGetters, mapActions } from 'vuex'
 
 export default {
   middleware: 'auth',
-  data () {
+  data() {
     return {
       drawer: false,
       menu: [
         {
           title: 'Edit my profile',
-          action: this.editProfile
+          action: this.editProfile,
         },
         {
           title: 'Report an issue or make a suggestion for content editor',
-          action: this.gotoIssuesPage
+          action: this.gotoIssuesPage,
         },
         {
           title: 'Log out',
-          action: this.logout
-        }
+          action: this.logout,
+        },
       ],
       globalState: {
         names: ['specs', 'episodes', 'details'],
         icons: ['script-text', 'format-list-numbered', 'creation'],
         color: ['warning lighten-2', 'blue lighten-3', 'purple lighten-2'],
-        tooltip: ['story specs', 'episode specs', 'episode details']
-      }
+        tooltip: ['story specs', 'episode specs', 'episode details'],
+      },
     }
   },
   computed: {
     ...mapState([
       'stories',
-      'isCommittingChanges'
+      'isCommittingChanges',
     ]),
     ...mapState('auth', [
       'isRequestingLogin',
       'loggedIn',
-      'invalidCredentials'
+      'invalidCredentials',
     ]),
     ...mapState('user', [
-      'privileges'
+      'privileges',
     ]),
     ...mapGetters('user', [
-      'initials'
+      'initials',
     ]),
     ...mapGetters('autosave', [
-      'statusText'
+      'statusText',
     ]),
-    idFromRoute () {
+    idFromRoute() {
       const p = this.$route.path
       if (p.startsWith('/element/')) {
         // Last uuid is the treeview item id
@@ -208,7 +208,7 @@ export default {
         return []
       }
     },
-    storyIdFromRoute () {
+    storyIdFromRoute() {
       const p = this.$route.path
       if (p.startsWith('/element/')) {
         // Last uuid is the treeview item id
@@ -218,42 +218,42 @@ export default {
         return null
       }
     },
-    isStorySelected () {
+    isStorySelected() {
       const storyPattern = /^\/element\/[-0-9a-f]+$/
       return storyPattern.test(this.$route.path)
     },
-    isEpisodeSelected () {
+    isEpisodeSelected() {
       const episodePattern = /^\/element\/[-0-9a-f]+\/[-0-9a-f]+$/
       return episodePattern.test(this.$route.path)
     },
-    version () {
+    version() {
       const packageJSON = require('~/package.json')
       const version = packageJSON.version
       return 'v' + version
-    }
+    },
   },
   methods: {
     ...mapActions([
-      'commitChanges'
+      'commitChanges',
     ]),
     ...mapActions('auth', [
       'requestLogin',
-      'requestLogout'
+      'requestLogout',
     ]),
-    refreshStories (previousResult, { subscriptionData }) {
+    refreshStories(previousResult, { subscriptionData }) {
       console.log('refreshStories', { previousResult, subscriptionData })
       const newQueryResult = subscriptionData.data.story
       const newStories = {
         story: [
-          ...newQueryResult
-        ]
+          ...newQueryResult,
+        ],
       }
       newStories.story.forEach((s, i) => {
         s.chapters = [...newQueryResult[i].chapters]
       })
       return newStories
     },
-    navigate ([selected], stories) {
+    navigate([selected], stories) {
       const isStory = stories.find(s => s.id === selected)
       if (isStory) {
         this.$router.push('/element/' + selected)
@@ -265,35 +265,35 @@ export default {
         })
       }
     },
-    episodeIndex (episode, stories) {
+    episodeIndex(episode, stories) {
       const storyId = episode.story.id
       const story = stories.find(s => s.id === storyId)
       return story ? story.chapters.indexOf(episode) : '?'
     },
-    login () {
+    login() {
       this.requestLogin([this.userName, this.password])
       this.userName = ''
       this.password = ''
       this.showPassword = false
     },
-    logout () {
+    logout() {
       this.requestLogout()
       this.$router.replace('/login?r=' + encodeURIComponent(this.$route.path))
     },
-    editProfile () {
+    editProfile() {
       this.$router.push('/profile')
     },
-    gotoIssuesPage () {
+    gotoIssuesPage() {
       window.open('https://github.com/mastoryberlin/content-editor/issues', '_blank')
     },
-    selectedStory (stories) {
+    selectedStory(stories) {
       return stories.find(s => s.id === this.storyIdFromRoute)
     },
-    selectedEpisode (stories) {
+    selectedEpisode(stories) {
       const story = this.selectedStory(stories)
       return story.chapters.find(e => e.id === this.idFromRoute[0])
     },
-    isGlobalState (state, data) {
+    isGlobalState(state, data) {
       switch (state) {
         case 'specs':
           return this.isStorySelected && this.selectedStory(data).edit.state === state
@@ -305,8 +305,8 @@ export default {
         default:
           return false
       }
-    }
-  }
+    },
+  },
 }
 </script>
 
