@@ -33,6 +33,26 @@
           small-chips
           @change="editTopics"
         >
+          <template #selection="{ attrs, item, parent, selected }">
+            <v-chip
+              v-if="item === Object(item)"
+              v-bind="attrs"
+              :input-value="selected"
+              label
+              small
+            >
+              <span class="pr-2">
+                {{ item.name }}
+              </span>
+              <v-icon
+                small
+                @click="parent.selectItem(item)"
+              >
+                $delete
+              </v-icon>
+            </v-chip>
+          </template>
+
           <template #append-outer>
             <v-menu>
               <template #activator="{on, attrs}">
@@ -64,24 +84,24 @@ export default {
   props: {
     phase: {
       type: Object,
-      required: true
+      required: true,
     },
     episodeId: {
       type: String,
-      required: true
+      required: true,
     },
     whitelist: {
       type: Array,
-      required: true
-    }
+      required: true,
+    },
   },
   apollo: {
     allTopics: {
       query: require('~/graphql/GetTopics'),
-      update: data => data.topic
-    }
+      update: data => data.topic,
+    },
   },
-  data () {
+  data() {
     // let topics
     // const whitelist = this.phase.topic_whitelist
     // if (whitelist) {
@@ -104,17 +124,17 @@ export default {
       menu: [
         {
           title: 'Copy this list',
-          action: this.copy
+          action: this.copy,
         },
         {
           title: 'Copy this list over to all subsequent phases',
-          action: this.copyToSubsequentPhases
-        }
-      ]
+          action: this.copyToSubsequentPhases,
+        },
+      ],
     }
   },
   computed: {
-    topics () {
+    topics() {
       const list = this.whitelist
       if (list) {
         return list.map((t) => {
@@ -128,17 +148,17 @@ export default {
           return ret
         })
       } else { return [] }
-    }
+    },
   },
 
   methods: {
-    refreshAllTopics (previousResult, { subscriptionData }) {
+    refreshAllTopics(previousResult, { subscriptionData }) {
       console.log('refreshAllTopics', previousResult, subscriptionData)
       const newQueryResult = subscriptionData.data.topic
       const newResult = { ...previousResult, topic: { ...newQueryResult } }
       return newResult
     },
-    filter (item, queryText, itemText) {
+    filter(item, queryText, itemText) {
       if (item.header) { return false }
 
       const hasValue = val => val != null ? val : ''
@@ -150,7 +170,7 @@ export default {
         .toLowerCase()
         .includes(query.toString().toLowerCase())
     },
-    copy () {
+    copy() {
       const text = this.topics.map(t => t.name).join(', ')
       if (navigator.clipboard) {
         navigator.clipboard.writeText(text)
@@ -172,17 +192,17 @@ export default {
         document.body.removeChild(tempInput)
       }
     },
-    copyToSubsequentPhases () {
+    copyToSubsequentPhases() {
       this.$apollo.mutate({
         mutation: require('~/graphql/UpdateSubsequentPhaseTopics'),
         variables: {
           episode_id: this.episodeId,
           afterNumber: this.phase.number,
-          topic_whitelist: this.whitelist
-        }
+          topic_whitelist: this.whitelist,
+        },
       })
     },
-    editTopics (newTopicsList) {
+    editTopics(newTopicsList) {
       console.log('BEGIN editTopics VALUE: ', newTopicsList)
       newTopicsList = newTopicsList.map((v) => {
         if (typeof v === 'string') {
@@ -197,7 +217,7 @@ export default {
             } else {
               this.$apollo.mutate({
                 mutation: require('~/graphql/AddTopic'),
-                variables: { name: v }
+                variables: { name: v },
               })
                 .then(({ data: { insert_topic_one: { id, name } } }) => {
                   console.log('THE TOPIC "' + name + ' was successfully added with id ' + id)
@@ -224,12 +244,12 @@ export default {
         mutation: require('~/graphql/UpdatePhaseTopics'),
         variables: {
           id: this.phase.id,
-          topic_whitelist: newTopicsList.map(t => t.id)
-        }
+          topic_whitelist: newTopicsList.map(t => t.id),
+        },
       })
       console.log('END editTopics ', newTopicsList)
-    }
-  }
+    },
+  },
 }
 </script>
 

@@ -14,12 +14,14 @@
         Are you sure students will not talk about this phase's context at all?
       </v-alert>
 
-      <topic-section
-        v-for="(topic, topicIndex) in phase.topics"
-        :key="topic.id"
-        :topic="topic"
-        :number="topicIndex + 1"
-      />
+      <v-expansion-panels :key="phase.id + '-topics'">
+        <topic-section
+          v-for="(topic, topicIndex) in phase.topics"
+          :key="topic.id"
+          :topic="topic"
+          :number="topicIndex + 1"
+        />
+      </v-expansion-panels>
     </template>
   </div>
 </template>
@@ -29,20 +31,28 @@ export default {
   props: {
     episode: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   data: () => ({
-    allTopics: []
+    allTopics: [],
   }),
   apollo: {
     allTopics: {
       query: require('~/graphql/GetTopics'),
-      update: data => data.topic
-    }
+      update: data => data.topic,
+      subscribeToMore: {
+        document: require('~/graphql/RefreshTopics'),
+        updateQuery: (previousResult, { subscriptionData }) => {
+          const newResult = { ...previousResult }
+          newResult.topic = JSON.parse(JSON.stringify(subscriptionData.data.topic))
+          return newResult
+        },
+      },
+    },
   },
   computed: {
-    phases () {
+    phases() {
       if (!this.episode.sections) { return [] }
       return this.episode.sections.map((phase) => {
         const list = phase.topic_whitelist
@@ -52,11 +62,11 @@ export default {
         })
         return {
           ...phase,
-          topics
+          topics,
         }
       })
-    }
-  }
+    },
+  },
 }
 </script>
 

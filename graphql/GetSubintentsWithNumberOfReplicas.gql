@@ -1,0 +1,10 @@
+query GetSubintentsWithNumberOfReplicas {
+  subintent {
+    replicas_aggregate {
+      aggregate {
+        count
+      }
+    }
+    id
+  }
+}
