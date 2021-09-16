@@ -1,6 +1,6 @@
 export const state = () => ({
   profile: null,
-  privileges: {}
+  privileges: {},
 })
 
 export const getters = {
@@ -17,7 +17,13 @@ export const getters = {
     } else {
       return '??'
     }
-  }
+  },
+  privilegesForStory: state => storyID =>
+    state.privileges
+      ? (state.privileges[storyID] || [])
+      : [],
+  may: (state, getters) => (doSomething, storyID) =>
+    state.privileges && (state.privileges.superadmin || getters.privilegesForStory(storyID).includes(doSomething)),
 }
 
 export const mutations = {
@@ -29,11 +35,11 @@ export const mutations = {
   },
   eraseProfile: (state) => {
     state.profile = null
-  }
+  },
 }
 
 export const actions = {
-  async queryProfile ({ commit }) {
+  async queryProfile({ commit }) {
     const response = await this.$axios.$get('user/profile')
     if (response.success) {
       const profile = { ...response }
@@ -41,16 +47,16 @@ export const actions = {
       commit('setProfile', profile)
     }
   },
-  async queryPrivileges ({ commit }) {
+  async queryPrivileges({ commit }) {
     const response = await this.$axios.$get('user/privileges')
     if (response.success) {
       commit('setPrivileges', response.privileges)
     }
   },
-  async updateProfile ({ commit }, newData) {
+  async updateProfile({ commit }, newData) {
     const response = await this.$axios.$post('user/profile', newData)
     if (response.success) {
       commit('setProfile', newData)
     }
-  }
+  },
 }

@@ -73,7 +73,6 @@
                             class="text-h5"
                             filled
                             rounded
-                            autofocus
                             single-line
                             full-width
                             rows="1"
@@ -269,6 +268,13 @@
                   />
                 </container>
               </template>
+
+              <!-- <finish-work-btn
+              v-if="data.story_chapter_by_pk.edit.state === 'details'"
+                :may-commit="mayCommitMessageFlow"
+                :loading="isCommittingMessageFlow"
+                @commit="commitMessageFlow"
+              /> -->
             </episode-tab>
           </apollo-query>
         </v-tab-item>
@@ -357,37 +363,41 @@ import { Container, Draggable } from 'vue-smooth-dnd'
 export default {
   components: {
     Container,
-    Draggable
+    Draggable,
   },
-  asyncData ({ route }) {
+  asyncData({ route }) {
     const tab = route.query.t || 0
     return { tab }
   },
   data: () => ({
-    isCommittingEpisodeSpecs: false
+    isCommittingEpisodeSpecs: false,
+    isCommittingMessageFlow: false,
   }),
-  head () {
+  head() {
     return {
-      title: 'Episode View' // TODO: One day, move apollo query into <script> to make it accessible from here and change title to sth like "Episode 1"
+      title: 'Episode View', // TODO: One day, move apollo query into <script> to make it accessible from here and change title to sth like "Episode 1"
     }
   },
   computed: {
-    storyId () {
+    storyId() {
       return this.$route.params.story
     },
-    episodeId () {
+    episodeId() {
       return this.$route.params.episode
     },
-    privileges () {
+    privileges() {
       const priv = this.$store.state.user.privileges
       return priv ? priv[this.storyId] : []
     },
-    mayCommitEpisodeSpecs () {
+    mayCommitEpisodeSpecs() {
       return this.privileges && this.privileges.includes('CommitEpisodeSpecs')
-    }
+    },
+    mayCommitMessageFlow() {
+      return this.privileges && this.privileges.includes('CommitEpisodeSpecs')
+    },
   },
   methods: {
-    addTabToURL (index) {
+    addTabToURL(index) {
       console.log('Called addTabToURL ', index)
       const query = this.$route.query
       if (index !== query.t) {
@@ -395,12 +405,12 @@ export default {
           ...this.$route,
           query: {
             ...query,
-            t: this.tab
-          }
+            t: this.tab,
+          },
         })
       }
     },
-    refreshEpisode (previousResult, { subscriptionData }) {
+    refreshEpisode(previousResult, { subscriptionData }) {
       if (previousResult) {
         console.log('refreshEpisode', { previousResult, subscriptionData })
         const newQueryResult = subscriptionData.data.story_chapter_by_pk
@@ -408,15 +418,15 @@ export default {
         const newEpisode = {
           story_chapter_by_pk: {
             id: previousResult.story_chapter_by_pk.id,
-            ...newQueryResult
-          }
+            ...newQueryResult,
+          },
         }
         newEpisode.story_chapter_by_pk.story.edit.state = newQueryResult.story.edit.state
         newEpisode.story_chapter_by_pk.sections = JSON.parse(JSON.stringify(newPhases))
         return newEpisode
       }
     },
-    refreshEpisodeMessages (previousResult, { subscriptionData }) {
+    refreshEpisodeMessages(previousResult, { subscriptionData }) {
       if (previousResult) {
         console.log('refreshEpisodeMessages', { previousResult, subscriptionData })
         const newQueryResult = subscriptionData.data.story_chapter_by_pk
@@ -424,71 +434,72 @@ export default {
         const newEpisodeMsgs = {
           story_chapter_by_pk: {
             id: previousResult.story_chapter_by_pk.id,
-            ...newQueryResult
-          }
+            ...newQueryResult,
+          },
         }
         newEpisodeMsgs.story_chapter_by_pk.sections = JSON.parse(JSON.stringify(newPhases))
         return newEpisodeMsgs
       }
     },
-    updateEpisodeEditStateToSpecsIfNull (editField) {
+    updateEpisodeEditStateToSpecsIfNull(editField) {
       if (!('state' in editField)) {
         this.$apollo.mutate({
           mutation: require('~/graphql/UpdateEpisodeEditState'),
           variables: {
             id: this.episodeId,
-            state: 'specs'
-          }
+            state: 'specs',
+          },
         })
       }
     },
-    async addPhase ({ after, duplicate = false, data }) {
+    async addPhase({ after, duplicate = false, data }) {
       this.updateEpisodeEditStateToSpecsIfNull(data.story_chapter_by_pk.edit)
       const number = after.number ? after.number + 1 : 1
       const fakeId = 'zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzz'
       const variables = {
         episodeId: this.episodeId,
         number,
-        meta: JSON.parse(JSON.stringify(after.meta))
+        meta: JSON.parse(JSON.stringify(after.meta)),
+        topic_whitelist: [...after.topic_whitelist],
       }
       const idxClone = after.number ? after.number - 1 : 0
       const cloneData = data.story_chapter_by_pk.sections[idxClone]
       if (duplicate) {
         Object.assign(variables, {
           title: after.title,
-          specs: after.specs
+          specs: after.specs,
         })
         data.story_chapter_by_pk.sections.push({
           ...cloneData,
-          id: fakeId
+          id: fakeId,
         })
       } else {
         data.story_chapter_by_pk.sections.push({
           ...cloneData,
           id: fakeId,
           title: '',
-          specs: ''
+          specs: '',
         })
       }
       data.story_chapter_by_pk.sections.sort((a, b) => parseFloat(a.number) - parseFloat(b.number))
       const apolloClient = this.$apollo.provider.defaultClient
       apolloClient.writeQuery({
         query: require('~/graphql/GetEpisode'),
-        data
+        data,
       })
       const request = await this.$apollo.mutate({
         mutation: require('~/graphql/AddPhase'),
-        variables
+        variables,
       })
       console.log('mutation AddPhase returned', request.data)
       this.$apollo.mutate({
         mutation: require('~/graphql/AddMessage'),
         variables: {
-          phaseId: request.data.insert_story_section_one.id
-        }
+          phaseId: request.data.insert_story_section_one.id,
+        },
       })
     },
-    deletePhase (phase, data) {
+    deletePhase(phase, data) {
       if (confirm('Are you sure you want to delete phase ' + phase.number + ', "' + phase.title + '"?')) {
         this.updateEpisodeEditStateToSpecsIfNull(data.story_chapter_by_pk.edit)
 
@@ -505,7 +516,7 @@ export default {
         const apolloClient = this.$apollo.provider.defaultClient
         apolloClient.writeQuery({
           query: require('~/graphql/GetEpisode'),
-          data
+          data,
         })
 
         // ... and perform the changes in the DB
@@ -513,9 +524,9 @@ export default {
       }
     },
     ...mapMutations('autosave', [
-      'pushChange'
+      'pushChange',
     ]),
-    edit (what, id, element, value, editField) {
+    edit(what, id, element, value, editField) {
       this.updateEpisodeEditStateToSpecsIfNull(editField)
       const capital = s => s.substr(0, 1).toUpperCase() + s.substr(1)
       const variables = { id }
@@ -523,34 +534,34 @@ export default {
       this.pushChange({
         change: {
           mutation: require('~/graphql/Update' + capital(what) + capital(element)),
-          variables
+          variables,
         },
-        dispatch: this.$store.dispatch
+        dispatch: this.$store.dispatch,
       })
     },
-    async commitEpisodeSpecs () {
+    async commitEpisodeSpecs() {
       this.isCommittingEpisodeSpecs = true
       await this.$apollo.mutate({
         mutation: require('~/graphql/EnterEpisodeDetailsExecution'),
         variables: {
-          id: this.episodeId
-        }
+          id: this.episodeId,
+        },
       })
       this.isCommittingEpisodeSpecs = false
     },
-    closeStorySpecsHaveChangedWarning () {
+    closeStorySpecsHaveChangedWarning() {
       this.$apollo.mutate({
         mutation: require('~/graphql/UpdateEpisodeEditWarnStorySpecsHaveChanged'),
         variables: {
           id: this.episodeId,
-          warnStorySpecsHaveChanged: false
-        }
+          warnStorySpecsHaveChanged: false,
+        },
       })
     },
-    activateSpecsTab () {
+    activateSpecsTab() {
       this.tab = 0
     },
-    applyDrag (arr, { removedIndex, addedIndex, payload }) {
+    applyDrag(arr, { removedIndex, addedIndex, payload }) {
       console.log(removedIndex, addedIndex, payload)
       const result = [...arr]
       let itemToAdd = payload
@@ -562,14 +573,14 @@ export default {
       }
       return {
         item: itemToAdd,
-        arr: result
+        arr: result,
       }
     },
-    async onDrop ({ removedIndex, addedIndex, payload }) {
+    async onDrop({ removedIndex, addedIndex, payload }) {
       const apolloClient = this.$apollo.provider.defaultClient
       const data = apolloClient.readQuery({
         query: require('~/graphql/GetEpisode'),
-        variables: { id: this.episodeId }
+        variables: { id: this.episodeId },
       })
       if (removedIndex !== addedIndex) {
         const { item, arr } = this.applyDrag(
@@ -579,7 +590,7 @@ export default {
         data.story_chapter_by_pk.sections = arr
         apolloClient.writeQuery({
           query: require('~/graphql/GetEpisode'),
-          data
+          data,
         })
         const difference = addedIndex - removedIndex
         await this.$apollo.mutate({
@@ -587,21 +598,22 @@ export default {
           variables: {
             id: item.id,
             episodeId: this.episodeId,
-            number: item.number
-          }
+            number: item.number,
+          },
         })
         await this.$apollo.mutate({
           mutation: require('~/graphql/AddPhase'),
           variables: {
             episodeId: this.episodeId,
-            number: difference > 0 ? item.number + difference : item.number - Math.abs(difference),
+            number: item.number + difference,
             meta: JSON.parse(JSON.stringify(item.meta)),
             title: item.title,
-            specs: item.specs
-          }
+            specs: item.specs,
+            topic_whitelist: item.topic_whitelist,
+          },
         })
       }
-    }
+    },
     // onDrop ({ removedIndex, addedIndex, payload }) {
     //   console.log(removedIndex, addedIndex, payload)
     //   if (removedIndex !== addedIndex) {
@@ -619,6 +631,6 @@ export default {
     //     })
     //   }
     // }
-  }
+  },
 }
 </script>

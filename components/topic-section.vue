@@ -60,7 +60,7 @@
                 prefix="A student might "
                 autofocus
                 persistent-hint
-                hint="Try to write as naturally as possible"
+                hint="Describe the speech act: What is a student’s intent behind an utterance?"
                 :rules="[
                   addIntentName !== '' || 'This field may not be left empty',
                   allowedVerbs.includes(wordsOfNewIntentName[0]) || 'Please start the intent with one of the verbs from the list above'

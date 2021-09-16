@@ -33,6 +33,54 @@
           small-chips
           @change="editTopics"
         >
+          <template #item="{ index, item }">
+            <v-text-field
+              v-if="editing === item"
+              :value="editing.name"
+              autofocus
+              flat
+              background-color="transparent"
+              hide-details
+              solo
+              @change="$apollo.mutate({
+                mutation: require('~/graphql/UpdateTopicName'),
+                variables: { id: item.id, name: $event }
+              })"
+              @keyup.enter="editTopicName(index, item)"
+            />
+            <template v-else>
+              {{ item.name }}
+            </template>
+
+            <v-spacer />
+
+            <v-list-item-action @click.stop>
+              <v-hover v-slot="{hover}">
+                <v-btn
+                  icon
+                  @click.stop.prevent="editTopicName(index, item)"
+                >
+                  <v-icon :color="hover ? 'blue' : null">
+                    {{ editing !== item ? 'mdi-pencil' : 'mdi-check' }}
+                  </v-icon>
+                </v-btn>
+              </v-hover>
+            </v-list-item-action>
+
+            <v-list-item-action @click.stop>
+              <v-hover v-slot="{hover}">
+                <v-btn
+                  icon
+                  @click.stop.prevent="deleteTopic(item)"
+                >
+                  <v-icon :color="hover ? 'red' : null">
+                    mdi-delete
+                  </v-icon>
+                </v-btn>
+              </v-hover>
+            </v-list-item-action>
+          </template>
+
           <template #selection="{ attrs, item, parent, selected }">
             <v-chip
               v-if="item === Object(item)"
@@ -99,28 +147,22 @@ export default {
     allTopics: {
       query: require('~/graphql/GetTopics'),
       update: data => data.topic,
+      subscribeToMore: {
+        document: require('~/graphql/RefreshTopics'),
+        updateQuery: (previousResult, { subscriptionData }) => {
+          const newResult = { ...previousResult }
+          newResult.topic = [...subscriptionData.data.topic]
+          return newResult
+        },
+      },
     },
   },
   data() {
-    // let topics
-    // const whitelist = this.phase.topic_whitelist
-    // if (whitelist) {
-    //   topics = whitelist.map((t) => {
-    //     const top = this.allTopics.find(at => at.id === t)
-    //     let ret
-    //     if (top) {
-    //       ret = { id: t, name: t.name }
-    //     } else {
-    //       ret = { id: t, name: '' }
-    //     }
-    //     return ret
-    //   })
-    // } else {
-    //   topics = []
-    // }
     return {
       allTopics: [],
       search: null,
+      editing: null,
+      editingIndex: -1,
       menu: [
         {
           title: 'Copy this list',
@@ -202,52 +244,62 @@ export default {
         },
       })
     },
-    editTopics(newTopicsList) {
-      console.log('BEGIN editTopics VALUE: ', newTopicsList)
-      newTopicsList = newTopicsList.map((v) => {
-        if (typeof v === 'string') {
-          const wholeString = v
-          const arr = []
-          const names = wholeString.split(',').map(n => n.trim())
-          const hashmap = Object.fromEntries(this.allTopics.map(t => [t.name, t.id]))
-          const knownNames = Object.keys(hashmap)
-          names.forEach((name) => {
-            if (knownNames.includes(name)) {
-              arr.push({ name, id: hashmap[name] })
-            } else {
-              this.$apollo.mutate({
-                mutation: require('~/graphql/AddTopic'),
-                variables: { name: v },
-              })
-                .then(({ data: { insert_topic_one: { id, name } } }) => {
-                  console.log('THE TOPIC "' + name + ' was successfully added with id ' + id)
-                  arr.push({ id, name })
-                })
-            }
-          })
-          // .then(({ data: { insert_topic_one: { id } } }) => {
-          //   const newTopic = this.topics.find(t => t.name === v.name)
-          //   if (newTopic) {
-          //     newTopic.id = id
-          //     console.log('UPDATED newTopic ', this.topics)
-          //   } else {
-          //     console.log('FAILED to update newTopic - couldn\'t find the name ' + v.name)
-          //   }
-          // })
-          v = arr
-        }
-        return v
+    async editTopics(values) {
+      const objects = values.filter(v => typeof v === 'object')
+      const texts = values.filter(v => typeof v === 'string')
+      let target = objects.length
+      texts.forEach((wholeString) => {
+        const topicNames = wholeString.split(',').map(n => n.trim())
+        target += topicNames.length
+        const hashmap = Object.fromEntries(this.allTopics.map(t => [t.name, t.id]))
+        const knownNames = Object.keys(hashmap)
+        topicNames.forEach(async (name) => {
+          if (knownNames.includes(name)) {
+            objects.push({ name, id: hashmap[name] })
+          } else {
+            const { data: { insert_topic_one: { id } } } = await this.$apollo.mutate({
+              mutation: require('~/graphql/AddTopic'),
+              variables: { name },
+            })
+            console.log('THE TOPIC "' + name + ' was successfully added with id ' + id)
+            objects.push({ id, name })
+          }
+        })
       })
-        .flat()
-      // this.topics = newTopicsList
+      console.log('Waiting until all array items have been pushed')
+      while (objects.length < target) { // eslint-disable-line no-unmodified-loop-condition
+        await new Promise((resolve) => { setTimeout(resolve, 250) })
+      }
+      console.log('newTopicsList: ', objects)
       this.$apollo.mutate({
         mutation: require('~/graphql/UpdatePhaseTopics'),
         variables: {
           id: this.phase.id,
-          topic_whitelist: newTopicsList.map(t => t.id),
+          topic_whitelist: objects.map(o => o.id),
         },
       })
-      console.log('END editTopics ', newTopicsList)
+    },
+    editTopicName(index, item) {
+      if (!this.editing) {
+        this.editing = item
+        this.editingIndex = index
+      } else {
+        this.editing = null
+        this.editingIndex = -1
+      }
+    },
+    deleteTopic(item) {
+      const { name, id } = item
+      if (confirm('Are you sure you want to delete the topic "' + name + '"?')) {
+        try {
+          this.$apollo.mutate({
+            mutation: require('~/graphql/DeleteTopic'),
+            variables: { id },
+          })
+        } catch (ex) {
+          alert('"' + name + '" could not be deleted.\nProbably the topic is already used somewhere and/or has\nexample student messages defined.')
+        }
+      }
     },
   },
 }
