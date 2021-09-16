@@ -23,13 +23,11 @@
       />
       <template v-if="showChangePasswordSection">
         <v-text-field
-          label="Old password"
-        />
-        <v-text-field
           v-model="password"
           :append-icon="showPassword1 ? 'mdi-eye' : 'mdi-eye-off'"
           :type="showPassword1 ? 'text' : 'password'"
           label="New password"
+          :rules="[password !== '' || 'This field may not be left empty']"
           @click:append="showPassword1 = !showPassword1"
         />
         <v-text-field
@@ -37,6 +35,7 @@
           :append-icon="showPassword2 ? 'mdi-eye' : 'mdi-eye-off'"
           :type="showPassword2 ? 'text' : 'password'"
           label="Enter new password again"
+          :rules="[passwordRepeated === password || 'This field must match the password you entered above']"
           @click:append="showPassword2 = !showPassword2"
         />
         <v-btn
@@ -65,7 +64,7 @@
 <script>
 import { mapState } from 'vuex'
 export default {
-  asyncData ({ store }) {
+  asyncData({ store }) {
     let name, email, gitName, gitEmail
     const p = store.state.user.profile
     if (p) {
@@ -88,18 +87,18 @@ export default {
     showPasswordChangedHint: false,
     showSavedHint: false,
     showPassword1: false,
-    showPassword2: false
+    showPassword2: false,
   }),
   computed: {
     ...mapState('user', [
-      'profile'
-    ])
+      'profile',
+    ]),
   },
   methods: {
-    async changePassword () {
+    async changePassword() {
       try {
         const resp = await this.$axios.$post('user/password', {
-          password: this.password
+          password: this.password,
         })
         if (resp.success) {
           this.password = ''
@@ -111,21 +110,21 @@ export default {
         }
       } catch (err) {}
     },
-    async save () {
+    async save() {
       try {
         const resp = await this.$axios.$post('user/profile', {
           id: this.$store.state.user.profile.id,
           name: this.name,
           email: this.email,
           gitName: this.gitName,
-          gitEmail: this.gitEmail
+          gitEmail: this.gitEmail,
         })
         if (resp.success) {
           this.showSavedHint = true
         }
       } catch (err) {}
-    }
-  }
+    },
+  },
 }
 </script>
 
