@@ -63,12 +63,12 @@ export default {
   props: {
     npc: {
       type: String,
-      required: true
+      required: true,
     },
     phase: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   data: () => ({
     moods: [
@@ -80,32 +80,32 @@ export default {
       'lol',
       'sad',
       'wondering',
-      'worried'
+      'worried',
     ],
-    moodSelectorOpen: false
+    moodSelectorOpen: false,
   }),
   computed: {
-    printableMood () {
+    printableMood() {
       return this.mood.replace('-', ' ')
     },
     mood: {
-      get () {
+      get() {
         const mood = this.phase.meta.mood
         return mood[this.npc] || 'happy'
       },
-      set (v) {
+      set(v) {
         const mood = this.phase.meta.mood
         mood[this.npc] = v
         this.$apollo.mutate({
           mutation: require('~/graphql/UpdatePhaseMood'),
-          variables: { id: this.phase.id, mood: { mood } }
+          variables: { id: this.phase.id, mood: { mood } },
         })
-      }
+      },
     },
-    available () {
+    available() {
       return this.mood !== 'unavailable'
-    }
-  }
+    },
+  },
 }
 </script>
 

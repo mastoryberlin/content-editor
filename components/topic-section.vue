@@ -145,7 +145,7 @@ export default {
   },
   methods: {
     addIntent() {
-      if (!this.wordsOfNewIntentName.includes(this.topic.name.toLowerCase())) {
+      if (!this.addIntentName.toLowerCase().includes(this.topic.name.toLowerCase())) {
         if (!confirm('The speech act you are about to add,\n  "' +
           this.addIntentName + '",\ndoes not include "' +
           this.topic.name + '" literally.\nPlease confirm that this is really about ' +
