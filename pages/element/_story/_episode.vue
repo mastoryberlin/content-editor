@@ -21,6 +21,7 @@
       class="content-editor"
     >
       <apollo-subscribe-to-more
+        v-if="!disableRefreshEpisode"
         :document="require('~/graphql/RefreshEpisode')"
         :variables="{id: episodeId}"
         :update-query="refreshEpisode"
@@ -233,6 +234,7 @@
               @goto-episode-specs="activateSpecsTab"
             >
               <apollo-subscribe-to-more
+                v-if="!disableRefreshEpisodeMessage"
                 :document="require('~/graphql/RefreshEpisodeMessages')"
                 :variables="{id: episodeId}"
                 :update-query="refreshEpisodeMessages"
@@ -248,22 +250,19 @@
                 <!-- :get-child-payload="setDragIndex" -->
                 <container
                   :key="phase.id + '-messages'"
-                  group-name="episode-messages"
-                  drag-handle-selector=".content-editor-draggable-handle"
-                  @drag-start="setDragSource({
-                    ...$event,
-                    dragSource: phase
-                  })"
-                  @drop="moveMessage({
-                    ...$event,
-                    dragTarget: phase
-                  })"
+                  style="cursor: all-scroll; min-height: 50px;"
+                  :get-child-payload="getChildPayload"
+                  group-name="1"
+                  @drag-start="onDragStart(gem.result.data.story_chapter_by_pk.sections[phaseIndex].prompts, $event)"
+                  @drop="dropMesage(gem, phase.id, phaseIndex, $event)"
                 >
                   <message-group
                     v-for="message in gem.result.data.story_chapter_by_pk.sections[phaseIndex].prompts.filter(p => p.parent === null)"
                     :key="message.id"
                     :all-messages-in-this-phase="gem.result.data.story_chapter_by_pk.sections[phaseIndex].prompts"
                     :message="message"
+                    :phase-index="phaseIndex"
+                    :gem="gem"
                     :deletable="gem.result.data.story_chapter_by_pk.sections[phaseIndex].prompts.length > 1"
                     :course-name="data.story_chapter_by_pk.story.id"
                   />
@@ -365,7 +364,9 @@ export default {
     return { tab }
   },
   data: () => ({
-    isCommittingEpisodeSpecs: false
+    isCommittingEpisodeSpecs: false,
+    disableRefreshEpisode: false,
+    disableRefreshEpisodeMessage: false
   }),
   head () {
     return {
@@ -385,6 +386,9 @@ export default {
     },
     mayCommitEpisodeSpecs () {
       return this.privileges && this.privileges.includes('CommitEpisodeSpecs')
+    },
+    dragItem () {
+      return this.$store.state.dragItem
     }
   },
   methods: {
@@ -418,6 +422,9 @@ export default {
       }
     },
     refreshEpisodeMessages (previousResult, { subscriptionData }) {
+      if (this.disableRefreshEpisode) {
+        this.disableRefreshEpisode = false
+      }
       if (previousResult) {
         console.log('refreshEpisodeMessages', { previousResult, subscriptionData })
         const newQueryResult = subscriptionData.data.story_chapter_by_pk
@@ -605,7 +612,7 @@ export default {
           }
         })
       }
-    }
+    },
     // onDrop ({ removedIndex, addedIndex, payload }) {
     //   console.log(removedIndex, addedIndex, payload)
     //   if (removedIndex !== addedIndex) {
@@ -623,6 +630,88 @@ export default {
     //     })
     //   }
     // }
+    getChildPayload (index) {
+      return index
+    },
+    onDragStart (arr, dragResult) {
+      const { isSource, payload } = dragResult
+      if (isSource) {
+        // arr.forEach((e, i) => {
+        //   if (e.parent !== null) {
+        //     arr.splice(i, 1)
+        //   }
+        // })
+        arr = arr.filter(e => e.parent === null)
+        console.log(arr, isSource, payload)
+        const item = arr[payload]
+        console.log(arr, item, payload)
+        this.$store.commit('setDragItem', item)
+      }
+    },
+    applyDragmessage (arr, phaseIndex, { removedIndex, addedIndex }) {
+      const result = [...arr]
+      let itemToAdd = this.dragItem
+
+      if (removedIndex !== null) {
+        itemToAdd = result.splice(removedIndex, 1)[0]
+      }
+
+      if (addedIndex !== null) {
+        result.splice(addedIndex, 0, itemToAdd)
+      }
+
+      return {
+        arr: result,
+        item: itemToAdd
+      }
+    },
+    async dropMesage (gem, phaseId, phaseIndex, { removedIndex, addedIndex }) {
+      try {
+        console.log(removedIndex, addedIndex)
+        if (removedIndex === null && addedIndex === null) { return }
+        if (removedIndex !== addedIndex) {
+          const collection = gem.result.data.story_chapter_by_pk.sections[phaseIndex].prompts
+          const { arr, item } = this.applyDragmessage(collection, phaseIndex, { removedIndex, addedIndex })
+          gem.result.data.story_chapter_by_pk.sections[phaseIndex].prompts = arr
+
+          const apolloClient = this.$apollo.provider.defaultClient
+          apolloClient.writeQuery({
+            query: require('~/graphql/GetEpisodeMessages'),
+            data: gem.result.data
+          })
+
+          this.disableRefreshEpisode = true
+          this.disableRefreshEpisodeMessage = true
+          if (removedIndex !== null) {
+            await this.$apollo.mutate({
+              mutation: require('~/graphql/DeleteMessage'),
+              variables: {
+                id: item.id,
+                number: item.number,
+                phaseId
+              }
+            })
+          }
+          if (addedIndex !== null) {
+            const variables = { ...item }
+            delete variables.id
+            delete variables.section_id
+            delete variables.__typename
+            await this.$apollo.mutate({
+              mutation: require('~/graphql/AddMessage'),
+              variables: {
+                ...variables,
+                number: addedIndex + 1,
+                phaseId
+              }
+            })
+          }
+          this.disableRefreshEpisodeMessage = false
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    }
   }
 }
 </script>

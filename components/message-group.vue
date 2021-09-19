@@ -76,7 +76,7 @@
               </v-textarea>
             </div>
 
-            <type-selector :disabled="children.length > 1" :message="message" />
+            <type-selector :disabled="children.length > 1" :gem="gem" :message="message" :phase-index="phaseIndex" />
             <sender-selector v-if="message.type !== 'nestable'" :message="message" />
 
             <template
@@ -154,22 +154,16 @@
 
             <!-- :get-child-payload="setDragIndex" -->
             <container
-              v-else
-              group-name="episode-messages"
+              v-if="message.type === 'nestable'"
+              group-name="2"
               drag-handle-selector=".content-editor-draggable-handle"
-              @drag-start="setDragSource({
-                ...$event,
-                dragSource: message,
-              })"
-              @drop="moveMessage({
-                ...$event,
-                dragTarget: message,
-              })"
             >
               <message-group
                 v-for="submessage in children"
                 :key="submessage.id"
                 :all-messages-in-this-phase="allMessagesInThisPhase"
+                :phase-index="phaseIndex"
+                :gem="gem"
                 :message="submessage"
                 :deletable="children.length > 1"
                 :course-name="courseName"
@@ -209,6 +203,14 @@ export default {
   },
   props: {
     message: {
+      type: Object,
+      required: true
+    },
+    phaseIndex: {
+      type: Number,
+      required: true
+    },
+    gem: {
       type: Object,
       required: true
     },
@@ -310,7 +312,20 @@ export default {
     // },
     async deleteMessage () {
       if (confirm('Are you sure you want to delete this message?')) {
+        console.log(this.message)
         // this.updateEpisodeEditStateToSpecsIfNull(editField)
+
+        let index = 0
+        const data = this.gem.result.data
+        data.story_chapter_by_pk.sections[this.phaseIndex].prompts.every((prompt, idx) => {
+          index = idx
+          if (prompt.id === this.message.id) {
+            return false
+          }
+          return true
+        })
+        data.story_chapter_by_pk.sections[this.phaseIndex].prompts.splice(index, 1)
+
         await this.$apollo.mutate({
           mutation: require('~/graphql/DeleteMessage'),
           variables: {
@@ -337,21 +352,37 @@ export default {
       })
     },
     async addMessage ({ after, duplicate }) {
-      let variables = {}
-      if (duplicate) {
-        variables = { ...after }
-        delete variables.id
-        delete variables.section_id
-        delete variables.__typename
-      } else {
-        variables.parent = after.parent
+      try {
+        let variables = {}
+        if (duplicate) {
+          variables = { ...after }
+          delete variables.id
+          delete variables.section_id
+          delete variables.__typename
+        } else {
+          variables.parent = after.parent
+        }
+        variables.phaseId = after.section_id
+        variables.number = after.number + 1
+
+        const data = this.gem.result.data
+        const index = variables.number - 1
+        data.story_chapter_by_pk.sections[this.phaseIndex].prompts.splice(
+          index,
+          0,
+          {
+            ...variables,
+            type: duplicate ? after.type : 'text'
+          }
+        )
+
+        await this.$apollo.mutate({
+          mutation: require('~/graphql/AddMessage'),
+          variables
+        })
+      } catch (error) {
+        console.log(error)
       }
-      variables.phaseId = after.section_id
-      variables.number = after.number + 1
-      await this.$apollo.mutate({
-        mutation: require('~/graphql/AddMessage'),
-        variables
-      })
     }
   }
 }

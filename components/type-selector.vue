@@ -30,6 +30,14 @@ export default {
       type: Object,
       required: true
     },
+    phaseIndex: {
+      type: Number,
+      required: true
+    },
+    gem: {
+      type: Object,
+      required: true
+    },
     disabled: {
       type: Boolean,
       default: false
@@ -81,19 +89,38 @@ export default {
       set (v) {
         const my = this.message
         if (v && v !== my.type) {
+          const data = this.gem.result.data
           if (v === 'nestable') {
             // Change from message type to logic block
-            this.$db.add('message', null, {
+            const variables = {
+              number: my.number + 1,
               sender_id: my.sender_id,
               type: my.type,
               text: my.text,
               attachment: my.attachment,
               parent: my.id
-            }, my.section_id)
+            }
+
+            const index = variables.number - 1
+
+            data.story_chapter_by_pk.sections[this.phaseIndex].prompts.splice(index, 0, variables)
+
+            this.$db.add('message', null, variables, my.section_id)
           } else if (my.type === 'nestable') {
             // Change FROM logic block to some message type
             // TODO
           }
+
+          let index = 0
+          data.story_chapter_by_pk.sections[this.phaseIndex].prompts.every((prompt, idx) => {
+            index = idx
+            if (prompt.id === this.message.id) {
+              return false
+            }
+            return true
+          })
+          data.story_chapter_by_pk.sections[this.phaseIndex].prompts[index].type = v
+
           this.$apollo.mutate({
             mutation: require('~/graphql/UpdateMessageType'),
             variables: {

@@ -4,7 +4,8 @@ export default {
       dragSource: null,
       removedIndex: null
     },
-    isCommittingChanges: false
+    isCommittingChanges: false,
+    dragItem: null
   }),
   getters: {
     featuresInPhase: state => (phaseId) => {
@@ -16,6 +17,9 @@ export default {
     }
   },
   mutations: {
+    setDragItem (state, value) {
+      state.dragItem = value
+    }
     // initializeStories: (state, retrievedStories) => {
     //   state.stories = retrievedStories
     // },
