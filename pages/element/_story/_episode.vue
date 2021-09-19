@@ -314,9 +314,9 @@
           <episode-tab
             :episode="data.story_chapter_by_pk"
             detail="feedback"
+            tab="test-and-feedback"
             @goto-episode-specs="activateSpecsTab"
           >
-            Episode test &amp; feedback for "{{ data.story_chapter_by_pk.title }}"
           </episode-tab>
         </v-tab-item>
 

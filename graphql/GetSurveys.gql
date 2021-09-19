@@ -1,0 +1,12 @@
+query GetSurveys($episodeId: uuid!) {
+  survey(where: {story_chapter_id: {_eq: $episodeId}}) {
+    id
+    questions(order_by: {number: asc}) {
+      id
+      note
+      number
+      question
+      type
+    }
+  }
+}

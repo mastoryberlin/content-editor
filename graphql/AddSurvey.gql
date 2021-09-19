@@ -1,0 +1,5 @@
+mutation AddSurvey($episodeId: uuid!) {
+  insert_survey_one(object: {story_chapter_id: $episodeId}) {
+    id
+  }
+}

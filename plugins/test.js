@@ -1,13 +1,13 @@
 export default (context, inject) => {
   inject('test', {
-    start() {
-      console.log("start alpha test")
+    start(classObject) {
+      console.log('start alpha test for class ' + classObject.id)
     },
-    stop() {
-      console.log("stop alpha test")
+    stop(classObject) {
+      console.log('stop alpha test for class ' + classObject.id)
     },
-    reset() {
-      console.log("reset alpha test")
+    reset(classObject) {
+      console.log('reset alpha test for class ' + classObject.id)
     },
   })
 }
