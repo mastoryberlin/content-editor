@@ -38,6 +38,8 @@
         </v-list>
       </div>
     </apollo-query>
+    <p>No stories showing up? Try refreshing the page in your browser!</p>
+    <p>If you still miss stories you expect, please drop Felix a note on Slack or mail.</p>
   </div>
 </template>
 
