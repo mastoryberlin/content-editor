@@ -409,8 +409,9 @@ export default {
           specs: after.specs,
         })
       }
-      if (editField.shortcutProjectID) {
-        const { id } = await this.$shortcut.createStory({ name: 'Episode ' + number, project_id: editField.shortcutProjectID })
+      const shortcut = editField.shortcut
+      if (shortcut) {
+        const { id } = await this.$shortcut.createStory({ name: 'Episode ' + number, project_id: shortcut.project, epic_id: shortcut.epic })
         variables.edit = {
           shortcutStoryID: id, state: 'specs', warnStorySpecsHaveChanged: false, warnEpisodeSpecsHaveChanged: false,
         }
