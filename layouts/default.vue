@@ -30,9 +30,10 @@
           <v-treeview
             activatable
             :active="idFromRoute"
+            active-class="font-weight-bold blue lighten-4"
             selection-type="independent"
             class="nav"
-            color="warning"
+            color="black"
             :items="data.story.filter((s) => {
               const id = s.id
               return (privileges && (privileges['superadmin'] || privileges[id] && privileges[id].includes('view')))

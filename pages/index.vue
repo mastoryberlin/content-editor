@@ -29,6 +29,7 @@
               return (privileges && (privileges['superadmin'] || privileges[id] && privileges[id].includes('view')))
             })"
             :key="s.id"
+            class="font-weight-bold"
             @click="$router.push(`/element/${s.id}`)"
           >
             <v-list-item-content>
@@ -38,8 +39,11 @@
         </v-list>
       </div>
     </apollo-query>
-    <p>No stories showing up? Try refreshing the page in your browser!</p>
-    <p>If you still miss stories you expect, please drop Felix a note on Slack or mail.</p>
+
+    <ul class="mt-7">
+      <li>No stories showing up? Try refreshing the page in your browser!</li>
+      <li>If you still miss stories you expect, please drop Felix a note on Slack or mail.</li>
+    </ul>
   </div>
 </template>
 
@@ -50,11 +54,11 @@ export default {
   }),
   computed: {
     ...mapState('user', [
-      'privileges'
-    ])
+      'privileges',
+    ]),
   },
   methods: {
-    refreshStories (previousResult, secondArg) {
+    refreshStories(previousResult, secondArg) {
       // if (previousResult && secondArg) {
       //   console.log(`Stories updated`, previousResult, secondArg)
       // const newResult = {
@@ -63,8 +67,8 @@ export default {
       // newResult.story.push(subscriptionData.data.story)
       // return newResult
       // }
-    }
-  }
+    },
+  },
 }
 </script>
 

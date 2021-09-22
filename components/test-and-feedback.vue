@@ -1,12 +1,17 @@
 <template lang="html">
   <div class="">
-    {{ episode.id }}
     <template v-if="$apollo.loading">
       Loading...
     </template>
 
     <template v-if="surveys">
-      <survey-card v-for="survey in surveys" :key="survey.id" :survey="survey" />
+      <survey-card
+        v-for="(survey, n) in surveys"
+        :key="survey.id"
+        :survey="survey"
+        :number="n"
+        @add-survey="addSurvey"
+      />
       <span v-if="surveys.length === 0" @click="addSurvey">
         Click here to add a survey for this episode.
       </span>

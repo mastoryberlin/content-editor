@@ -23,35 +23,31 @@ export default {
   props: {
     phase: {
       type: Object,
-      required: true
-    },
-    episodeId: {
-      type: String,
-      required: true
+      required: true,
     },
     data: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   data: () => ({
     color: {
       CCTV: 'teal',
       'Secret Folder': 'pink',
       'Calls From The Future': 'blue lighten-2',
-      Rover: 'indigo'
-    }
+      Rover: 'indigo',
+    },
   }),
   computed: {
-    allFeatures () {
+    allFeatures() {
       return Object.keys(this.color)
     },
-    availableFeatures () {
+    availableFeatures() {
       return this.phase.meta.features
-    }
+    },
   },
   methods: {
-    toggle (feature, data) {
+    toggle(feature, data) {
       const f = [...this.availableFeatures]
       const i = f.indexOf(feature)
       if (i >= 0) {
@@ -68,14 +64,14 @@ export default {
       const apolloClient = this.$apollo.provider.defaultClient
       apolloClient.writeQuery({
         query: require('~/graphql/GetEpisode'),
-        data
+        data,
       })
       this.$apollo.mutate({
         mutation: require('~/graphql/UpdatePhaseFeatures'),
-        variables: { id: this.phase.id, features: { features: f } }
+        variables: { id: this.phase.id, features: { features: f } },
       })
-    }
-  }
+    },
+  },
 }
 </script>
 

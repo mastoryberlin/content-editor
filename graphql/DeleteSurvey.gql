@@ -1,0 +1,9 @@
+mutation DeleteSurvey($id: uuid!) {
+  delete_survey_question(where: {survey_id: {_eq: $id}}) {
+    affected_rows
+  }
+
+  delete_survey_by_pk(id: $id) {
+    id
+  }
+}

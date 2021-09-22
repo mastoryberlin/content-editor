@@ -1,5 +1,6 @@
 query GetEpisode($id: uuid!) {
   story_chapter_by_pk(id: $id) {
+    id
     number
     title
     specs

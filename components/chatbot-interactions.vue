@@ -11,7 +11,8 @@
 
       <v-alert v-if="phase.topics.length === 0" :key="phase.id + '-no-topics-alert'" type="warning" prominent>
         There are no topics selected in this phase.
-        Are you sure students will not talk about this phase's context at all?
+        <a :style="{color: 'white', fontWeight: 'bold'}" @click.stop.prevent="$emit('goto-episode-specs')">Click here</a>
+        to go back to the episode specs and edit the whitelist of topics for each phase.
       </v-alert>
 
       <v-expansion-panels :key="phase.id + '-topics'">
@@ -34,6 +35,7 @@ export default {
       required: true,
     },
   },
+  emits: ['goto-episode-specs'],
   data: () => ({
     allTopics: [],
   }),

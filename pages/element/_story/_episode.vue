@@ -316,8 +316,7 @@
             detail="feedback"
             tab="test-and-feedback"
             @goto-episode-specs="activateSpecsTab"
-          >
-          </episode-tab>
+          />
         </v-tab-item>
 
         <!-- =============================================================================== -->
@@ -405,7 +404,7 @@ export default {
           ...this.$route,
           query: {
             ...query,
-            t: this.tab,
+            t: index,
           },
         })
       }
@@ -479,6 +478,10 @@ export default {
           id: fakeId,
           title: '',
           specs: '',
+          topic_whitelist: [],
+          number,
+          prompts: [],
+          meta: { mood: {}, topics: [], features: [], challenges: [] },
         })
       }
       data.story_chapter_by_pk.sections.sort((a, b) => parseFloat(a.number) - parseFloat(b.number))
@@ -560,6 +563,7 @@ export default {
     },
     activateSpecsTab() {
       this.tab = 0
+      this.addTabToURL(0)
     },
     applyDrag(arr, { removedIndex, addedIndex, payload }) {
       console.log(removedIndex, addedIndex, payload)

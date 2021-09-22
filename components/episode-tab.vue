@@ -57,7 +57,7 @@
       <p v-text="episode.specs" />
     </v-sheet>
 
-    <component :is="tab" v-if="tab" :episode="episode" />
+    <component :is="tab" v-if="tab" :episode="episode" @goto-episode-specs="$emit('goto-episode-specs')" />
     <slot v-else />
 
     <specs-have-changed-warning
@@ -76,23 +76,23 @@ export default {
   props: {
     episode: {
       type: Object,
-      required: true
+      required: true,
     },
     tab: {
       type: String,
-      default: null
+      default: null,
     },
     detail: {
       type: String,
-      default: null
-    }
+      default: null,
+    },
   },
   emits: ['goto-episode-specs'],
   computed: {
-    story () {
+    story() {
       return this.episode.story
-    }
-  }
+    },
+  },
 }
 </script>
 
