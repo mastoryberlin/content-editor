@@ -1,6 +1,7 @@
 query GetEpisodeMessages($id: uuid!) {
   story_chapter_by_pk(id: $id) {
     sections(order_by: {number: asc_nulls_last}) {
+      id
       prompts(order_by: {number: asc}) {
         id
         attachment

@@ -207,76 +207,12 @@
         <!-- =============================================================================== -->
 
         <v-tab-item class="content-editor-messages">
-          <apollo-query
-            v-slot="gem"
-            :query="require('~/graphql/GetEpisodeMessages')"
-            :variables="{id: episodeId}"
-          >
-            <div v-if="gem.result.loading">
-              <v-skeleton-loader
-                v-for="n in 5"
-                :key="n"
-                type="list-item"
-              />
-            </div>
-
-            <div v-else-if="gem.result.error">
-              An error occurred!
-            </div>
-
-            <episode-tab
-              v-else-if="gem.result.data"
-              detail="narrative"
-              :episode="data.story_chapter_by_pk"
-              :narrative-data="gem.result.data.story_chapter_by_pk"
-              @goto-episode-specs="activateSpecsTab"
-            >
-              <apollo-subscribe-to-more
-                :document="require('~/graphql/RefreshEpisodeMessages')"
-                :variables="{id: episodeId}"
-                :update-query="refreshEpisodeMessages"
-              />
-              <template v-for="(phase, phaseIndex) in data.story_chapter_by_pk.sections">
-                <div
-                  :key="phase.id + '-fixed'"
-                  class="my-7 pa-4 content-editor-specs-fixed"
-                >
-                  <h2>#{{ phaseIndex + 1 }}: {{ phase.title }}</h2>
-                  <p>{{ phase.specs }}</p>
-                </div>
-                <!-- :get-child-payload="setDragIndex" -->
-                <container
-                  :key="phase.id + '-messages'"
-                  group-name="episode-messages"
-                  drag-handle-selector=".content-editor-draggable-handle"
-                  @drag-start="setDragSource({
-                    ...$event,
-                    dragSource: phase
-                  })"
-                  @drop="moveMessage({
-                    ...$event,
-                    dragTarget: phase
-                  })"
-                >
-                  <message-group
-                    v-for="message in gem.result.data.story_chapter_by_pk.sections[phaseIndex].prompts.filter(p => p.parent === null)"
-                    :key="message.id"
-                    :all-messages-in-this-phase="gem.result.data.story_chapter_by_pk.sections[phaseIndex].prompts"
-                    :message="message"
-                    :deletable="gem.result.data.story_chapter_by_pk.sections[phaseIndex].prompts.length > 1"
-                    :course-name="data.story_chapter_by_pk.story.id"
-                  />
-                </container>
-              </template>
-
-              <!-- <finish-work-btn
-              v-if="data.story_chapter_by_pk.edit.state === 'details'"
-                :may-commit="mayCommitMessageFlow"
-                :loading="isCommittingMessageFlow"
-                @commit="commitMessageFlow"
-              /> -->
-            </episode-tab>
-          </apollo-query>
+          <episode-tab
+            :episode="data.story_chapter_by_pk"
+            detail="narrative"
+            tab="message-flow"
+            @goto-episode-specs="activateSpecsTab"
+          />
         </v-tab-item>
 
         <!-- =============================================================================== -->

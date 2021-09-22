@@ -2,9 +2,9 @@ export default {
   state: () => ({
     dragInfo: {
       dragSource: null,
-      removedIndex: null
+      removedIndex: null,
     },
-    isCommittingChanges: false
+    isCommittingChanges: false,
   }),
   getters: {
     featuresInPhase: state => (phaseId) => {
@@ -13,7 +13,7 @@ export default {
       // const ep = st.episodes.find(e => e.id === story + '/' + episode)
       // const ph = ep.phases.find(p => p.id === phaseId)
       // return ph.features
-    }
+    },
   },
   mutations: {
     // initializeStories: (state, retrievedStories) => {
@@ -289,7 +289,7 @@ export default {
     //   const response = await this.app.apolloProvider.defaultClient.query({query: require("~/graphql/GetStories")})
     //   commit("apolloTest", response.data.story)
     // },
-    lock (ctx, element) {
+    lock(ctx, element) {
       // const ws = state.websocket.ws
       // if (ws) {
       const id = element.id
@@ -302,7 +302,7 @@ export default {
       //   }))
       // }
     },
-    unlock (ctx, element) {
+    unlock(ctx, element) {
       // const ws = state.websocket.ws
       // if (ws) {
       const id = element.id
@@ -314,7 +314,7 @@ export default {
       //     token: state.auth.token
       //   }))
       // }
-    }
+    },
     // edit ({ commit, dispatch }, [{ id }, element, to]) {
     //   console.log(`edit action: ${id}[${element}] := ${to}`)
     //   const parts = id.split('/')
@@ -363,5 +363,5 @@ export default {
     //   sleep(500)
     //   commit('endCommittingChanges')
     // }
-  }
+  },
 }

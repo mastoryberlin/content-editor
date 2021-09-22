@@ -1,7 +1,11 @@
 <template lang="html">
   <div class="">
     <template v-if="$apollo.loading">
-      Loading...
+      <v-skeleton-loader
+        v-for="n in 5"
+        :key="n"
+        type="list-item"
+      />
     </template>
 
     <template v-if="surveys">
