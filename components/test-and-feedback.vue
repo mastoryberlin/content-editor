@@ -55,7 +55,7 @@ export default {
   }),
   computed: {
     episodeId() {
-      return this.episode.id
+      return this.$route.params.episode
     },
   },
   methods: {
