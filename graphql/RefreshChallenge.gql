@@ -1,0 +1,16 @@
+subscription GetChallenge($episodeId: uuid!) {
+  challenge(where: {chapter_id: {_eq: $episodeId}}) {
+    id
+    long_description
+    short_description
+    geogebra_worksheets(order_by: {number: asc}) {
+      id
+      document
+      inputs
+      outputs
+      number
+      short_description
+      long_description
+    }
+  }
+}

@@ -1,0 +1,5 @@
+mutation DeleteWorksheet($id: uuid!) {
+  delete_geogebra_worksheet_by_pk(id: $id) {
+    id
+  }
+}

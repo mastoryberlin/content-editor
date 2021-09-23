@@ -1,0 +1,8 @@
+mutation UpdateWorksheetMeta($id: uuid!, $long_description: String = "", $short_description: String = "", $outputs: jsonb = [], $inputs: jsonb = []) {
+  update_geogebra_worksheet_by_pk(pk_columns: {id: $id}, _set: {long_description: $long_description, short_description: $short_description, outputs: $outputs, inputs: $inputs}) {
+    inputs
+    outputs
+    long_description
+    short_description
+  }
+}

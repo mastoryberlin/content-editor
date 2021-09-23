@@ -11,6 +11,11 @@ export default {
     htmlAttrs: {
       lang: 'en'
     },
+    script: [
+      {
+        src: 'https://www.geogebra.org/apps/deployggb.js'
+      }
+    ],
     meta: [
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },

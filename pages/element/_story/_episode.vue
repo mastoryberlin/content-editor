@@ -236,6 +236,7 @@
           <episode-tab
             :episode="data.story_chapter_by_pk"
             detail="math"
+            tab="math-challenge"
             @goto-episode-specs="activateSpecsTab"
           >
             Episode challenge for "{{ data.story_chapter_by_pk.title }}"
