@@ -6,7 +6,8 @@ const DB_NAMES = ['story', 'story_chapter', 'story_section', 'prompt']
 export default ({ app }, inject) => {
   inject('db', {
     $apollo: app.apolloProvider.defaultClient,
-    async add (type, previous = null, variables = {}, parentId = null) {
+
+    async add(type, previous = null, variables = {}, parentId = null) {
       console.log('[content-mutation] adding a ' + type)
       // TODO: Implement proper number handling with previous param
 
@@ -28,7 +29,7 @@ export default ({ app }, inject) => {
 
       const resp = await app.apolloProvider.defaultClient.mutate({
         mutation: require('~/graphql/Add' + type.toCamelCase()),
-        variables
+        variables,
       })
 
       if (layer < 3) {
@@ -40,7 +41,7 @@ export default ({ app }, inject) => {
       }
     },
 
-    async delete (type, element, parentId) {
+    async delete(type, element, parentId) {
       console.log('[content-mutation] deleting a ' + type)
       const layer = CONTENT_LAYERS.indexOf(type)
       let variables = {}
@@ -53,19 +54,21 @@ export default ({ app }, inject) => {
         variables[type + 'Id'] = id
         if (layer < 2) {
           // TODO: Retrieve all child ids from DB and recursively call this.delete for each
-          data = await this.$apollo.query({
+          const { data } = await this.$apollo.query({
             query: require('~/graphql/GetAll' + childType.toCamelCase() + 's'),
-            variables
+            variables,
           })
-          const objs = data[childLayer]
-          objs.forEach(el => {
+          const objs = data[childField]
+          objs.forEach((el) => {
             this.delete(childType, el, id)
           })
+        } else {
+          // Delete all messages manually
+          await this.$apollo.mutate({
+            mutation: require('~/graphql/DeleteAll' + childType.toCamelCase() + 's'),
+            variables,
+          })
         }
-        await this.$apollo.mutate({
-          mutation: require('~/graphql/DeleteAll' + childType.toCamelCase() + 's'),
-          variables
-        })
       }
 
       variables = { id: element.id }
@@ -81,8 +84,8 @@ export default ({ app }, inject) => {
 
       await this.$apollo.mutate({
         mutation: require('~/graphql/Delete' + type.toCamelCase()),
-        variables
+        variables,
       })
-    }
+    },
   })
 }

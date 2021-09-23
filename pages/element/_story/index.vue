@@ -227,6 +227,7 @@
                         <v-row>
                           <features-selector
                             :phase="episode.sections[0]"
+                            :data="data"
                           />
                         </v-row>
                       </v-container>
@@ -254,8 +255,6 @@
             :may-commit="mayCommit"
             commit-message-ext="to enable editing individual episodes"
             :loading="isCommittingStorySpecs"
-            v-bind="attrs"
-            v-on="on"
             @commit="commitStorySpecs"
           />
         </v-tab-item>
@@ -433,7 +432,6 @@ export default {
     deleteEpisode(episode) {
       const title = episode.title === '' ? '' : ', "' + episode.title + '"'
       if (confirm('Are you sure you want to delete episode ' + episode.number + title + '?')) {
-        this.$db.delete('episode', episode)
         if (episode.edit) {
           const shortcutStoryID = episode.edit.shortcutStoryID
           if (shortcutStoryID) {
@@ -442,6 +440,7 @@ export default {
             } catch (err) {}
           }
         }
+        this.$db.delete('episode', episode, this.storyId)
       }
     },
 
