@@ -1,36 +1,107 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: content-editor-develop
+  name: dev-ce-app-deploy
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: content-editor
+      app: dev-ce-app
   strategy:
     rollingUpdate:
       maxSurge: 1
-      maxUnavailable: 0
-  minReadySeconds: 15
+      maxUnavailable: 1
+  minReadySeconds: 30
   template:
     metadata:
       labels:
-        app: content-editor
+        app: dev-ce-app
     spec:
       containers:
-      - name: content-editor
+      - name: dev-ce-app
         image: gcr.io/mastory-323910/content:latest
         ports:
           - containerPort: 5000
 ---
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: dev-ce-app-be
+  namespace: default
+spec:
+  healthCheck:
+    checkIntervalSec: 20
+    healthyThreshold: 1
+    port: 80
+    timeoutSec: 1
+    type: HTTP
+    unhealthyThreshold: 3
+---
 apiVersion: v1
 kind: Service
 metadata:
-  name: content-editor-develop-service
+  name: dev-ce-app-int-lb
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   ports:
-    - port: 80
+    - name: dev-ce-app-tcp-port
+      protocol: TCP
+      port: 80
       targetPort: 5000
   selector:
-    app: content-editor
+    app: dev-ce-app
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt-content
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: contact@mastory.io
+    preferredChain:  
+    privateKeySecretRef: 
+      name: letsencrypt-content
+    solvers:
+    - http01:
+       ingress:
+         class: nginx
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: dev-ce-app-crt
+spec:
+  secretName: dev-ce-app-tls-secret
+  issuerRef:
+    kind: Issuer
+    name: letsencrypt-content
+  commonName: test-content.mastory.io
+  dnsNames:
+  - test-content.mastory.io
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dev-ce-app-ingres
+  annotations:
+    cloud.google.com/backend-config: '{"ports": {"80":"dev-ce-app-be"}}'
+    cert-manager.io/issuer: "letsencrypt-content"
+    acme.cert-manager.io/http01-edit-in-place: "true"
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  rules:
+  - host: "test-content.mastory.io"
+    http:
+      paths:
+      - path: /
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: dev-ce-app-int-lb
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - "test-content.mastory.io"
+    secretName: dev-ce-app-tls-secret
