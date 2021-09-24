@@ -24,8 +24,28 @@
           </v-col>
           <v-col md="12" lg="4">
             <v-file-input v-model="file" label="Choose a GeoGebra file (.ggb) to upload it" show-size accept=".ggb" @change="loadGGB" />
-            <v-text-field :value="inputVariables" label="Input variables" hint="Enter the IDs of all GeoGebra objects in the worksheet which serve as input parameters as a comma-separated list, e.g. A, x, f, B_0" @change="inputVariables = $event" />
-            <v-text-field :value="outputVariables" label="Output variables" hint="Enter the IDs of all GeoGebra objects in the worksheet which serve as output parameters as a comma-separated list, e.g. A, x, f, B_0" @change="outputVariables = $event" />
+            <v-autocomplete
+              v-model="inputs"
+              auto-select-first
+              chips
+              clearable
+              deletable-chips
+              multiple
+              :items="allObjectNames"
+              label="Input variables"
+              hint="Enter the IDs of all GeoGebra objects in the worksheet which serve as input parameters"
+            />
+            <v-autocomplete
+              v-model="outputs"
+              auto-select-first
+              chips
+              clearable
+              deletable-chips
+              multiple
+              :items="allObjectNames"
+              label="Output variables"
+              hint="Enter the IDs of all GeoGebra objects in the worksheet which serve as output parameters"
+            />
           </v-col>
         </v-row>
       </v-container>
@@ -54,10 +74,6 @@ export default {
       type: Object,
       required: true,
     },
-    number: {
-      type: Number,
-      default: 1,
-    },
   },
   emits: [
     'add-worksheet',
@@ -65,16 +81,20 @@ export default {
   data: () => ({
     file: null,
     geogebra: null,
+    forceUpdate: false,
   }),
   computed: {
     id() {
       return this.worksheet.id
     },
+    number() {
+      return this.worksheet.number
+    },
     title() {
       if (undefined === this.number) {
         return null
       } else {
-        const letter = String.fromCharCode(this.number + 65)
+        const letter = String.fromCharCode(this.number + 64)
         return 'Worksheet ' + letter
       }
     },
@@ -112,9 +132,16 @@ export default {
         })
       },
     },
-    inputVariables: {
+    allObjectNames() {
+      const { geogebra, forceUpdate } = this
+      if (forceUpdate) {
+        // Dummy
+      }
+      return geogebra ? geogebra.getAllObjectNames() : []
+    },
+    inputs: {
       get() {
-        return this.worksheet.inputs.join(', ')
+        return this.worksheet.inputs
       },
       set(v) {
         this.$apollo.mutate({
@@ -123,15 +150,15 @@ export default {
             id: this.id,
             short_description: this.shortDescription,
             long_description: this.longDescription,
-            inputs: v.split(/\s*,\s*/),
+            inputs: v,
             outputs: this.outputs,
           },
         })
       },
     },
-    outputVariables: {
+    outputs: {
       get() {
-        return this.worksheet.inputs.join(', ')
+        return this.worksheet.outputs
       },
       set(v) {
         this.$apollo.mutate({
@@ -141,29 +168,29 @@ export default {
             short_description: this.shortDescription,
             long_description: this.longDescription,
             inputs: this.inputs,
-            outputs: v.split(/\s*,\s*/),
+            outputs: v,
           },
         })
       },
     },
   },
   mounted() {
-    const { id, worksheet } = this
+    const { id, worksheet: { ggb } } = this
+    console.log('Mounted worksheet-card', ggb)
     const params = {
-      appName: 'graphing',
       id: 'ggbApplet-' + id,
       width: 800,
       height: 600,
       appletOnLoad: (api) => {
-        const xml = worksheet.document
-        if (xml) {
-          api.setXML(xml)
-        }
         this.geogebra = api
+        console.log('Geogebra API object', this.geogebra)
       },
     }
-    const geogebra = new GGBApplet(params, true)
-    geogebra.inject('ggb-' + id)
+    if (ggb) {
+      params.ggbBase64 = ggb
+    }
+    const applet = new GGBApplet(params, true)
+    applet.inject('ggb-' + id)
   },
   methods: {
     deleteWorksheet() {
@@ -172,12 +199,14 @@ export default {
           mutation: require('~/graphql/DeleteWorksheet'),
           variables: {
             id: this.id,
+            challengeId: this.worksheet.challenge_id,
+            number: this.number,
           },
         })
       }
     },
     loadGGB() {
-      const { file, geogebra } = this
+      const { file, geogebra, forceUpdate } = this
       if (!!file && !!geogebra) {
         console.log('Loading GGB file ' + file.name)
         const reader = new FileReader()
@@ -185,12 +214,13 @@ export default {
           const ggbBase64 = btoa(e.target.result)
           geogebra.setBase64(ggbBase64)
           this.$apollo.mutate({
-            mutation: require('~/graphql/UpdateWorksheetDocument'),
+            mutation: require('~/graphql/UpdateWorksheetGgb'),
             variables: {
               id: this.id,
-              document: geogebra.getXML(),
+              ggb: ggbBase64,
             },
           })
+          this.forceUpdate = !forceUpdate
         }
         reader.readAsBinaryString(file)
       }

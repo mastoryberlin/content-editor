@@ -17,8 +17,7 @@
         v-for="(worksheet, n) in worksheets"
         :key="worksheet.id"
         :worksheet="worksheet"
-        :number="n"
-        @add-worksheet="addWorksheet(n + 1)"
+        @add-worksheet="addWorksheet(n + 2)"
       />
       <span v-if="worksheets.length === 0" @click="addWorksheet(1)">
         Click here to add a worksheet for this episode’s math challenge.

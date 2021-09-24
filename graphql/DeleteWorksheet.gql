@@ -1,5 +1,8 @@
-mutation DeleteWorksheet($id: uuid!) {
+mutation DeleteWorksheet($id: uuid!, $challengeId: uuid!, $number: smallint!) {
   delete_geogebra_worksheet_by_pk(id: $id) {
     id
+  }
+  update_geogebra_worksheet(where: {challenge_id: {_eq: $challengeId}, _and: {number: {_gt: $number}}}, _inc: {number: -1}) {
+    affected_rows
   }
 }

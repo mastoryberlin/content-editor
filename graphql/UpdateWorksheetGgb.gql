@@ -1,0 +1,5 @@
+mutation UpdateWorksheetGgb($id: uuid!, $ggb: String!) {
+  update_geogebra_worksheet_by_pk(pk_columns: {id: $id}, _set: {ggb: $ggb}) {
+    id
+  }
+}
