@@ -4,17 +4,17 @@
     offset-y
     :nudge-left="140"
   >
-    <template #activator="{ on, attrs }">
+    <template #activator="menuActivator">
       <div
-        v-bind="attrs"
-        v-on="on"
+        v-bind="menuActivator.attrs"
+        v-on="menuActivator.on"
       >
         <v-tooltip top>
-          <template #activator="{on, attrs}">
+          <template #activator="npcActivator">
             <div
               class="mood-selector"
-              v-bind="attrs"
-              v-on="on"
+              v-bind="npcActivator.attrs"
+              v-on="npcActivator.on"
             >
               <v-avatar
                 @click="available = !available"
@@ -46,32 +46,33 @@
     </template>
     <v-card>
       <v-row no-gutters class="pa-3">
-        <v-col
+        <v-hover
           v-for="m in moods.filter(k => k != mood)"
+          v-slot="{hover}"
           :key="m"
-          cols="2"
-          @click="mood = m"
         >
-          <v-img
-            :src="`/moods/${m}.png`"
-            :alt="m"
-            max-width="30"
-            class="mt-2"
-          />
-        </v-col>
+          <v-col
+            cols="2"
+            :class="hover ? 'mood-selector-mood-hover' : null"
+            @click="mood = m"
+          >
+            <v-tooltip top>
+              <template #activator="moodActivator">
+                <v-img
+                  :src="`/moods/${m}.png`"
+                  :alt="m"
+                  max-width="30"
+                  class="mt-2"
+                  v-bind="moodActivator.attrs"
+                  v-on="moodActivator.on"
+                />
+              </template>
+              <span v-text="m" />
+            </v-tooltip>
+          </v-col>
+        </v-hover>
       </v-row>
     </v-card>
-
-    <!-- <v-list>
-      <v-list-item
-        v-for="m in moods.filter(k => k != mood)"
-        :key="m"
-        class="mood-selector mood-selector-emojis"
-        @click="mood = m"
-      >
-        <v-list-item-title>p</v-list-item-title>
-      </v-list-item>
-    </v-list> -->
   </v-menu>
 </template>
 
@@ -140,6 +141,9 @@ export default {
     bottom: 35%
     &-image
       transform: scale(0.6)
+    &-hover
+      background: #ddd
+      border-radius: inherit
 .selected
   position: absolute
   left: 15px
