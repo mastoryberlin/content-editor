@@ -1,61 +1,78 @@
 <template lang="html">
-  <v-tooltip top>
-    <template #activator="{on, attrs}">
+  <v-menu
+    bottom
+    offset-y
+    :nudge-left="140"
+  >
+    <template #activator="{ on, attrs }">
       <div
-        class="mood-selector"
         v-bind="attrs"
         v-on="on"
       >
-        <v-avatar
-          @click="available = !available"
-        >
-          <img
-            :src="`/npcs/${npc.toLowerCase()}.png`"
-            :alt="npc"
-            :class="available ? null : 'mood-selector-image-unavailable'"
-          >
-        </v-avatar>
-
-        <v-speed-dial
-          v-model="moodSelectorOpen"
-          transition="scale-transition"
-          absolute
-          bottom
-          right
-          direction="bottom"
-        >
-          <!-- class="mood-selector-mood" -->
-          <template #activator>
-            <v-avatar
-              class="mood-selector mood-selector-mood"
+        <v-tooltip top>
+          <template #activator="{on, attrs}">
+            <div
+              class="mood-selector"
+              v-bind="attrs"
+              v-on="on"
             >
-              <template v-if="!moods.includes(mood)">
-                ?
-              </template>
-              <img
-                :src="`/moods/${available ? mood : 'unavailable'}.png`"
-                :alt="mood"
-                class="mood-selector mood-selector-mood-image"
+              <v-avatar
+                @click="available = !available"
               >
-            </v-avatar>
+                <img
+                  :src="`/npcs/${npc.toLowerCase()}.png`"
+                  :alt="npc"
+                  :class="available ? null : 'mood-selector-image-unavailable'"
+                >
+              </v-avatar>
+
+              <v-avatar
+                class="mood-selector selected"
+              >
+                <template v-if="!moods.includes(mood)">
+                  ?
+                </template>
+                <img
+                  :src="`/moods/${available ? mood : 'unavailable'}.png`"
+                  :alt="mood"
+                  class="mood-selector mood-selector-mood-image"
+                >
+              </v-avatar>
+            </div>
           </template>
-          <v-avatar
-            v-for="m in moods.filter(k => k != mood)"
-            :key="m"
-            class="mood-selector mood-selector-emojis"
-            @click="mood = m"
-          >
-            <img
-              :src="`/moods/${m}.png`"
-              :alt="m"
-              class="mood-selector mood-selector-mood-image"
-            >
-          </v-avatar>
-        </v-speed-dial>
+          <span v-text="npc + ' is ' + (available ? printableMood : 'unavailable')" />
+        </v-tooltip>
       </div>
     </template>
-    <span v-text="npc + ' is ' + (available ? printableMood : 'unavailable')" />
-  </v-tooltip>
+    <v-card>
+      <v-row no-gutters class="pa-3">
+        <v-col
+          v-for="m in moods.filter(k => k != mood)"
+          :key="m"
+          cols="2"
+          @click="mood = m"
+        >
+          <v-img
+            :src="`/moods/${m}.png`"
+            :alt="m"
+            max-width="30"
+            class="mt-2"
+          />
+        </v-col>
+      </v-row>
+    </v-card>
+
+    <!-- <v-list>
+      <v-list-item
+        v-for="m in moods.filter(k => k != mood)"
+        :key="m"
+        class="mood-selector mood-selector-emojis"
+        @click="mood = m"
+      >
+        <v-list-item-title>p</v-list-item-title>
+      </v-list-item>
+    </v-list> -->
+  </v-menu>
 </template>
 
 <script>
@@ -123,4 +140,8 @@ export default {
     bottom: 35%
     &-image
       transform: scale(0.6)
+.selected
+  position: absolute
+  left: 15px
+  top: -15px
 </style>
