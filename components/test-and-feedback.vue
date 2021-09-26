@@ -8,22 +8,28 @@
       />
     </template>
 
-    <template v-if="surveys">
-      <survey-card
-        v-for="(survey, n) in surveys"
-        :key="survey.id"
-        :survey="survey"
-        :number="n"
-        @add-survey="addSurvey"
-      />
-      <span v-if="surveys.length === 0" @click="addSurvey">
-        Click here to add a survey for this episode.
-      </span>
-    </template>
-
-    <template v-else>
+    <template v-else-if="$apollo.error">
       An error occured
     </template>
+
+    <privileged-area
+      v-else
+      needs="edit_episode_intents"
+      to="edit"
+    >
+      <template v-if="surveys">
+        <survey-card
+          v-for="(survey, n) in surveys"
+          :key="survey.id"
+          :survey="survey"
+          :number="n"
+          @add-survey="addSurvey"
+        />
+        <span v-if="surveys.length === 0" @click="addSurvey">
+          Click here to add a survey for this episode.
+        </span>
+      </template>
+    </privileged-area>
   </div>
 </template>
 
