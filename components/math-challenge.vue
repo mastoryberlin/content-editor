@@ -14,7 +14,7 @@
 
     <privileged-area
       v-else
-      :needs="edit_episode_math"
+      needs="edit_episode_math"
       to="edit"
     >
       <template v-if="challenge">

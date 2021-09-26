@@ -14,7 +14,7 @@
 
     <privileged-area
       v-else
-      :needs="edit_episode_intents"
+      needs="edit_episode_intents"
       to="edit"
     >
       <template v-if="phases">

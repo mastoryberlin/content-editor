@@ -14,7 +14,7 @@
 
     <privileged-area
       v-else
-      :needs="edit_episode_narrative"
+      needs="edit_episode_narrative"
       to="edit"
     >
       <template v-if="phases">
