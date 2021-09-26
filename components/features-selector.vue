@@ -48,28 +48,36 @@ export default {
   },
   methods: {
     toggle(feature, data) {
-      const f = [...this.availableFeatures]
-      const i = f.indexOf(feature)
-      if (i >= 0) {
-        // Set feature to be unavailable
-        f.splice(i, 1)
-      } else {
-        // Set feature to be available
-        f.push(feature)
+      try {
+        console.log(data, this.phase.id)
+        const f = [...this.availableFeatures]
+        const i = f.indexOf(feature)
+        if (i >= 0) {
+          // Set feature to be unavailable
+          f.splice(i, 1)
+        } else {
+          // Set feature to be available
+          f.push(feature)
+        }
+        if (data.story_chapter_by_pk) {
+          data.story_chapter_by_pk.sections
+            .find(section => section.id === this.phase.id)
+            .meta
+            .features = f
+        } else {
+          data.story_by_pk.chapters
+            .find(chapter => chapter.sections[0].id === this.phase.id)
+            .sections[0]
+            .meta
+            .features = f
+        }
+        this.$apollo.mutate({
+          mutation: require('~/graphql/UpdatePhaseFeatures'),
+          variables: { id: this.phase.id, features: { features: f } },
+        })
+      } catch (error) {
+        console.log(error)
       }
-      data.story_chapter_by_pk.sections
-        .find(section => section.id === this.phase.id)
-        .meta
-        .features = f
-      const apolloClient = this.$apollo.provider.defaultClient
-      apolloClient.writeQuery({
-        query: require('~/graphql/GetEpisode'),
-        data,
-      })
-      this.$apollo.mutate({
-        mutation: require('~/graphql/UpdatePhaseFeatures'),
-        variables: { id: this.phase.id, features: { features: f } },
-      })
     },
   },
 }

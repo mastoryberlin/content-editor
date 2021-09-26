@@ -405,12 +405,12 @@ export default {
           title: after.title,
           specs: after.specs,
         })
-        data.story_chapter_by_pk.sections.push({
+        data.story_chapter_by_pk.sections.splice(number - 1, 0, {
           ...cloneData,
           id: fakeId,
         })
       } else {
-        data.story_chapter_by_pk.sections.push({
+        data.story_chapter_by_pk.sections.splice(number - 1, 0, {
           ...cloneData,
           id: fakeId,
           title: '',
@@ -421,12 +421,6 @@ export default {
           meta: { mood: {}, topics: [], features: [], challenges: [] },
         })
       }
-      data.story_chapter_by_pk.sections.sort((a, b) => parseFloat(a.number) - parseFloat(b.number))
-      const apolloClient = this.$apollo.provider.defaultClient
-      apolloClient.writeQuery({
-        query: require('~/graphql/GetEpisode'),
-        data,
-      })
       const request = await this.$apollo.mutate({
         mutation: require('~/graphql/AddPhase'),
         variables,
