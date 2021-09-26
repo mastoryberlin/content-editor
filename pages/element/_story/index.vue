@@ -86,7 +86,7 @@
             group-name="story-specs"
             drag-handle-selector=".content-editor-draggable-handle"
             :get-child-payload="(index) => ({episodeId: data.story_by_pk.chapters[index].id})"
-            @drop="onDrop"
+            @drop="onDrop(data, $event)"
           >
             <draggable v-for="(episode, i) in data.story_by_pk.chapters" :key="i">
               <v-sheet
@@ -96,14 +96,14 @@
               >
                 <v-container>
                   <v-row cols="12">
-                    <!-- <v-col class="content-editor-draggable-sidebar">
+                    <v-col class="content-editor-draggable-sidebar">
                       <v-icon
                         class="content-editor-draggable-handle"
                       >
                         mdi-drag
                       </v-icon>
 
-                    </v-col> -->
+                    </v-col>
 
                     <v-col class="content-editor-draggable-content">
                       <div class="content-editor-draggable-title">
@@ -152,7 +152,7 @@
                                     class="ml-2"
                                     :color="hover ? 'blue' : 'grey lighten-2'"
                                     v-on="on"
-                                    @click="addEpisode({ after: episode, duplicate: true, editField: data.story_by_pk.edit })"
+                                    @click="addEpisode({ after: episode, duplicate: true, data })"
                                   >
                                     mdi-content-duplicate
                                   </v-icon>
@@ -175,7 +175,7 @@
                                     :color="hover ? 'red' : 'grey lighten-2'"
                                     :disabled="!!episode.editedBy"
                                     v-on="on"
-                                    @click="deleteEpisode(episode)"
+                                    @click="deleteEpisode(episode, data)"
                                   >
                                     mdi-delete
                                   </v-icon>
@@ -239,7 +239,7 @@
                     size="12"
                     color="green"
                     class="content-editor-draggable-add"
-                    @click="addEpisode({ after: episode, editField: data.story_by_pk.edit })"
+                    @click="addEpisode({ after: episode, data })"
                   >
                     <v-icon color="white">
                       mdi-plus
@@ -395,8 +395,15 @@ export default {
       return newStory
     },
 
-    async addEpisode({ after, duplicate = false, editField }) {
+    async addEpisode({ after, duplicate = false, data }) {
+      const editField = data.story_by_pk.edit
       const number = after.number ? after.number + 1 : 1
+      const fakeId = 'zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzz'
+      const fakeSections = {
+        episodeId: fakeId,
+        number: 1,
+        meta: JSON.parse(JSON.stringify(after.sections[after.sections.length - 1].meta)),
+      }
       const variables = {
         storyId: this.storyId,
         number,
@@ -407,7 +414,36 @@ export default {
           description: after.description,
           specs: after.specs,
         })
+        data.story_by_pk.chapters.splice(number - 1, 0, {
+          ...after,
+          id: fakeId,
+          number,
+          sections: [fakeSections],
+        })
+      } else {
+        data.story_by_pk.chapters.splice(number - 1, 0, {
+          edit: after.edit,
+          id: fakeId,
+          number,
+          title: '',
+          specs: '',
+          sections: [fakeSections],
+        })
       }
+      // Optimistic sidebar
+      const apolloClient = this.$apollo.provider.defaultClient
+      const getStories = apolloClient.readQuery({
+        query: require('~/graphql/GetStories'),
+      })
+      getStories.story[0].chapters.splice(number - 1, 0, {
+        edit: after.edit,
+        id: fakeId,
+        story: {
+          id: fakeId,
+        },
+        title: duplicate ? after.title : '',
+      })
+  
       const shortcut = editField.shortcut
       if (shortcut) {
         const { id } = await this.$shortcut.createStory({ name: 'Episode ' + number, project_id: shortcut.project, epic_id: shortcut.epic })
@@ -415,21 +451,38 @@ export default {
           shortcutStoryID: id, state: 'specs', warnStorySpecsHaveChanged: false, warnEpisodeSpecsHaveChanged: false,
         }
       }
-      const { data } = await this.$apollo.mutate({
+      const request = await this.$apollo.mutate({
         mutation: require('~/graphql/AddEpisode'),
         variables,
       })
       await this.$apollo.mutate({
         mutation: require('~/graphql/AddPhase'),
         variables: {
-          episodeId: data.insert_story_chapter_one.id,
+          episodeId: request.data.insert_story_chapter_one.id,
           number: 1,
           meta: JSON.parse(JSON.stringify(after.sections[after.sections.length - 1].meta)),
         },
       })
     },
 
-    deleteEpisode(episode) {
+    deleteEpisode(episode, data) {
+      // Optimistic
+      let index = 0
+      data.story_by_pk.chapters.every((chapter, idx) => {
+        index = idx
+        if (chapter.id === episode.id) {
+          return false
+        }
+        return true
+      })
+      data.story_by_pk.chapters.splice(index, 1)
+      // Optimistic sidebar
+      const apolloClient = this.$apollo.provider.defaultClient
+      const getStories = apolloClient.readQuery({
+        query: require('~/graphql/GetStories'),
+      })
+      getStories.story[0].chapters.splice(index, 1)
+
       const title = episode.title === '' ? '' : ', "' + episode.title + '"'
       if (confirm('Are you sure you want to delete episode ' + episode.number + title + '?')) {
         if (episode.edit) {
@@ -444,20 +497,58 @@ export default {
       }
     },
 
-    async onDrop({ removedIndex, addedIndex, payload }) {
-      if (removedIndex !== addedIndex) {
-        const from = removedIndex + 1
-        const to = addedIndex + 1
-        console.log('dragdrop episode', from, to)
-        await this.$apollo.mutate({
-          mutation: require('~/graphql/MoveEpisode'),
-          variables: {
-            id: payload.episodeId,
-            storyId: this.storyId,
-            from,
-            to,
-          },
+    applyDrag(getStory, getStories, { removedIndex, addedIndex, payload }) {
+      const getStoryResult = [...getStory]
+      const getStoriesResult = [...getStories]
+      let getStoryToAdd = payload
+      let getStoriesToAdd = payload
+      if (removedIndex !== null) {
+        getStoryToAdd = getStoryResult.splice(removedIndex, 1)[0]
+        getStoriesToAdd = getStoriesResult.splice(removedIndex, 1)[0]
+      }
+      if (addedIndex !== null) {
+        getStoryResult.splice(addedIndex, 0, getStoryToAdd)
+        getStoriesResult.splice(addedIndex, 0, getStoriesToAdd)
+      }
+      return {
+        getStoryResult,
+        getStoriesResult,
+      }
+    },
+
+    async onDrop(data, { removedIndex, addedIndex, payload }) {
+      try {
+        const apolloClient = this.$apollo.provider.defaultClient
+        const getStories = apolloClient.readQuery({
+          query: require('~/graphql/GetStories'),
         })
+
+        if (removedIndex !== addedIndex) {
+          // Optimistic
+          const { getStoryResult, getStoriesResult } = this.applyDrag(
+            data.story_by_pk.chapters,
+            getStories.story[0].chapters,
+            { removedIndex, addedIndex, payload }
+          )
+          data.story_by_pk.chapters = getStoryResult
+          // Optimistic sidebar
+          getStories.story[0].chapters = getStoriesResult
+
+          const from = removedIndex + 1
+          const to = addedIndex + 1
+          console.log('dragdrop episode', from, to)
+          await this.$apollo.mutate({
+            mutation: require('~/graphql/MoveEpisode'),
+            variables: {
+              id: payload.episodeId,
+              storyId: this.storyId,
+              from,
+              to,
+            },
+          })
+        }
+      } catch (error) {
+        console.log(error)
       }
     },
 
