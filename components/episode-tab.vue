@@ -57,7 +57,12 @@
       <p v-text="episode.specs" />
     </v-sheet>
 
-    <component :is="tab" v-if="tab" :episode="episode" @goto-episode-specs="$emit('goto-episode-specs')" />
+    <component
+      :is="tab"
+      v-if="tab"
+      :episode="episode"
+      @goto-episode-specs="$emit('goto-episode-specs')"
+    />
     <slot v-else />
 
     <specs-have-changed-warning

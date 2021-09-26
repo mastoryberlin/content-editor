@@ -12,32 +12,38 @@
       An error occurred!
     </template>
 
-    <template v-if="phases">
-      <template v-for="(phase, phaseIndex) in phases">
-        <div
-          :key="phase.id + '-fixed'"
-          class="my-7 pa-4 content-editor-specs-fixed"
-        >
-          <h2>#{{ phaseIndex + 1 }}: {{ phase.title }}</h2>
-          <p>{{ phase.specs }}</p>
-        </div>
+    <privileged-area
+      v-else
+      :needs="edit_episode_intents"
+      to="edit"
+    >
+      <template v-if="phases">
+        <template v-for="(phase, phaseIndex) in phases">
+          <div
+            :key="phase.id + '-fixed'"
+            class="my-7 pa-4 content-editor-specs-fixed"
+          >
+            <h2>#{{ phaseIndex + 1 }}: {{ phase.title }}</h2>
+            <p>{{ phase.specs }}</p>
+          </div>
 
-        <v-alert v-if="phase.topics.length === 0" :key="phase.id + '-no-topics-alert'" type="warning" prominent>
-          There are no topics selected in this phase.
-          <a :style="{color: 'white', fontWeight: 'bold'}" @click.stop.prevent="$emit('goto-episode-specs')">Click here</a>
-          to go back to the episode specs and edit the whitelist of topics for each phase.
-        </v-alert>
+          <v-alert v-if="phase.topics.length === 0" :key="phase.id + '-no-topics-alert'" type="warning" prominent>
+            There are no topics selected in this phase.
+            <a :style="{color: 'white', fontWeight: 'bold'}" @click.stop.prevent="$emit('goto-episode-specs')">Click here</a>
+            to go back to the episode specs and edit the whitelist of topics for each phase.
+          </v-alert>
 
-        <v-expansion-panels :key="phase.id + '-topics'">
-          <topic-section
-            v-for="(topic, topicIndex) in phase.topics"
-            :key="topic.id"
-            :topic="topic"
-            :number="topicIndex + 1"
-          />
-        </v-expansion-panels>
+          <v-expansion-panels :key="phase.id + '-topics'">
+            <topic-section
+              v-for="(topic, topicIndex) in phase.topics"
+              :key="topic.id"
+              :topic="topic"
+              :number="topicIndex + 1"
+            />
+          </v-expansion-panels>
+        </template>
       </template>
-    </template>
+    </privileged-area>
   </div>
 </template>
 

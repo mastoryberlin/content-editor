@@ -12,21 +12,27 @@
       An error occured
     </template>
 
-    <template v-if="challenge">
-      <worksheet-card
-        v-for="(worksheet, n) in worksheets"
-        :key="worksheet.id"
-        :worksheet="worksheet"
-        @add-worksheet="addWorksheet(n + 2)"
-      />
-      <span v-if="worksheets.length === 0" @click="addWorksheet(1)">
-        Click here to add a worksheet for this episode’s math challenge.
-      </span>
-    </template>
+    <privileged-area
+      v-else
+      :needs="edit_episode_math"
+      to="edit"
+    >
+      <template v-if="challenge">
+        <worksheet-card
+          v-for="(worksheet, n) in worksheets"
+          :key="worksheet.id"
+          :worksheet="worksheet"
+          @add-worksheet="addWorksheet(n + 2)"
+        />
+        <span v-if="worksheets.length === 0" @click="addWorksheet(1)">
+          Click here to add a worksheet for this episode’s math challenge.
+        </span>
+      </template>
 
-    <span v-else @click="addChallenge">
-      Click here to add a math challenge for this episode.
-    </span>
+      <span v-else @click="addChallenge">
+        Click here to add a math challenge for this episode.
+      </span>
+    </privileged-area>
   </div>
 </template>
 

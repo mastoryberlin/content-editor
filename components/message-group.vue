@@ -205,65 +205,65 @@ import { Container, Draggable } from 'vue-smooth-dnd'
 export default {
   components: {
     Container,
-    Draggable
+    Draggable,
   },
   props: {
     message: {
       type: Object,
-      required: true
+      required: true,
     },
     allMessagesInThisPhase: {
       type: Array,
-      required: true
+      required: true,
     },
     deletable: {
       type: Boolean,
-      default: true
+      default: true,
     },
     courseName: {
       type: String,
-      required: true
-    }
+      required: true,
+    },
   },
-  data () {
+  data() {
     return {
       loading: false,
       file: null,
       uploadFailedAlert: null,
       url: null,
-      preview: false
+      preview: false,
     }
   },
   computed: {
-    children () {
+    children() {
       return this.allMessagesInThisPhase.filter(m => m.parent === this.message.id)
     },
-    enableFileUpload () {
+    enableFileUpload() {
       return ['audio', 'video', 'image'].includes(this.message.type)
     },
-    showTextField () {
-      return ['text', 'image'].includes(this.message.type)
+    showTextField() {
+      return ['text', 'image', 'audio', 'video'].includes(this.message.type)
     },
-    acceptedFiles () {
+    acceptedFiles() {
       return {
         image: 'image/png, image/jpeg, image/gif',
         audio: 'audio/x-mpeg',
-        video: 'video/mp4'
+        video: 'video/mp4',
       }
-    }
+    },
   },
   watch: {
-    loader () {
+    loader() {
       const l = this.loader
       this[l] = !this[l]
 
       setTimeout(() => (this[l] = false), 3000)
 
       this.loader = null
-    }
+    },
   },
   methods: {
-    async upload () {
+    async upload() {
       this.loading = true
       const fd = new FormData()
       fd.append('image', this.file, this.file.name)
@@ -277,23 +277,23 @@ export default {
             mutation: require('~/graphql/UpdateMessageAttachment'),
             variables: {
               id: this.message.id,
-              attachment: result.url
-            }
+              attachment: result.url,
+            },
           })
         } else {
           this.uploadFailedAlert = {
             show: true,
-            errorMessage: result.msg
+            errorMessage: result.msg,
           }
         }
       } catch (ex) {
         this.uploadFailedAlert = {
           show: true,
-          errorMessage: JSON.stringify(ex)
+          errorMessage: JSON.stringify(ex),
         }
       }
     },
-    createBlobURL (file) {
+    createBlobURL(file) {
       this.url = file ? URL.createObjectURL(file) : ''
       this.preview = !!file
     },
@@ -308,7 +308,7 @@ export default {
     //     })
     //   }
     // },
-    async deleteMessage () {
+    async deleteMessage() {
       if (confirm('Are you sure you want to delete this message?')) {
         // this.updateEpisodeEditStateToSpecsIfNull(editField)
         await this.$apollo.mutate({
@@ -316,27 +316,27 @@ export default {
           variables: {
             id: this.message.id,
             number: this.message.number,
-            phaseId: this.message.section_id
-          }
+            phaseId: this.message.section_id,
+          },
         })
       }
     },
     ...mapMutations([
       'moveMessage',
       'setDragIndex',
-      'setDragSource'
+      'setDragSource',
     ]),
-    async changeMessage ({ element, to }) {
+    async changeMessage({ element, to }) {
       const variables = {
-        id: this.message.id
+        id: this.message.id,
       }
       variables[element] = to
       await this.$apollo.mutate({
         mutation: require('~/graphql/UpdateMessage' + element.toCamelCase()),
-        variables
+        variables,
       })
     },
-    async addMessage ({ after, duplicate }) {
+    async addMessage({ after, duplicate }) {
       let variables = {}
       if (duplicate) {
         variables = { ...after }
@@ -350,10 +350,10 @@ export default {
       variables.number = after.number + 1
       await this.$apollo.mutate({
         mutation: require('~/graphql/AddMessage'),
-        variables
+        variables,
       })
-    }
-  }
+    },
+  },
 }
 </script>
 
