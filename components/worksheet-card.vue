@@ -181,6 +181,8 @@ export default {
       id: 'ggbApplet-' + id,
       width: 800,
       height: 600,
+      language: 'en',
+      country: 'US',
       appletOnLoad: (api) => {
         this.geogebra = api
         console.log('Geogebra API object', this.geogebra)

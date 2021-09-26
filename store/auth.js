@@ -28,7 +28,7 @@ export const actions = {
   async requestLogin ({ commit, dispatch }, [userName, password]) {
     commit('requestingLogin', true)
     try {
-      const response = await this.$axios.$post('auth-token', { userName, password })
+      const response = await this.$axios.$post('https://dev-proc.mastory.io/content-editor/auth-token', { userName, password })
       if (response.success) {
         this.$apolloHelpers.onLogin(response.token)
         this.$axios.setToken(response.token, 'Bearer')

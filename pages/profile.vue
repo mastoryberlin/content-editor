@@ -97,7 +97,7 @@ export default {
   methods: {
     async changePassword() {
       try {
-        const resp = await this.$axios.$post('user/password', {
+        const resp = await this.$axios.$post('https://dev-proc.mastory.io/content-editor/user/password', {
           password: this.password,
         })
         if (resp.success) {
@@ -112,7 +112,7 @@ export default {
     },
     async save() {
       try {
-        const resp = await this.$axios.$post('user/profile', {
+        const resp = await this.$axios.$post('https://dev-proc.mastory.io/content-editor/user/profile', {
           id: this.$store.state.user.profile.id,
           name: this.name,
           email: this.email,

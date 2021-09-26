@@ -40,7 +40,7 @@ export const mutations = {
 
 export const actions = {
   async queryProfile({ commit }) {
-    const response = await this.$axios.$get('user/profile')
+    const response = await this.$axios.$get('https://dev-proc.mastory.io/content-editor/user/profile')
     if (response.success) {
       const profile = { ...response }
       delete profile.success
@@ -48,13 +48,13 @@ export const actions = {
     }
   },
   async queryPrivileges({ commit }) {
-    const response = await this.$axios.$get('user/privileges')
+    const response = await this.$axios.$get('https://dev-proc.mastory.io/content-editor/user/privileges')
     if (response.success) {
       commit('setPrivileges', response.privileges)
     }
   },
   async updateProfile({ commit }, newData) {
-    const response = await this.$axios.$post('user/profile', newData)
+    const response = await this.$axios.$post('https://dev-proc.mastory.io/content-editor/user/profile', newData)
     if (response.success) {
       commit('setProfile', newData)
     }
