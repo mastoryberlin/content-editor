@@ -76,7 +76,7 @@
               </v-textarea>
             </div>
 
-            <type-selector :disabled="children.length > 1" :message="message" />
+            <type-selector :message="message" :children="children" />
             <sender-selector v-if="message.type !== 'nestable'" :message="message" />
 
             <template
@@ -268,7 +268,7 @@ export default {
       const fd = new FormData()
       fd.append('image', this.file, this.file.name)
       try {
-        const result = await this.$axios.$post('https://dev-proc.mastory.io/content-editor/upload', fd, { params: { c: this.courseName } })
+        const result = await this.$axios.$post('https://proc.mastory.io/content-editor/upload', fd, { params: { c: this.courseName } })
         this.loading = false
         if (result.success) {
           this.url = result.url
