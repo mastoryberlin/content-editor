@@ -554,7 +554,7 @@ export default {
 
     async commitStorySpecs(commitMessage) {
       this.isCommittingStorySpecs = true
-      await this.$axios.post('https://dev-proc.mastory.io/content-editor/commit/story-specs', {
+      await this.$axios.post('https://proc.mastory.io/content-editor/commit/story-specs', {
         storyId: this.storyId,
         commitMessage,
         pullRequest: !this.mayCommit,
