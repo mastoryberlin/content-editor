@@ -68,6 +68,7 @@ export default {
       'contributor:math-author',
       'contributor:ux-researcher',
       'contributor:head-of-content',
+      'observer',
       '(no access)'
     ]
   }),
