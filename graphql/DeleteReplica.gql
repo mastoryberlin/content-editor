@@ -1,0 +1,5 @@
+mutation DeleteReplica($id: uuid = "") {
+  delete_replica_by_pk(id: $id) {
+    id
+  }
+}

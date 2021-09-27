@@ -1,0 +1,5 @@
+mutation DeleteAllPhases($episodeId: uuid!) {
+  delete_story_section(where: {chapter_id: {_eq: $episodeId}}) {
+    affected_rows
+  }
+}

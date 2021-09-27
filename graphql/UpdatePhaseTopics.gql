@@ -1,0 +1,5 @@
+mutation UpdatePhaseTopics($id: uuid = "", $topic_whitelist: jsonb!) {
+  update_story_section_by_pk(pk_columns: {id: $id}, _set: {topic_whitelist: $topic_whitelist}) {
+    topic_whitelist
+  }
+}

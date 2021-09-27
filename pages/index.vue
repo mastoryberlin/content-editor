@@ -24,8 +24,12 @@
         />
         <v-list>
           <v-list-item
-            v-for="s in data.story"
+            v-for="s in data.story.filter((s) => {
+              const id = s.id
+              return (privileges && (privileges['superadmin'] || privileges[id] && privileges[id].includes('view')))
+            })"
             :key="s.id"
+            class="font-weight-bold"
             @click="$router.push(`/element/${s.id}`)"
           >
             <v-list-item-content>
@@ -35,23 +39,36 @@
         </v-list>
       </div>
     </apollo-query>
+
+    <ul class="mt-7">
+      <li>No stories showing up? Try refreshing the page in your browser!</li>
+      <li>If you still miss stories you expect, please drop Felix a note on Slack or mail.</li>
+    </ul>
   </div>
 </template>
 
 <script>
-/* eslint-disable */
+import { mapState } from 'vuex'
 export default {
+  data: () => ({
+  }),
+  computed: {
+    ...mapState('user', [
+      'privileges',
+    ]),
+  },
   methods: {
-    refreshStories () {
-      console.log(`Stories updated`) // previousResult, { subscriptionData } : previous: ${JSON.stringify(previousResult)}, subscriptionData: ${JSON.stringify(subscriptionData)}
+    refreshStories(previousResult, secondArg) {
+      // if (previousResult && secondArg) {
+      //   console.log(`Stories updated`, previousResult, secondArg)
       // const newResult = {
       //   story: [...previousResult.story]
       // }
-      // // Add the question to the list
       // newResult.story.push(subscriptionData.data.story)
       // return newResult
-    }
-  }
+      // }
+    },
+  },
 }
 </script>
 

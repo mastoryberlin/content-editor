@@ -26,12 +26,9 @@
         :update-query="refreshStory"
       />
       <v-tabs v-model="tab">
-        <v-tab>
-          Specs
-        </v-tab>
-        <v-tab>
-          Meta
-        </v-tab>
+        <v-tab v-text="'Specs'" />
+        <v-tab v-text="'Meta'" />
+        <v-tab v-if="isSuperAdmin" v-text="'Alpha Test'" />
       </v-tabs>
 
       <v-tabs-items v-model="tab">
@@ -89,7 +86,7 @@
             group-name="story-specs"
             drag-handle-selector=".content-editor-draggable-handle"
             :get-child-payload="(index) => ({episodeId: data.story_by_pk.chapters[index].id})"
-            @drop="onDrop"
+            @drop="onDrop(data, $event)"
           >
             <draggable v-for="(episode, i) in data.story_by_pk.chapters" :key="i">
               <v-sheet
@@ -106,23 +103,6 @@
                         mdi-drag
                       </v-icon>
 
-                      <v-tooltip
-                        v-if="episode.editedBy"
-                        right
-                      >
-                        <template
-                          #activator="{on, attrs}"
-                        >
-                          <v-icon
-                            v-bind="attrs"
-                            v-on="
-                              on"
-                          >
-                            mdi-lock
-                          </v-icon>
-                        </template>
-                        <span>This episode is currently being edited by {{ episode.editedBy }}</span>
-                      </v-tooltip>
                     </v-col>
 
                     <v-col class="content-editor-draggable-content">
@@ -141,13 +121,7 @@
                           :disabled="!!episode.editedBy"
                           @focus="startEditing(episode, 'title')"
                           @blur="stopEditing"
-                          @change="pushChange({
-                            change: {
-                              mutation: require('~/graphql/UpdateEpisodeTitle'),
-                              variables: {id: episode.id, title: $event}
-                            },
-                            dispatch: $store.dispatch
-                          })"
+                          @change="editEpisodeTitle(episode, $event)"
                         >
                           <template #append>
                             <v-tooltip bottom>
@@ -178,7 +152,7 @@
                                     class="ml-2"
                                     :color="hover ? 'blue' : 'grey lighten-2'"
                                     v-on="on"
-                                    @click="addEpisode({ after: episode, duplicate: true })"
+                                    @click="addEpisode({ after: episode, duplicate: true, data })"
                                   >
                                     mdi-content-duplicate
                                   </v-icon>
@@ -201,7 +175,7 @@
                                     :color="hover ? 'red' : 'grey lighten-2'"
                                     :disabled="!!episode.editedBy"
                                     v-on="on"
-                                    @click="deleteEpisode(episode)"
+                                    @click="deleteEpisode(episode, data)"
                                   >
                                     mdi-delete
                                   </v-icon>
@@ -226,13 +200,7 @@
                           :disabled="!!episode.editedBy"
                           @focus="startEditing(episode, 'specs')"
                           @blur="stopEditing"
-                          @change="pushChange({
-                            change: {
-                              mutation: require('~/graphql/UpdateEpisodeSpecs'),
-                              variables: {id: episode.id, specs: $event}
-                            },
-                            dispatch: $store.dispatch
-                          })"
+                          @change="editEpisodeSpecs(episode, $event)"
                         />
                       </div>
                     </v-col>
@@ -259,6 +227,7 @@
                         <v-row>
                           <features-selector
                             :phase="episode.sections[0]"
+                            :data="data"
                           />
                         </v-row>
                       </v-container>
@@ -270,7 +239,7 @@
                     size="12"
                     color="green"
                     class="content-editor-draggable-add"
-                    @click="addEpisode({ after: episode })"
+                    @click="addEpisode({ after: episode, data })"
                   >
                     <v-icon color="white">
                       mdi-plus
@@ -283,11 +252,10 @@
 
           <finish-work-btn
             v-if="data.story_by_pk.edit.state === 'specs'"
-            :label="privileges.includes('CommitStorySpecs') ?
-              'Mark as finished and enable editing individual episodes' :
-              'Mark as finished and request approvement'"
+            :may-commit="mayCommit"
+            commit-message-ext="to enable editing individual episodes"
             :loading="isCommittingStorySpecs"
-            :@click="privileges.includes('CommitStorySpecs') ? commitStorySpecs : issuePullRequest"
+            @commit="commitStorySpecs"
           />
         </v-tab-item>
 
@@ -301,6 +269,10 @@
             })"
           />
         </v-tab-item>
+
+        <v-tab-item v-if="isSuperAdmin" class="content-editor-alpha-test">
+          <alpha-test />
+        </v-tab-item>
       </v-tabs-items>
     </div>
   </apollo-query>
@@ -313,44 +285,88 @@ import { mapActions, mapMutations } from 'vuex'
 export default {
   components: {
     Container,
-    Draggable
+    Draggable,
   },
   data: () => ({
     tab: 0,
     noUpdatesFrom: { id: null, field: null },
+    showFreeflow: false,
     isCommittingStorySpecs: false,
     isReopeningStorySpecs: false,
-    showFreeflow: false
   }),
   head: {
-    title: 'Story View'
+    title: 'Story View',
   },
   computed: {
-    storyId () {
+    storyId() {
       return this.$route.params.story
     },
-    privileges () {
+    privileges() {
       const priv = this.$store.state.user.privileges
+      if (!priv) {
+        this.$store.dispatch('user/queryPrivileges')
+      }
       return priv ? priv[this.storyId] : []
-    }
+    },
+    isSuperAdmin() {
+      const priv = this.$store.state.user.privileges
+      return priv ? !!priv.superadmin : false
+    },
+    mayCommit() {
+      return this.privileges && this.privileges.includes('CommitStorySpecs')
+    },
   },
   methods: {
-    generateSpecsFromFreeflow (text) {
+    generateSpecsFromFreeflow(text) {
       console.log(text)
     },
-    startEditing (element, field) {
+    startEditing(element, field) {
       this.noUpdatesFrom = {
         id: element ? element.id : null,
-        field
+        field,
       }
       console.log('startEditing', this.noUpdatesFrom)
     },
-    stopEditing () {
+    stopEditing() {
       this.noUpdatesFrom = null
+    },
+    editEpisodeTitle(episode, title) {
+      this.pushChange({
+        change: {
+          mutation: require('~/graphql/UpdateEpisodeTitle'),
+          variables: { id: episode.id, title },
+        },
+        dispatch: this.$store.dispatch,
+      })
+      if (episode.edit) {
+        const shortcutStoryID = episode.edit.shortcutStoryID
+        if (shortcutStoryID) {
+          this.$shortcut.updateStory(shortcutStoryID, {
+            name: 'Episode ' + episode.number + ': ' + title,
+          })
+        }
+      }
+    },
+    editEpisodeSpecs(episode, specs) {
+      this.pushChange({
+        change: {
+          mutation: require('~/graphql/UpdateEpisodeSpecs'),
+          variables: { id: episode.id, specs },
+        },
+        dispatch: this.$store.dispatch,
+      })
+      if (episode.edit) {
+        const shortcutStoryID = episode.edit.shortcutStoryID
+        if (shortcutStoryID) {
+          this.$shortcut.updateStory(shortcutStoryID, {
+            description: specs,
+          })
+        }
+      }
     },
 
     // Handle subscription updates
-    refreshStory (previousResult, { subscriptionData }) {
+    refreshStory(previousResult, { subscriptionData }) {
       console.log('refreshStory', { previousResult, subscriptionData })
       const previous = previousResult.story_by_pk
       const updated = subscriptionData.data.story_by_pk
@@ -370,8 +386,8 @@ export default {
       const newStory = {
         story_by_pk: {
           id: previous.id,
-          ...updated
-        }
+          ...updated,
+        },
       }
       newStory.story_by_pk.chapters = JSON.parse(JSON.stringify(updated.chapters))
       newStory.story_by_pk.edit.state = updated.edit.state
@@ -379,101 +395,199 @@ export default {
       return newStory
     },
 
-    async addEpisode ({ after, duplicate = false }) {
+    async addEpisode({ after, duplicate = false, data }) {
+      const editField = data.story_by_pk.edit
       const number = after.number ? after.number + 1 : 1
+      const fakeId = 'zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzz'
+      const fakeSections = {
+        episodeId: fakeId,
+        number: 1,
+        meta: JSON.parse(JSON.stringify(after.sections[after.sections.length - 1].meta)),
+      }
       const variables = {
         storyId: this.storyId,
-        number
+        number,
       }
       if (duplicate) {
         Object.assign(variables, {
           title: after.title,
           description: after.description,
-          specs: after.specs
+          specs: after.specs,
+        })
+        data.story_by_pk.chapters.splice(number - 1, 0, {
+          ...after,
+          id: fakeId,
+          number,
+          sections: [fakeSections],
+        })
+      } else {
+        data.story_by_pk.chapters.splice(number - 1, 0, {
+          edit: after.edit,
+          id: fakeId,
+          number,
+          title: '',
+          specs: '',
+          sections: [fakeSections],
         })
       }
-      const { data } = await this.$apollo.mutate({
+      // Optimistic sidebar
+      const apolloClient = this.$apollo.provider.defaultClient
+      const getStories = apolloClient.readQuery({
+        query: require('~/graphql/GetStories'),
+      })
+      getStories.story[0].chapters.splice(number - 1, 0, {
+        edit: after.edit,
+        id: fakeId,
+        story: {
+          id: fakeId,
+        },
+        title: duplicate ? after.title : '',
+      })
+  
+      const shortcut = editField.shortcut
+      if (shortcut) {
+        const { id } = await this.$shortcut.createStory({ name: 'Episode ' + number, project_id: shortcut.project, epic_id: shortcut.epic })
+        variables.edit = {
+          shortcutStoryID: id, state: 'specs', warnStorySpecsHaveChanged: false, warnEpisodeSpecsHaveChanged: false,
+        }
+      }
+      const request = await this.$apollo.mutate({
         mutation: require('~/graphql/AddEpisode'),
-        variables
+        variables,
       })
       await this.$apollo.mutate({
         mutation: require('~/graphql/AddPhase'),
         variables: {
-          episodeId: data.insert_story_chapter_one.id,
+          episodeId: request.data.insert_story_chapter_one.id,
           number: 1,
-          meta: JSON.parse(JSON.stringify(after.sections[after.sections.length - 1].meta))
-        }
+          meta: JSON.parse(JSON.stringify(after.sections[after.sections.length - 1].meta)),
+        },
       })
     },
 
-    async deleteEpisode (episode) {
+    deleteEpisode(episode, data) {
+      // Optimistic
+      let index = 0
+      data.story_by_pk.chapters.every((chapter, idx) => {
+        index = idx
+        if (chapter.id === episode.id) {
+          return false
+        }
+        return true
+      })
+      data.story_by_pk.chapters.splice(index, 1)
+      // Optimistic sidebar
+      const apolloClient = this.$apollo.provider.defaultClient
+      const getStories = apolloClient.readQuery({
+        query: require('~/graphql/GetStories'),
+      })
+      getStories.story[0].chapters.splice(index, 1)
+
       const title = episode.title === '' ? '' : ', "' + episode.title + '"'
       if (confirm('Are you sure you want to delete episode ' + episode.number + title + '?')) {
-        await this.$apollo.mutate({
-          mutation: require('~/graphql/DeleteEpisode'),
-          variables: {
-            id: episode.id,
-            storyId: this.storyId,
-            number: episode.number
+        if (episode.edit) {
+          const shortcutStoryID = episode.edit.shortcutStoryID
+          if (shortcutStoryID) {
+            try {
+              this.$shortcut.deleteStory(shortcutStoryID)
+            } catch (err) {}
           }
-        })
+        }
+        this.$db.delete('episode', episode, this.storyId)
       }
     },
 
-    async onDrop ({ removedIndex, addedIndex, payload }) {
-      if (removedIndex !== addedIndex) {
-        const from = removedIndex + 1
-        const to = addedIndex + 1
-        console.log('dragdrop episode', from, to)
-        await this.$apollo.mutate({
-          mutation: require('~/graphql/MoveEpisode'),
-          variables: {
-            id: payload.episodeId,
-            storyId: this.storyId,
-            from,
-            to
-          }
-        })
+    applyDrag(getStory, getStories, { removedIndex, addedIndex, payload }) {
+      const getStoryResult = [...getStory]
+      const getStoriesResult = [...getStories]
+      let getStoryToAdd = payload
+      let getStoriesToAdd = payload
+      if (removedIndex !== null) {
+        getStoryToAdd = getStoryResult.splice(removedIndex, 1)[0]
+        getStoriesToAdd = getStoriesResult.splice(removedIndex, 1)[0]
+      }
+      if (addedIndex !== null) {
+        getStoryResult.splice(addedIndex, 0, getStoryToAdd)
+        getStoriesResult.splice(addedIndex, 0, getStoriesToAdd)
+      }
+      return {
+        getStoryResult,
+        getStoriesResult,
       }
     },
 
-    async commitStorySpecs () {
+    async onDrop(data, { removedIndex, addedIndex, payload }) {
+      try {
+        const apolloClient = this.$apollo.provider.defaultClient
+        const getStories = apolloClient.readQuery({
+          query: require('~/graphql/GetStories'),
+        })
+
+        if (removedIndex !== addedIndex) {
+          // Optimistic
+          const { getStoryResult, getStoriesResult } = this.applyDrag(
+            data.story_by_pk.chapters,
+            getStories.story[0].chapters,
+            { removedIndex, addedIndex, payload }
+          )
+          data.story_by_pk.chapters = getStoryResult
+          // Optimistic sidebar
+          getStories.story[0].chapters = getStoriesResult
+
+          const from = removedIndex + 1
+          const to = addedIndex + 1
+          console.log('dragdrop episode', from, to)
+          await this.$apollo.mutate({
+            mutation: require('~/graphql/MoveEpisode'),
+            variables: {
+              id: payload.episodeId,
+              storyId: this.storyId,
+              from,
+              to,
+            },
+          })
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    },
+
+    async commitStorySpecs(commitMessage) {
       this.isCommittingStorySpecs = true
+      await this.$axios.post('https://proc.mastory.io/content-editor/commit/story-specs', {
+        storyId: this.storyId,
+        commitMessage,
+        pullRequest: !this.mayCommit,
+      })
       await this.$apollo.mutate({
         mutation: require('~/graphql/UpdateStoryEditState'),
         variables: {
           id: this.storyId,
-          state: 'episodes'
-        }
+          state: this.mayCommit ? 'episodes' : 'specs-pr',
+        },
       })
       this.isCommittingStorySpecs = false
     },
 
-    issuePullRequest () {
-      console.log('PULL REQUEST')
-    },
-
-    async uncommitStorySpecs (currentState) {
+    async uncommitStorySpecs(currentState) {
       await this.$apollo.mutate({
         mutation: require('~/graphql/UpdateStoryEditState'),
         variables: {
           id: this.storyId,
-          state: 'specs'
-        }
+          state: 'specs',
+        },
       })
     },
 
     ...mapMutations('autosave', [
-      'pushChange'
+      'pushChange',
     ]),
 
     ...mapActions([
       'lock',
-      'unlock'
-    //   'add',
-    //   'edit'
-    ])
-  }
+      'unlock',
+    ]),
+  },
 }
 </script>
 

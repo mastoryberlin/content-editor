@@ -1,0 +1,6 @@
+query GetClasses {
+  class(order_by: {name: asc}) {
+    id
+    name
+  }
+}

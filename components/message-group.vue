@@ -4,16 +4,17 @@
       elevation="2"
       rounded
       class="mx-4 my-8 pa-3 content-editor-draggable"
+      :class="'content-editor-draggable-' + message.type + '-message-bg'"
     >
       <v-container>
         <v-row cols="12">
-          <v-col v-if="deletable" class="content-editor-draggable-sidebar">
+          <!-- <v-col v-if="deletable" class="content-editor-draggable-sidebar">
             <v-icon
-              class="content-editor-draggable-handle"
+            class="content-editor-draggable-handle"
             >
               mdi-drag
             </v-icon>
-          </v-col>
+          </v-col> -->
 
           <v-col class="content-editor-draggable-content">
             <div class="content-editor-draggable-header">
@@ -22,14 +23,13 @@
                 class="content-editor-draggable-logic"
                 filled
                 rounded
-                autofocus
                 single-line
                 full-width
                 rows="1"
                 auto-grow
                 background-color="purple lighten-3"
                 label="Flow control logic"
-                @input="changeMessage({id: message.id, element: 'logic', to: $event})"
+                @change="changeMessage({element: 'logic', to: $event})"
               >
                 <template #append-outer>
                   <v-tooltip bottom>
@@ -76,28 +76,87 @@
               </v-textarea>
             </div>
 
-            <type-selector :message="message" />
+            <type-selector :message="message" :children="children" />
+            <sender-selector v-if="message.type !== 'nestable'" :message="message" />
 
-            <div
-              v-if="message.type !== 'nestable'"
-              class="content-editor-draggable-message"
+            <template
+              v-if="enableFileUpload"
             >
-              <v-textarea
-                :value="message.text"
+              <v-file-input
+                v-model="file"
+                :label="'Pick ' + message.type + ' file for upload'"
+                :accept="acceptedFiles"
+                @change="createBlobURL"
+              />
+              <!-- <v-textarea
+                :value="message.attachment"
                 full-width
-                outlined
                 auto-grow
                 rows="2"
-                label="Enter message text"
-                @input="changeMessage({id: message.id, element: 'text', to: $event})"
-              />
-            </div>
+                label="or enter a URL directly"
+                @change="changeMessage({element: 'attachment', to: $event})"
+              /> -->
+              <h4 v-if="preview">
+                PREVIEW - press button to upload
+              </h4>
+              <div v-if="file !== null">
+                <v-btn
+                  :loading="loading"
+                  :disabled="loading"
+                  color="blue-grey"
+                  class="ma-2 white--text"
+                  fab
+                  @click="upload"
+                >
+                  <v-icon dark>
+                    mdi-cloud-upload
+                  </v-icon>
+                </v-btn>
 
+                <v-alert
+                  v-if="uploadFailedAlert"
+                  v-model="uploadFailedAlert.show"
+                  type="error"
+                  dismissible
+                >
+                  There was a problem uploading the file: {{ uploadFailedAlert.errorMessage }}
+                </v-alert>
+              </div>
+
+              <div v-if="message.type === 'audio'">
+                <audio controls>
+                  <source
+                    :src="url || message.attachment"
+                  >
+                </audio>
+              </div>
+              <div v-else-if="message.type === 'video'">
+                <video
+                  controls
+                  :src="url || message.attachment"
+                  type="video/mp4"
+                />
+              </div>
+              <div v-else-if="message.type === 'image'">
+                <v-img :src="url || message.attachment" />
+              </div>
+            </template>
+
+            <v-textarea
+              v-if="showTextField"
+              :value="message.text"
+              full-width
+              auto-grow
+              rows="2"
+              label="Message text"
+              @change="changeMessage({element: 'text', to: $event})"
+            />
+
+            <!-- :get-child-payload="setDragIndex" -->
             <container
               v-else
               group-name="episode-messages"
               drag-handle-selector=".content-editor-draggable-handle"
-              :get-child-payload="setDragIndex"
               @drag-start="setDragSource({
                 ...$event,
                 dragSource: message,
@@ -108,10 +167,12 @@
               })"
             >
               <message-group
-                v-for="submessage in message.messages"
+                v-for="submessage in children"
                 :key="submessage.id"
+                :all-messages-in-this-phase="allMessagesInThisPhase"
                 :message="submessage"
-                :deletable="message.messages.length > 1"
+                :deletable="children.length > 1"
+                :course-name="courseName"
               />
             </container>
           </v-col><!-- content-editor-draggable-content -->
@@ -128,6 +189,10 @@
             mdi-plus
           </v-icon>
         </v-btn>
+        </v-if>
+        </div>
+      </v-container>
+      </v-col>
       </v-container>
     </v-sheet>
   </draggable>
@@ -140,30 +205,160 @@ import { Container, Draggable } from 'vue-smooth-dnd'
 export default {
   components: {
     Container,
-    Draggable
+    Draggable,
   },
   props: {
     message: {
       type: Object,
-      required: true
+      required: true,
+    },
+    allMessagesInThisPhase: {
+      type: Array,
+      required: true,
     },
     deletable: {
       type: Boolean,
-      default: true
+      default: true,
+    },
+    courseName: {
+      type: String,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      loading: false,
+      file: null,
+      uploadFailedAlert: null,
+      url: null,
+      preview: false,
     }
   },
+  computed: {
+    children() {
+      return this.allMessagesInThisPhase.filter(m => m.parent === this.message.id)
+    },
+    enableFileUpload() {
+      return ['audio', 'video', 'image'].includes(this.message.type)
+    },
+    showTextField() {
+      return ['text', 'image', 'audio', 'video'].includes(this.message.type)
+    },
+    acceptedFiles() {
+      return {
+        image: 'image/png, image/jpeg, image/gif',
+        audio: 'audio/x-mpeg',
+        video: 'video/mp4',
+      }
+    },
+  },
+  watch: {
+    loader() {
+      const l = this.loader
+      this[l] = !this[l]
+
+      setTimeout(() => (this[l] = false), 3000)
+
+      this.loader = null
+    },
+  },
   methods: {
+    async upload() {
+      this.loading = true
+      const fd = new FormData()
+      fd.append('image', this.file, this.file.name)
+      try {
+        const result = await this.$axios.$post('https://proc.mastory.io/content-editor/upload', fd, { params: { c: this.courseName } })
+        this.loading = false
+        if (result.success) {
+          this.url = result.url
+          this.preview = false
+          await this.$apollo.mutate({
+            mutation: require('~/graphql/UpdateMessageAttachment'),
+            variables: {
+              id: this.message.id,
+              attachment: result.url,
+            },
+          })
+        } else {
+          this.uploadFailedAlert = {
+            show: true,
+            errorMessage: result.msg,
+          }
+        }
+      } catch (ex) {
+        this.uploadFailedAlert = {
+          show: true,
+          errorMessage: JSON.stringify(ex),
+        }
+      }
+    },
+    createBlobURL(file) {
+      this.url = file ? URL.createObjectURL(file) : ''
+      this.preview = !!file
+    },
+    // updateEpisodeEditStateToSpecsIfNull (editField) {
+    //   if (!('state' in editField)) {
+    //     this.$apollo.mutate({
+    //       mutation: require('~/graphql/UpdateEpisodeEditState'),
+    //       variables: {
+    //         id: this.messageId,
+    //         state: 'specs'
+    //       }
+    //     })
+    //   }
+    // },
+    async deleteMessage() {
+      if (confirm('Are you sure you want to delete this message?')) {
+        // this.updateEpisodeEditStateToSpecsIfNull(editField)
+        await this.$apollo.mutate({
+          mutation: require('~/graphql/DeleteMessage'),
+          variables: {
+            id: this.message.id,
+            number: this.message.number,
+            phaseId: this.message.section_id,
+          },
+        })
+      }
+    },
     ...mapMutations([
-      'changeMessage',
-      'addMessage',
-      'deleteMessage',
       'moveMessage',
       'setDragIndex',
-      'setDragSource'
-    ])
-  }
+      'setDragSource',
+    ]),
+    async changeMessage({ element, to }) {
+      const variables = {
+        id: this.message.id,
+      }
+      variables[element] = to
+      await this.$apollo.mutate({
+        mutation: require('~/graphql/UpdateMessage' + element.toCamelCase()),
+        variables,
+      })
+    },
+    async addMessage({ after, duplicate }) {
+      let variables = {}
+      if (duplicate) {
+        variables = { ...after }
+        delete variables.id
+        delete variables.section_id
+        delete variables.__typename
+      } else {
+        variables.parent = after.parent
+      }
+      variables.phaseId = after.section_id
+      variables.number = after.number + 1
+      await this.$apollo.mutate({
+        mutation: require('~/graphql/AddMessage'),
+        variables,
+      })
+    },
+  },
 }
 </script>
 
 <style lang="css" scoped>
+video{
+  width: 100%;
+}
 </style>

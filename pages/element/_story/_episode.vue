@@ -25,7 +25,7 @@
         :variables="{id: episodeId}"
         :update-query="refreshEpisode"
       />
-      <v-tabs v-model="tab">
+      <v-tabs v-model="tab" @change="addTabToURL">
         <v-tab v-text="'Specs'" />
         <v-tab v-text="'Message Flow'" />
         <v-tab v-text="'Chatbot Interaction'" />
@@ -36,13 +36,18 @@
 
       <v-tabs-items v-model="tab">
         <v-tab-item class="content-editor-specs">
+          <!-- =============================================================================== -->
+          <!-- SPECS TAB -->
+          <!-- =============================================================================== -->
+
           <episode-tab
             :episode="data.story_chapter_by_pk"
           >
             <container
-              group-name="episode-specs"
+              behaviour="contain"
+              orientation="vertical"
               drag-handle-selector=".content-editor-draggable-handle"
-              :get-child-payload="(index) => ({phaseId: data.story_chapter_by_pk.sections[index - 1].id})"
+              group-name="episode-specs"
               @drop="onDrop"
             >
               <draggable v-for="(phase, phaseIndex) in data.story_chapter_by_pk.sections" :key="phase.id">
@@ -68,7 +73,6 @@
                             class="text-h5"
                             filled
                             rounded
-                            autofocus
                             single-line
                             full-width
                             rows="1"
@@ -87,7 +91,7 @@
                                       class="ml-2"
                                       :color="hover ? 'blue' : 'grey lighten-2'"
                                       v-on="on"
-                                      @click="addPhase({after: phase, duplicate: true, editField: data.story_chapter_by_pk.edit})"
+                                      @click="addPhase({after: phase, duplicate: true, data})"
                                     >
                                       mdi-content-duplicate
                                     </v-icon>
@@ -109,7 +113,7 @@
                                       class="ml-2"
                                       :color="hover ? 'red' : 'grey lighten-2'"
                                       v-on="on"
-                                      @click="deletePhase(phase, data.story_chapter_by_pk.edit)"
+                                      @click="deletePhase(phase, data)"
                                     >
                                       mdi-delete
                                     </v-icon>
@@ -158,8 +162,16 @@
                           <v-row>
                             <features-selector
                               :phase="phase"
+                              :episode-id="episodeId"
+                              :data="data"
                             />
                           </v-row>
+
+                          <topics-selector
+                            :phase="phase"
+                            :episode-id="episodeId"
+                            :whitelist="phase.topic_whitelist"
+                          />
                         </v-container>
                       </v-col>
                     </v-row>
@@ -169,7 +181,7 @@
                       size="12"
                       color="green"
                       class="content-editor-draggable-add"
-                      @click="addPhase({after: phase, editField: data.story_chapter_by_pk.edit})"
+                      @click="addPhase({after: phase, data})"
                     >
                       <v-icon color="white">
                         mdi-plus
@@ -181,88 +193,90 @@
 
               <finish-work-btn
                 v-if="data.story_chapter_by_pk.edit.state === 'specs'"
-                label="Mark as finished and enable editing execution details"
+                :may-commit="mayCommitEpisodeSpecs"
+                commit-message-ext="to enable editing execution details"
                 :loading="isCommittingEpisodeSpecs"
-                @click="commitEpisodeSpecs"
+                @commit="commitEpisodeSpecs"
               />
             </container>
           </episode-tab>
         </v-tab-item>
+
+        <!-- =============================================================================== -->
+        <!-- MESSAGE FLOW TAB -->
+        <!-- =============================================================================== -->
 
         <v-tab-item class="content-editor-messages">
           <episode-tab
             :episode="data.story_chapter_by_pk"
             detail="narrative"
+            tab="message-flow"
             @goto-episode-specs="activateSpecsTab"
-          >
-          <!-- <template v-for="(phase, phaseIndex) in episodeInfo.phases">
-            <div
-              :key="phase.id + '-fixed'"
-              class="my-7 pa-4 content-editor-specs-fixed"
-            >
-              <h2>#{{ phaseIndex + 1 }}: {{ phase.title }}</h2>
-              <p>{{ phase.specs }}</p>
-            </div>
-            <container
-              :key="phase.id + '-messages'"
-              group-name="episode-messages"
-              drag-handle-selector=".content-editor-draggable-handle"
-              :get-child-payload="setDragIndex"
-              @drag-start="setDragSource({
-                ...$event,
-                dragSource: phase
-              })"
-              @drop="moveMessage({
-                ...$event,
-                dragTarget: phase
-              })"
-            >
-              <message-group
-                v-for="message in phase.messages"
-                :key="message.id"
-                :message="message"
-                :deletable="phase.messages.length > 1"
-              />
-            </container>
-          </template> -->
-          </episode-tab>
+          />
         </v-tab-item>
+
+        <!-- =============================================================================== -->
+        <!-- CHATBOT INTERACTIONS TAB -->
+        <!-- =============================================================================== -->
 
         <v-tab-item class="content-editor-interactions">
           <episode-tab
             :episode="data.story_chapter_by_pk"
             detail="chatbot"
+            tab="chatbot-interactions"
             @goto-episode-specs="activateSpecsTab"
-          >
-            Episode chatbot interactions for "{{ data.story_chapter_by_pk.title }}"
-          </episode-tab>
+          />
         </v-tab-item>
+
+        <!-- =============================================================================== -->
+        <!-- MATH CHALLENGE TAB -->
+        <!-- =============================================================================== -->
 
         <v-tab-item class="content-editor-challenge">
           <episode-tab
             :episode="data.story_chapter_by_pk"
             detail="math"
+            tab="math-challenge"
             @goto-episode-specs="activateSpecsTab"
           >
             Episode challenge for "{{ data.story_chapter_by_pk.title }}"
           </episode-tab>
         </v-tab-item>
 
+        <!-- =============================================================================== -->
+        <!-- TESTS & FEEDBACK TAB -->
+        <!-- =============================================================================== -->
+
         <v-tab-item class="content-editor-feedback">
           <episode-tab
             :episode="data.story_chapter_by_pk"
             detail="feedback"
+            tab="test-and-feedback"
             @goto-episode-specs="activateSpecsTab"
-          >
-            Episode test &amp; feedback for "{{ data.story_chapter_by_pk.title }}"
-          </episode-tab>
+          />
         </v-tab-item>
+
+        <!-- =============================================================================== -->
+        <!-- META TAB -->
+        <!-- =============================================================================== -->
 
         <v-tab-item class="content-editor-meta">
           <v-text-field
             label="Episode Title"
             :value="data.story_chapter_by_pk.title"
             @change="edit('episode', episodeId, 'title', $event, data.story_chapter_by_pk.edit)"
+          />
+
+          <v-text-field
+            label="Promises"
+            :value="data.story_chapter_by_pk.edit.promises || ''"
+            @change="$apollo.mutate({
+              mutation: require('~/graphql/UpdateEpisodePromises'),
+              variables: {
+                id: episodeId,
+                promises: [$event]
+              }
+            })"
           />
         </v-tab-item>
       </v-tabs-items>
@@ -285,95 +299,168 @@ import { Container, Draggable } from 'vue-smooth-dnd'
 export default {
   components: {
     Container,
-    Draggable
+    Draggable,
+  },
+  asyncData({ route }) {
+    const tab = route.query.t || 0
+    return { tab }
   },
   data: () => ({
-    tab: 0,
-    isCommittingEpisodeSpecs: false
+    isCommittingEpisodeSpecs: false,
+    isCommittingMessageFlow: false,
   }),
-  head () {
+  head() {
     return {
-      title: 'Episode View' // TODO: Move apollo query into component to make it accessible from here and change title to sth like "Episode 1"
+      title: 'Episode View', // TODO: One day, move apollo query into <script> to make it accessible from here and change title to sth like "Episode 1"
     }
   },
   computed: {
-    storyId () {
+    storyId() {
       return this.$route.params.story
     },
-    episodeId () {
+    episodeId() {
       return this.$route.params.episode
-    }
+    },
+    privileges() {
+      const priv = this.$store.state.user.privileges
+      return priv ? priv[this.storyId] : []
+    },
+    mayCommitEpisodeSpecs() {
+      return this.privileges && this.privileges.includes('CommitEpisodeSpecs')
+    },
+    mayCommitMessageFlow() {
+      return this.privileges && this.privileges.includes('CommitEpisodeSpecs')
+    },
   },
   methods: {
-    refreshEpisode (previousResult, { subscriptionData }) {
-      console.log('refreshEpisode', { previousResult, subscriptionData })
-      const newQueryResult = subscriptionData.data.story_chapter_by_pk
-      const newPhases = newQueryResult.sections
-      const newEpisode = {
-        story_chapter_by_pk: {
-          id: previousResult.story_chapter_by_pk.id,
-          ...newQueryResult
-        }
+    addTabToURL(index) {
+      console.log('Called addTabToURL ', index)
+      const query = this.$route.query
+      if (index !== query.t) {
+        this.$router.replace({
+          ...this.$route,
+          query: {
+            ...query,
+            t: index,
+          },
+        })
       }
-      newEpisode.story_chapter_by_pk.story.edit.state = newQueryResult.story.edit.state
-      newEpisode.story_chapter_by_pk.sections = JSON.parse(JSON.stringify(newPhases))
-      return newEpisode
     },
-    updateEpisodeEditStateToSpecsIfNull (editField) {
+    refreshEpisode(previousResult, { subscriptionData }) {
+      if (previousResult) {
+        console.log('refreshEpisode', { previousResult, subscriptionData })
+        const newQueryResult = subscriptionData.data.story_chapter_by_pk
+        const newPhases = newQueryResult.sections
+        const newEpisode = {
+          story_chapter_by_pk: {
+            id: previousResult.story_chapter_by_pk.id,
+            ...newQueryResult,
+          },
+        }
+        newEpisode.story_chapter_by_pk.story.edit.state = newQueryResult.story.edit.state
+        newEpisode.story_chapter_by_pk.sections = JSON.parse(JSON.stringify(newPhases))
+        return newEpisode
+      }
+    },
+    refreshEpisodeMessages(previousResult, { subscriptionData }) {
+      if (previousResult) {
+        console.log('refreshEpisodeMessages', { previousResult, subscriptionData })
+        const newQueryResult = subscriptionData.data.story_chapter_by_pk
+        const newPhases = [...newQueryResult.sections]
+        const newEpisodeMsgs = {
+          story_chapter_by_pk: {
+            id: previousResult.story_chapter_by_pk.id,
+            ...newQueryResult,
+          },
+        }
+        newEpisodeMsgs.story_chapter_by_pk.sections = JSON.parse(JSON.stringify(newPhases))
+        return newEpisodeMsgs
+      }
+    },
+    updateEpisodeEditStateToSpecsIfNull(editField) {
       if (!('state' in editField)) {
         this.$apollo.mutate({
           mutation: require('~/graphql/UpdateEpisodeEditState'),
           variables: {
             id: this.episodeId,
-            state: 'specs'
-          }
+            state: 'specs',
+          },
         })
       }
     },
-    async addPhase ({ after, duplicate = false, editField }) {
-      this.updateEpisodeEditStateToSpecsIfNull(editField)
+    async addPhase({ after, duplicate = false, data }) {
+      this.updateEpisodeEditStateToSpecsIfNull(data.story_chapter_by_pk.edit)
       const number = after.number ? after.number + 1 : 1
+      const fakeId = 'zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzz'
       const variables = {
         episodeId: this.episodeId,
         number,
-        meta: JSON.parse(JSON.stringify(after.meta))
+        meta: JSON.parse(JSON.stringify(after.meta)),
+        topic_whitelist: [...after.topic_whitelist],
       }
+      const idxClone = after.number ? after.number - 1 : 0
+      const cloneData = data.story_chapter_by_pk.sections[idxClone]
       if (duplicate) {
         Object.assign(variables, {
           title: after.title,
-          specs: after.specs
+          specs: after.specs,
+        })
+        data.story_chapter_by_pk.sections.splice(number - 1, 0, {
+          ...cloneData,
+          id: fakeId,
+        })
+      } else {
+        data.story_chapter_by_pk.sections.splice(number - 1, 0, {
+          ...cloneData,
+          id: fakeId,
+          title: '',
+          specs: '',
+          topic_whitelist: [],
+          number,
+          prompts: [],
+          meta: { mood: {}, topics: [], features: [], challenges: [] },
         })
       }
-      const { data } = await this.$apollo.mutate({
+      const request = await this.$apollo.mutate({
         mutation: require('~/graphql/AddPhase'),
-        variables
+        variables,
       })
-      console.log('mutation AddPhase returned', data)
-      // TODO: Add a message block
-      // this.$apollo.mutate({
-      //   mutation: require('~/graphql/AddPhase'),
-      //   variables: {
-      //     episodeId: data.insert_story_chapter_one.id
-      //   }
-      // })
+      console.log('mutation AddPhase returned', request.data)
+      this.$apollo.mutate({
+        mutation: require('~/graphql/AddMessage'),
+        variables: {
+          phaseId: request.data.insert_story_section_one.id,
+        },
+      })
     },
-    async deletePhase (phase, editField) {
+    deletePhase(phase, data) {
       if (confirm('Are you sure you want to delete phase ' + phase.number + ', "' + phase.title + '"?')) {
-        this.updateEpisodeEditStateToSpecsIfNull(editField)
-        await this.$apollo.mutate({
-          mutation: require('~/graphql/DeletePhase'),
-          variables: {
-            id: phase.id,
-            episodeId: this.episodeId,
-            number: phase.number
+        this.updateEpisodeEditStateToSpecsIfNull(data.story_chapter_by_pk.edit)
+
+        // Update UI optimistically ...
+        let index = 0
+        data.story_chapter_by_pk.sections.every((section, idx) => {
+          index = idx
+          if (section.id === phase.id) {
+            return false
           }
+          return true
         })
+        data.story_chapter_by_pk.sections.splice(index, 1)
+        const apolloClient = this.$apollo.provider.defaultClient
+        apolloClient.writeQuery({
+          query: require('~/graphql/GetEpisode'),
+          data,
+        })
+
+        // ... and perform the changes in the DB
+        this.$db.delete('phase', phase, this.episodeId)
       }
     },
     ...mapMutations('autosave', [
-      'pushChange'
+      'pushChange',
     ]),
-    edit (what, id, element, value, editField) {
+    edit(what, id, element, value, editField) {
       this.updateEpisodeEditStateToSpecsIfNull(editField)
       const capital = s => s.substr(0, 1).toUpperCase() + s.substr(1)
       const variables = { id }
@@ -381,47 +468,104 @@ export default {
       this.pushChange({
         change: {
           mutation: require('~/graphql/Update' + capital(what) + capital(element)),
-          variables
+          variables,
         },
-        dispatch: this.$store.dispatch
+        dispatch: this.$store.dispatch,
       })
     },
-    commitEpisodeSpecs () {
-      this.$apollo.mutate({
+    async commitEpisodeSpecs() {
+      this.isCommittingEpisodeSpecs = true
+      await this.$apollo.mutate({
         mutation: require('~/graphql/EnterEpisodeDetailsExecution'),
         variables: {
-          id: this.episodeId
-        }
+          id: this.episodeId,
+        },
       })
+      this.isCommittingEpisodeSpecs = false
     },
-    closeStorySpecsHaveChangedWarning () {
+    closeStorySpecsHaveChangedWarning() {
       this.$apollo.mutate({
         mutation: require('~/graphql/UpdateEpisodeEditWarnStorySpecsHaveChanged'),
         variables: {
           id: this.episodeId,
-          warnStorySpecsHaveChanged: false
-        }
+          warnStorySpecsHaveChanged: false,
+        },
       })
     },
-    activateSpecsTab () {
+    activateSpecsTab() {
       this.tab = 0
+      this.addTabToURL(0)
     },
-    async onDrop ({ removedIndex, addedIndex, payload }) {
+    applyDrag(arr, { removedIndex, addedIndex, payload }) {
+      console.log(removedIndex, addedIndex, payload)
+      const result = [...arr]
+      let itemToAdd = payload
+      if (removedIndex !== null) {
+        itemToAdd = result.splice(removedIndex, 1)[0]
+      }
+      if (addedIndex !== null) {
+        result.splice(addedIndex, 0, itemToAdd)
+      }
+      return {
+        item: itemToAdd,
+        arr: result,
+      }
+    },
+    async onDrop({ removedIndex, addedIndex, payload }) {
+      const apolloClient = this.$apollo.provider.defaultClient
+      const data = apolloClient.readQuery({
+        query: require('~/graphql/GetEpisode'),
+        variables: { id: this.episodeId },
+      })
       if (removedIndex !== addedIndex) {
-        const from = removedIndex + 1
-        const to = addedIndex + 1
-        console.log('dragdrop phase', from, to)
+        const { item, arr } = this.applyDrag(
+          data.story_chapter_by_pk.sections,
+          { removedIndex, addedIndex, payload }
+        )
+        data.story_chapter_by_pk.sections = arr
+        apolloClient.writeQuery({
+          query: require('~/graphql/GetEpisode'),
+          data,
+        })
+        const difference = addedIndex - removedIndex
         await this.$apollo.mutate({
-          mutation: require('~/graphql/MovePhase'),
+          mutation: require('~/graphql/DeletePhase'),
           variables: {
-            id: payload.phaseId,
+            id: item.id,
             episodeId: this.episodeId,
-            from,
-            to
-          }
+            number: item.number,
+          },
+        })
+        await this.$apollo.mutate({
+          mutation: require('~/graphql/AddPhase'),
+          variables: {
+            episodeId: this.episodeId,
+            number: item.number + difference,
+            meta: JSON.parse(JSON.stringify(item.meta)),
+            title: item.title,
+            specs: item.specs,
+            topic_whitelist: item.topic_whitelist,
+          },
         })
       }
-    }
-  }
+    },
+    // onDrop ({ removedIndex, addedIndex, payload }) {
+    //   console.log(removedIndex, addedIndex, payload)
+    //   if (removedIndex !== addedIndex) {
+    //     const from = removedIndex + 1
+    //     const to = addedIndex + 1
+    //     console.log('dragdrop phase', from, to)
+    //     await this.$apollo.mutate({
+    //       mutation: require('~/graphql/MovePhase'),
+    //       variables: {
+    //         id: payload.phaseId,
+    //         episodeId: this.episodeId,
+    //         from,
+    //         to
+    //       }
+    //     })
+    //   }
+    // }
+  },
 }
 </script>

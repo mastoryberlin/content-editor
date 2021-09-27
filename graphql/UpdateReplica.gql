@@ -1,0 +1,6 @@
+mutation UpdateReplica($id: uuid!, $subintent_id: uuid!, $message: String!) {
+  update_replica_by_pk(pk_columns: {id: $id}, _set: {subintent_id: $subintent_id, message: $message}) {
+    message
+    subintent_id
+  }
+}

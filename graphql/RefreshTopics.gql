@@ -1,0 +1,6 @@
+subscription RefreshTopics {
+  topic(order_by: {name: asc}) {
+    id
+    name
+  }
+}

@@ -1,6 +1,6 @@
 <template lang="html">
   <div class="content-editor-episode-tab">
-    <v-overlay
+    <!-- <v-overlay
       absolute
       :value="story.edit.state === 'specs'"
     >
@@ -14,10 +14,10 @@
         </nuxt-link>
         before you can start editing individual episodes.
       </p>
-    </v-overlay>
+    </v-overlay> -->
 
-    <v-overlay
-      v-if="detail"
+    <!-- <v-overlay
+      v-if="detail && story.edit.state !== 'specs'"
       absolute
       :value="episode.edit.state !== 'details'"
     >
@@ -31,7 +31,7 @@
         </a>
         before you can start editing the {{ detail }} details.
       </p>
-    </v-overlay>
+    </v-overlay> -->
 
     <v-sheet elevation="5" color="amber lighten-4" class="my-7 pa-4 content-editor-specs-fixed">
       <h2>
@@ -57,7 +57,13 @@
       <p v-text="episode.specs" />
     </v-sheet>
 
-    <slot />
+    <component
+      :is="tab"
+      v-if="tab"
+      :episode="episode"
+      @goto-episode-specs="$emit('goto-episode-specs')"
+    />
+    <slot v-else />
 
     <specs-have-changed-warning
       v-if="episode.edit.state === 'detail'
@@ -75,19 +81,23 @@ export default {
   props: {
     episode: {
       type: Object,
-      required: true
+      required: true,
+    },
+    tab: {
+      type: String,
+      default: null,
     },
     detail: {
       type: String,
-      default: null
-    }
+      default: null,
+    },
   },
   emits: ['goto-episode-specs'],
   computed: {
-    story () {
+    story() {
       return this.episode.story
-    }
-  }
+    },
+  },
 }
 </script>
 

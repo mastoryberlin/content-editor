@@ -1,0 +1,6 @@
+query GetTopics {
+  topic(order_by: {name: asc}) {
+    id
+    name
+  }
+}

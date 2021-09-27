@@ -1,0 +1,6 @@
+query GetAllPhases($episodeId: uuid = "") {
+  story_section(where: {chapter_id: {_eq: $episodeId}}) {
+    id
+    number
+  }
+}

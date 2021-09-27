@@ -1,74 +1,10 @@
-// function findMessage (id, state, startAt) {
-//   console.log(`Called findMessage id: ${id}, startAt.id: ${startAt ? startAt.id : '(undefined)'}`)
-//   const storiesRoot = state.stories
-//   if (undefined === startAt) {
-//     const [story, episode, phase] = id.split('/')
-//     const st = storiesRoot.find(s => s.id === story)
-//     const ep = st.episodes.find(e => e.id === `${story}/${episode}`)
-//     const ph = ep.phases.find(p => p.id === `${story}/${episode}/${phase}`)
-//     return findMessage(id, state, ph)
-//   } else {
-//     const rem = id.substr(startAt.id.length + 1)
-//     console.log(`rem: ${rem}`)
-//     if (rem === '') {
-//       console.log('rem is empty string -> returning startAt')
-//       return { message: startAt }
-//     } else {
-//       const [partial, more] = rem.split('/')
-//       console.log(`partial: ${partial}`)
-//       const msgs = startAt.messages
-//       if (msgs) {
-//         const lookingFor = startAt.id + '/' + partial
-//         console.log('startAt has a messages property -> trying to locate ' + lookingFor)
-//         const sub = msgs.find(m => m.id === lookingFor)
-//         if (sub) {
-//           if (more) {
-//             console.log('Found it but more = ' + more + ' -> calling findMessage again...')
-//             return findMessage(id, state, sub)
-//           } else {
-//             console.log('Found it, more was empty -> returning the object')
-//             return { message: sub, parent: startAt, index: msgs.indexOf(sub) }
-//           }
-//         } else {
-//           console.log('Not found -> returning null!')
-//           return null
-//         }
-//       }
-//     }
-//   }
-// }
-//
-// function updateMessageStructure (state, changedMessageID) {
-//   const storiesRoot = state.stories
-//   const [story, episode, phase] = changedMessageID.split('/')
-//   const st = storiesRoot.find(s => s.id === story)
-//   const ep = st.episodes.find(e => e.id === `${story}/${episode}`)
-//   const ph = ep.phases.find(p => p.id === `${story}/${episode}/${phase}`)
-//   const allMessagesInPhase = JSON.stringify(ph.messages)
-//   ph.messages = JSON.parse(allMessagesInPhase)
-// }
-//
-// function refactorMessageID (state, msg, replace, by) {
-//   let newID = msg.id.replace(replace, by)
-//   while (findMessage(newID, state)) {
-//     newID = newID + '-1'
-//   }
-//   msg.id = newID
-//   const sub = msg.messages
-//   if (sub) {
-//     for (const m in sub) {
-//       refactorMessageID(state, m, replace, by)
-//     }
-//   }
-// }
-
 export default {
   state: () => ({
     dragInfo: {
       dragSource: null,
-      removedIndex: null
+      removedIndex: null,
     },
-    isCommittingChanges: false
+    isCommittingChanges: false,
   }),
   getters: {
     featuresInPhase: state => (phaseId) => {
@@ -77,7 +13,7 @@ export default {
       // const ep = st.episodes.find(e => e.id === story + '/' + episode)
       // const ph = ep.phases.find(p => p.id === phaseId)
       // return ph.features
-    }
+    },
   },
   mutations: {
     // initializeStories: (state, retrievedStories) => {
@@ -353,7 +289,7 @@ export default {
     //   const response = await this.app.apolloProvider.defaultClient.query({query: require("~/graphql/GetStories")})
     //   commit("apolloTest", response.data.story)
     // },
-    lock (ctx, element) {
+    lock(ctx, element) {
       // const ws = state.websocket.ws
       // if (ws) {
       const id = element.id
@@ -366,7 +302,7 @@ export default {
       //   }))
       // }
     },
-    unlock (ctx, element) {
+    unlock(ctx, element) {
       // const ws = state.websocket.ws
       // if (ws) {
       const id = element.id
@@ -378,7 +314,7 @@ export default {
       //     token: state.auth.token
       //   }))
       // }
-    }
+    },
     // edit ({ commit, dispatch }, [{ id }, element, to]) {
     //   console.log(`edit action: ${id}[${element}] := ${to}`)
     //   const parts = id.split('/')
@@ -427,5 +363,5 @@ export default {
     //   sleep(500)
     //   commit('endCommittingChanges')
     // }
-  }
+  },
 }

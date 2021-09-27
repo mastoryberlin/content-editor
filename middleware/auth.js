@@ -5,10 +5,13 @@ export default ({ app, error, redirect, route }) => {
   } else {
     token = null
   }
-  console.log('$apolloHelpers.getToken()', token)
   if (!token) {
+    app.store.commit('auth/logout')
     return redirect('/login?r=' + encodeURIComponent(route.path))
-  } else if (!app.store.state.auth.user) {
+  } else {
+    app.$axios.setToken(token, 'Bearer')
     app.store.dispatch('user/queryProfile')
+    app.store.dispatch('user/queryPrivileges')
+    app.store.commit('auth/login', token)
   }
 }

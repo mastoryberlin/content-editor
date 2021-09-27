@@ -1,0 +1,18 @@
+subscription RefreshIntentsForTopic($topicId: uuid!) {
+  intent(where: {topic_id: {_eq: $topicId}}, order_by: {name: asc}) {
+    id
+    name
+    subintents {
+      id
+      name
+      reactions {
+        id
+        message
+      }
+      replicas {
+        id
+        message
+      }
+    }
+  }
+}

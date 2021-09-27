@@ -1,0 +1,5 @@
+mutation AddChallenge($episodeId: uuid!) {
+  insert_challenge_one(object: {chapter_id: $episodeId}) {
+    id
+  }
+}

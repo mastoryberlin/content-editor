@@ -30,11 +30,18 @@
           <v-treeview
             activatable
             :active="idFromRoute"
+            active-class="font-weight-bold blue lighten-4"
             selection-type="independent"
-            color="warning"
-            :items="data.story"
+            class="nav"
+            color="black"
+            :items="data.story.filter((s) => {
+              const id = s.id
+              return (privileges && (privileges['superadmin'] || privileges[id] && privileges[id].includes('view')))
+            })"
+            :open="[storyIdFromRoute]"
             item-text="title"
             item-children="chapters"
+            hoverable
             @update:active="navigate($event, data.story)"
           >
             <template #prepend="{item}">
@@ -49,7 +56,7 @@
       >
         <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
         <v-toolbar-title>
-          Mastory Content Editor
+          Mastory Content Editor <span class="mx-4 text-subtitle-2" v-text="version" />
         </v-toolbar-title>
 
         <v-spacer />
@@ -96,35 +103,39 @@
 
         <v-spacer />
 
-        <template>
-          <div class="text-center">
-            <v-menu offset-y>
-              <template #activator="{ on, attrs }">
-                <v-avatar
-                  color="indigo"
-                  size="48"
-                  class="mx-3"
-                  v-bind="attrs"
-                  v-on="on"
-                >
-                  <span
-                    class="white--text text-h6"
-                    v-text="loggedIn ? initials : '?'"
-                  />
-                </v-avatar>
-              </template>
-              <v-list>
-                <v-list-item
-                  v-for="(item, index) in items"
-                  :key="index"
-                  @click="item.action"
-                >
-                  <v-list-item-title>{{ item.title }}</v-list-item-title>
-                </v-list-item>
-              </v-list>
-            </v-menu>
-          </div>
-        </template>
+        <div class="text-center">
+          <v-menu offset-y>
+            <template #activator="{ on, attrs }">
+              <v-avatar
+                color="indigo"
+                size="48"
+                class="mx-3"
+                v-bind="attrs"
+                v-on="on"
+              >
+                <span
+                  class="white--text text-h6"
+                  v-text="loggedIn ? initials : '?'"
+                />
+              </v-avatar>
+            </template>
+            <v-list>
+              <v-list-item
+                v-if="Object.keys(privileges).includes('superadmin')"
+                @click="$router.push('/accounts')"
+              >
+                <v-list-item-title>Manage accounts</v-list-item-title>
+              </v-list-item>
+              <v-list-item
+                v-for="(item, index) in menu"
+                :key="index"
+                @click="item.action"
+              >
+                <v-list-item-title>{{ item.title }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
+        </div>
       </v-app-bar>
       <v-main>
         <v-container>
@@ -141,52 +152,55 @@
 </template>
 
 <script>
-import { mapState, mapGetters, mapMutations, mapActions } from 'vuex'
+import { mapState, mapGetters, mapActions } from 'vuex'
 
 export default {
   middleware: 'auth',
-  data () {
+  data() {
     return {
       drawer: false,
-      items: [
+      menu: [
         {
           title: 'Edit my profile',
-          action: this.editProfile
+          action: this.editProfile,
         },
         {
           title: 'Report an issue or make a suggestion for content editor',
-          action: this.gotoIssuesPage
+          action: this.gotoIssuesPage,
         },
         {
           title: 'Log out',
-          action: this.logout
-        }
+          action: this.logout,
+        },
       ],
       globalState: {
         names: ['specs', 'episodes', 'details'],
         icons: ['script-text', 'format-list-numbered', 'creation'],
         color: ['warning lighten-2', 'blue lighten-3', 'purple lighten-2'],
-        tooltip: ['story specs', 'episode specs', 'episode details']
-      }
+        tooltip: ['story specs', 'episode specs', 'episode details'],
+      },
     }
   },
   computed: {
     ...mapState([
       'stories',
-      'isCommittingChanges'
+      'isCommittingChanges',
     ]),
     ...mapState('auth', [
       'isRequestingLogin',
       'loggedIn',
-      'invalidCredentials'
+      'invalidCredentials',
     ]),
-    ...mapGetters('autosave', [
-      'statusText'
+    ...mapState('user', [
+      'privileges',
     ]),
     ...mapGetters('user', [
-      'initials'
+      'initials',
     ]),
-    idFromRoute () {
+    ...mapGetters('autosave', [
+      'statusText',
+    ]),
+    idFromRoute() {
       const p = this.$route.path
       if (p.startsWith('/element/')) {
         // Last uuid is the treeview item id
@@ -195,7 +209,7 @@ export default {
         return []
       }
     },
-    storyIdFromRoute () {
+    storyIdFromRoute() {
       const p = this.$route.path
       if (p.startsWith('/element/')) {
         // Last uuid is the treeview item id
@@ -205,39 +219,42 @@ export default {
         return null
       }
     },
-    isStorySelected () {
+    isStorySelected() {
       const storyPattern = /^\/element\/[-0-9a-f]+$/
       return storyPattern.test(this.$route.path)
     },
-    isEpisodeSelected () {
+    isEpisodeSelected() {
       const episodePattern = /^\/element\/[-0-9a-f]+\/[-0-9a-f]+$/
       return episodePattern.test(this.$route.path)
-    }
+    },
+    version() {
+      const packageJSON = require('~/package.json')
+      const version = packageJSON.version
+      return 'v' + version
+    },
   },
   methods: {
     ...mapActions([
-      'commitChanges'
+      'commitChanges',
     ]),
     ...mapActions('auth', [
       'requestLogin',
-      'requestLogout'
+      'requestLogout',
     ]),
-    ...mapMutations('auth', [
-    ]),
-    refreshStories (previousResult, { subscriptionData }) {
+    refreshStories(previousResult, { subscriptionData }) {
       console.log('refreshStories', { previousResult, subscriptionData })
       const newQueryResult = subscriptionData.data.story
       const newStories = {
         story: [
-          ...newQueryResult
-        ]
+          ...newQueryResult,
+        ],
       }
       newStories.story.forEach((s, i) => {
         s.chapters = [...newQueryResult[i].chapters]
       })
       return newStories
     },
-    navigate ([selected], stories) {
+    navigate([selected], stories) {
       const isStory = stories.find(s => s.id === selected)
       if (isStory) {
         this.$router.push('/element/' + selected)
@@ -249,35 +266,35 @@ export default {
         })
       }
     },
-    episodeIndex (episode, stories) {
+    episodeIndex(episode, stories) {
       const storyId = episode.story.id
       const story = stories.find(s => s.id === storyId)
       return story ? story.chapters.indexOf(episode) : '?'
     },
-    login () {
+    login() {
       this.requestLogin([this.userName, this.password])
       this.userName = ''
       this.password = ''
       this.showPassword = false
     },
-    logout () {
+    logout() {
       this.requestLogout()
       this.$router.replace('/login?r=' + encodeURIComponent(this.$route.path))
     },
-    editProfile () {
+    editProfile() {
       this.$router.push('/profile')
     },
-    gotoIssuesPage () {
+    gotoIssuesPage() {
       window.open('https://github.com/mastoryberlin/content-editor/issues', '_blank')
     },
-    selectedStory (stories) {
+    selectedStory(stories) {
       return stories.find(s => s.id === this.storyIdFromRoute)
     },
-    selectedEpisode (stories) {
+    selectedEpisode(stories) {
       const story = this.selectedStory(stories)
       return story.chapters.find(e => e.id === this.idFromRoute[0])
     },
-    isGlobalState (state, data) {
+    isGlobalState(state, data) {
       switch (state) {
         case 'specs':
           return this.isStorySelected && this.selectedStory(data).edit.state === state
@@ -289,12 +306,14 @@ export default {
         default:
           return false
       }
-    }
-  }
+    },
+  },
 }
 </script>
 
 <style lang="sass">
+.v-treeview-node
+  cursor: pointer
 .content-editor
   padding: 5px
   &-global-state-indicator
@@ -305,6 +324,7 @@ export default {
       display: inline-block
       margin-right: 5px
       max-width: 20px
+      cursor: all-scroll
     &-content
       display: inline-block
     &-title
@@ -321,6 +341,21 @@ export default {
       right: 24px
     &-logic
       font-style: italic
+    &-text-message
+      &-bg
+        background-color: #e6e6ff !important
+    &-image-message
+      &-bg
+        background-color: #fff5e1 !important
+    &-audio-message
+      &-bg
+        background-color: #efffef !important
+    &-video-message
+      &-bg
+        background-color: #fee !important
+    &-nestable-message
+      &-bg
+        background-color: #fff0ff !important
   &-specs
     &-fixed
       background: orange
@@ -331,13 +366,6 @@ export default {
   &-interactions
     &-npc
       display: inline
-.login
-  &-sheet
-    max-width: 400px
-    margin: auto auto
-    padding: 2em
-  &-failed-message
-    position: fixed
 .v-overlay__content
   text-align: center
   & > p

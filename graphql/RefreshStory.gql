@@ -8,6 +8,7 @@ subscription RefreshStory($id : uuid!) {
       title
       specs
       number
+      edit
       sections(order_by: {number: asc_nulls_last}) {
         id
         meta

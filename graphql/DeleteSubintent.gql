@@ -1,0 +1,5 @@
+mutation DeleteSubintent($id: uuid!) {
+  delete_subintent_by_pk(id: $id) {
+    id
+  }
+}

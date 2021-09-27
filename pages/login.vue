@@ -1,62 +1,67 @@
 <template lang="html">
-  <div class="">
-    <v-alert
-      v-if="invalidCredentials"
-      type="error"
-      dismissible
-      class="mt-8 login-failed-message"
-      transition="scale-transition"
-    >
-      Unknown credentials. Please try again
-    </v-alert>
-
-    <v-sheet
-      class="login-sheet"
-      elevation="5"
-    >
-      <v-form
-        @submit.prevent="login"
+  <div class="login-page">
+    <div class="login-wrapper">
+      <v-sheet
+        class="login-sheet"
+        elevation="5"
       >
-        <h2>Log in</h2>
-        <v-text-field
-          v-model="userName"
-          label="Your user name"
-          :disabled="isRequestingLogin()"
-        />
+        <v-form
+          @submit.prevent="login"
+        >
+          <h2>Log in</h2>
+          <v-text-field
+            v-model="userName"
+            autofocus
+            label="Your user name"
+            :disabled="isRequestingLogin"
+            @input="startEntering"
+          />
 
-        <v-text-field
-          v-model="password"
-          :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
-          :type="showPassword ? 'text' : 'password'"
-          :disabled="isRequestingLogin()"
-          label="Your password"
-          @click:append="showPassword = !showPassword"
-        />
+          <v-text-field
+            v-model="password"
+            :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+            :type="showPassword ? 'text' : 'password'"
+            :disabled="isRequestingLogin"
+            label="Your password"
+            @input="startEntering"
+            @click:append="showPassword = !showPassword"
+          />
 
-        <div class="text-center">
-          <v-btn
-            :loading="isRequestingLogin()"
-            :disabled="userName === '' || password === ''"
-            type="submit"
-          >
-            Log in!
-            <template #loader>
-              <v-progress-circular
-                :width="3"
-                :size="25"
-                indeterminate
-                color="primary"
-              />
-            </template>
-            <style scoped>
-              .v-progress-circular {
-              margin: 1rem;
-              }
-            </style>
-          </v-btn>
-        </div>
-      </v-form>
-    </v-sheet>
+          <div class="text-center">
+            <v-btn
+              :loading="isRequestingLogin"
+              :disabled="userName === '' || password === ''"
+              type="submit"
+            >
+              Log in!
+              <template #loader>
+                <v-progress-circular
+                  :width="3"
+                  :size="25"
+                  indeterminate
+                  color="primary"
+                />
+              </template>
+              <style scoped>
+                .v-progress-circular {
+                margin: 1rem;
+                }
+              </style>
+            </v-btn>
+
+            <v-alert
+              v-model="invalidCredentials"
+              type="error"
+              class="mt-8"
+              transition="scale-transition"
+              dismissible
+            >
+              Unknown credentials. Please try again
+            </v-alert>
+          </div>
+        </v-form>
+      </v-sheet>
+    </div>
   </div>
 </template>
 
@@ -67,10 +72,15 @@ export default {
   layout: 'public',
   data: () => ({
     userName: '',
-    password: 'TOP SECRET',
-    showPassword: false
+    password: '',
+    showPassword: false,
+    invalidCredentials: false
   }),
   computed: {
+    ...mapState('auth', [
+      'loggedIn',
+      'isRequestingLogin'
+    ]),
     targetRoute () {
       const queryParam = this.$route.query.r
       if (queryParam) {
@@ -81,17 +91,19 @@ export default {
     }
   },
   methods: {
-    ...mapState('auth', [
-      'loggedIn',
-      'isRequestingLogin',
-      'invalidCredentials'
-    ]),
     ...mapActions('auth', [
       'requestLogin'
     ]),
     async login () {
       await this.requestLogin([this.userName, this.password])
-      this.$router.replace(this.targetRoute)
+      if (this.loggedIn) {
+        this.$router.replace(this.targetRoute)
+      } else {
+        this.invalidCredentials = true
+      }
+    },
+    startEntering () {
+      this.invalidCredentials = false
     }
   },
   mount () {

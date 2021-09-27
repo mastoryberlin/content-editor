@@ -1,0 +1,6 @@
+mutation AddTopic($name: String!) {
+  insert_topic_one(object: {name: $name}) {
+    id
+    name
+  }
+}

@@ -1,0 +1,8 @@
+mutation DeleteMessage($id: uuid!, $number: Int!, $phaseId: uuid!) {
+  delete_prompt_by_pk(id: $id) {
+    id
+  }
+  update_prompt(where: {section_id: {_eq: $phaseId}, _and: {number: {_gt: $number}}}, _inc: {number: -1}) {
+    affected_rows
+  }
+}

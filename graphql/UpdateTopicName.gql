@@ -1,0 +1,5 @@
+mutation UpdateTopicName($id: uuid!, $name: String!) {
+  update_topic_by_pk(pk_columns: {id: $id}, _set: {name: $name}) {
+    name
+  }
+}

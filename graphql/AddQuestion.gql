@@ -1,0 +1,5 @@
+mutation AddQuestion($survey_id: uuid!, $number: Int!, $question: String!, $note: String = "", $type: String = "text") {
+  insert_survey_question_one(object: {survey_id: $survey_id, question: $question, number: $number, note: $note, type: $type}) {
+    id
+  }
+}

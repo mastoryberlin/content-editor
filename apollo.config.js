@@ -9,7 +9,7 @@ const getHeaders = () => {
   const headers = {
     // 'X-Hasura-Role': 'teacher',
     // 'x-hasura-user-token': '8ac3a21e-cf14-4900-ab21-623a11687c9a'
-    'x-hasura-admin-secret': '4e46fee975cf7a5daa6ed584c182d5b0ec9cba297015d692'
+    'x-hasura-admin-secret': process.env.NUXT_ENV_HASURA_TOKEN
   }
   // const token = window.localStorage.getItem('apollo-token')
   // if (token) {

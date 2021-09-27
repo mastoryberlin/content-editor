@@ -1,0 +1,8 @@
+mutation AddWorksheet($challengeId: uuid!, $number: smallint!, $long_description: String = "", $short_description: String = "") {
+  update_geogebra_worksheet(where: {challenge_id: {_eq: $challengeId}, _and: {number: {_gte: $number}}}, _inc: {number: 1}) {
+    affected_rows
+  }
+  insert_geogebra_worksheet_one(object: {challenge_id: $challengeId, long_description: $long_description, number: $number, short_description: $short_description}) {
+    id
+  }
+}

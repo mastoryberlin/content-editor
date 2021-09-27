@@ -1,0 +1,11 @@
+mutation MoveQuestion($id: uuid!, $survey_id: uuid!, $from: Int!, $to: Int!) {
+  shiftNumbers: update_survey_question(where: {survey_id: {_eq: $survey_id}, _and: {number: {_gte: $to}}}, _inc: {number: 1}) {
+    affected_rows
+  }
+  updateQuestion: update_survey_question_by_pk(pk_columns: {id: $id}, _set: {number: $to}) {
+    number
+  }
+  unshiftNumbers: update_survey_question(where: {survey_id: {_eq: $survey_id}, _and: {number: {_gt: $from}}}, _inc: {number: -1}) {
+    affected_rows
+  }
+}

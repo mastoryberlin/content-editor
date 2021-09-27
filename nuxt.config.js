@@ -2,7 +2,7 @@ import colors from 'vuetify/es5/util/colors'
 
 export default {
   // Target: https://go.nuxtjs.dev/config-target
-  target: 'static',
+  target: 'server',
 
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
@@ -11,6 +11,11 @@ export default {
     htmlAttrs: {
       lang: 'en'
     },
+    script: [
+      {
+        src: 'https://www.geogebra.org/apps/deployggb.js'
+      }
+    ],
     meta: [
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
@@ -33,6 +38,10 @@ export default {
   plugins: [
     '~/plugins/readstat.js',
     '~/plugins/extensions.js',
+    '~/plugins/shortcut.js',
+    '~/plugins/content-mutation.js',
+    '~/plugins/test.js',
+
   ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components
@@ -55,12 +64,12 @@ export default {
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
-    host: process.env.BACKEND === 'local'
-    ? 'localhost'
-    : `${process.env.NODE_ENV === 'development' ? 'dev-proc' : 'proc'}.mastory.io`,
-    port: process.env.BACKEND === 'local' ? 4000 : 443,
-    prefix: '/content-editor/',
-    https: process.env.BACKEND !== 'local',
+    // host: process.env.BACKEND === 'local'
+    // ? 'localhost'
+    // : `${process.env.NODE_ENV === 'development' ? 'dev-proc' : 'proc'}.mastory.io`,
+    // port: process.env.BACKEND === 'local' ? 4000 : 443,
+    // prefix: '/content-editor/',
+    // https: process.env.BACKEND !== 'local',
   },
 
   apollo: {
