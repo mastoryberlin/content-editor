@@ -1,22 +1,14 @@
-<template lang="html">
-  <div class="">
+<template>
+  <div>
     <template v-if="$apollo.loading">
-      <v-skeleton-loader
-        v-for="n in 5"
-        :key="n"
-        type="list-item"
-      />
+      <v-skeleton-loader v-for="n in 5" :key="n" type="list-item" />
     </template>
 
     <template v-else-if="$apollo.error">
       An error occurred!
     </template>
 
-    <privileged-area
-      v-else
-      needs="edit_episode_narrative"
-      to="edit"
-    >
+    <privileged-area v-else needs="edit_episode_narrative" to="edit">
       <template v-if="phases">
         <template v-for="(phase, phaseIndex) in phases">
           <div
@@ -31,17 +23,23 @@
             :key="phase.id + '-messages'"
             group-name="episode-messages"
             drag-handle-selector=".content-editor-draggable-handle"
-            @drag-start="setDragSource({
-              ...$event,
-              dragSource: phase
-            })"
-            @drop="moveMessage({
-              ...$event,
-              dragTarget: phase
-            })"
+            @drag-start="
+              setDragSource({
+                ...$event,
+                dragSource: phase,
+              })
+            "
+            @drop="
+              moveMessage({
+                ...$event,
+                dragTarget: phase,
+              })
+            "
           >
             <message-group
-              v-for="message in phases[phaseIndex].prompts.filter(p => p.parent === null)"
+              v-for="message in phases[phaseIndex].prompts.filter(
+                (p) => p.parent === null
+              )"
               :key="message.id"
               :all-messages-in-this-phase="phases[phaseIndex].prompts"
               :message="message"
@@ -51,7 +49,7 @@
           </container>
         </template>
 
-      <!-- <finish-work-btn
+        <!-- <finish-work-btn
       v-if="data.story_chapter_by_pk.edit.state === 'details'"
         :may-commit="mayCommitMessageFlow"
         :loading="isCommittingMessageFlow"
@@ -59,6 +57,9 @@
       /> -->
       </template>
     </privileged-area>
+    <button @click="messageFlow">
+      Finish work
+    </button>
   </div>
 </template>
 
@@ -106,6 +107,14 @@ export default {
     },
   },
   methods: {
+    messageFlow() {
+      const payload = {
+        storyId: this.storyId,
+        episodeId: this.episodeId,
+        commitMessage: 'something',
+      }
+      this.$axios.post('https://proc.mastory.io/content-editor/commit/message-flow', payload)
+    },
     addSurvey() {
       this.$apollo.mutate({
         mutation: require('~/graphql/AddSurvey'),

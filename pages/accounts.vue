@@ -2,7 +2,7 @@
   <div class="">
     <h2>User Accounts</h2>
     <v-select v-model="account" :items="userAccounts" />
-    <div
+    <template
       v-if="account"
       class=""
     >
@@ -39,7 +39,10 @@
           </tr>
         </tbody>
       </v-simple-table>
-    </div>
+      <v-btn color="red" @click="deleteUser">
+        Delete user
+      </v-btn>
+    </template>
     <v-btn @click="addUser">
       Add user
     </v-btn>
@@ -52,10 +55,10 @@ export default {
   apollo: {
     stories: {
       query: require('~/graphql/GetStories'),
-      update: data => data.story
-    }
+      update: data => data.story,
+    },
   },
-  async asyncData ({ $axios }) {
+  async asyncData({ $axios }) {
     const response = await $axios.$get('https://proc.mastory.io/content-editor/user/roles')
     const userRoles = response.success ? response.userRoles : null
     return { userRoles }
@@ -68,14 +71,15 @@ export default {
       'contributor:math-author',
       'contributor:ux-researcher',
       'contributor:head-of-content',
-      '(no access)'
-    ]
+      'observer',
+      '(no access)',
+    ],
   }),
   computed: {
     ...mapGetters('user', [
-      'login'
+      'login',
     ]),
-    userAccounts () {
+    userAccounts() {
       if (this.userRoles) {
         return this.userRoles.map(ur => ur.id).sort()
       } else {
@@ -83,7 +87,7 @@ export default {
       }
     },
     roles: {
-      get () {
+      get() {
         if (this.userRoles && this.account) {
           const rolesObject = this.userRoles.find(ur => ur.id === this.account)
           if (rolesObject) {
@@ -91,21 +95,21 @@ export default {
           } else { return [] }
         } else { return [] }
       },
-      set (v) {
+      set(v) {
         const rolesObject = this.userRoles.find(ur => ur.id === this.account)
         if (rolesObject) {
           rolesObject.roles = v
         }
-      }
+      },
     },
-    superAdmin () {
+    superAdmin() {
       return this.roles
         ? Object.keys(this.roles).includes('superadmin')
         : false
-    }
+    },
   },
   methods: {
-    toggleSuperAdmin (isSuperAdmin) {
+    toggleSuperAdmin(isSuperAdmin) {
       const newRoles = { ...this.roles }
       let question
       if (isSuperAdmin) {
@@ -118,12 +122,12 @@ export default {
       if (confirm(question)) {
         this.$axios.post('https://proc.mastory.io/content-editor/user/roles', {
           userName: this.account,
-          roles: newRoles
+          roles: newRoles,
         })
         this.roles = newRoles
       }
     },
-    switchRole (story, newRole) {
+    switchRole(story, newRole) {
       const newRoles = { ...this.roles }
       if (newRole === '(no access)') {
         delete newRole[story]
@@ -132,21 +136,28 @@ export default {
       }
       this.$axios.post('https://proc.mastory.io/content-editor/user/roles', {
         userName: this.account,
-        roles: newRoles
+        roles: newRoles,
       })
       this.roles = newRoles
     },
-    addUser () {
+    addUser() {
       const newUserName = prompt('Please enter a login name for the new user!')
       if (newUserName) {
         this.userRoles.push({ id: newUserName, roles: {} })
         this.$axios.post('https://proc.mastory.io/content-editor/user', {
           userName: newUserName,
-          initialPassword: 'TOP SECRET'
+          initialPassword: 'TOP SECRET',
         })
       }
-    }
-  }
+    },
+    deleteUser() {
+      this.$axios.delete('https://proc.mastory.io/content-editor/user', {
+        params: {
+          user: this.account,
+        },
+      })
+    },
+  },
 }
 </script>
 

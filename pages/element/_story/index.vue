@@ -102,7 +102,6 @@
                       >
                         mdi-drag
                       </v-icon>
-
                     </v-col>
 
                     <v-col class="content-editor-draggable-content">
@@ -443,7 +442,7 @@ export default {
         },
         title: duplicate ? after.title : '',
       })
-  
+
       const shortcut = editField.shortcut
       if (shortcut) {
         const { id } = await this.$shortcut.createStory({ name: 'Episode ' + number, project_id: shortcut.project, epic_id: shortcut.epic })
