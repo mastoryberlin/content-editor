@@ -1,4 +1,4 @@
-<template lang="html">
+<template>
   <div class="">
     <template v-if="$apollo.loading">
       <v-skeleton-loader
@@ -59,15 +59,18 @@
       /> -->
       </template>
     </privileged-area>
+    <finish-work-btn @commit="onCommit" />
   </div>
 </template>
 
 <script>
 import { Container } from 'vue-smooth-dnd'
+import FinishWorkBtn from './finish-work-btn.vue'
 
 export default {
   components: {
     Container,
+    FinishWorkBtn,
   },
   props: {
     episode: {
@@ -106,6 +109,14 @@ export default {
     },
   },
   methods: {
+    onCommit(commitMessage) {
+      const payload = {
+        storyId: this.storyId,
+        episodeId: this.episodeId,
+        commitMessage,
+      }
+      this.$axios.post('https://proc.mastory.io/content-editor/commit/message-flow', payload)
+    },
     addSurvey() {
       this.$apollo.mutate({
         mutation: require('~/graphql/AddSurvey'),

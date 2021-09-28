@@ -38,7 +38,7 @@
 
         <v-card-actions>
           <v-spacer />
-          <v-btn type="submit" color="green">
+          <v-btn type="submit" color="green" @click="$emit('commit', commitMessage)">
             OK
           </v-btn>
           <v-btn @click="showCommitMessageDialog = false">
@@ -58,25 +58,25 @@ export default {
   props: {
     loading: {
       type: Boolean,
-      default: null
+      default: null,
     },
     mayCommit: {
       type: Boolean,
-      default: false
+      default: false,
     },
     commitMessageExt: {
       type: String,
-      default: ''
-    }
+      default: '',
+    },
   },
   emits: ['commit'],
   data: () => ({
     showCommitMessageDialog: false,
     commitMessage: '',
-    label: 'Mark work as finished'
+    label: 'Mark work as finished',
   }),
   computed: {
-  }
+  },
 }
 </script>
 
