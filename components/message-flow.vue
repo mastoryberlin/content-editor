@@ -50,6 +50,7 @@
             />
           </container>
         </template>
+        <finish-work-btn />
 
       <!-- <finish-work-btn
       v-if="data.story_chapter_by_pk.edit.state === 'details'"
@@ -59,7 +60,6 @@
       /> -->
       </template>
     </privileged-area>
-    <finish-work-btn @commit="onCommit" />
   </div>
 </template>
 
@@ -109,14 +109,6 @@ export default {
     },
   },
   methods: {
-    onCommit(commitMessage) {
-      const payload = {
-        storyId: this.storyId,
-        episodeId: this.episodeId,
-        commitMessage,
-      }
-      this.$axios.post('https://proc.mastory.io/content-editor/commit/message-flow', payload)
-    },
     addSurvey() {
       this.$apollo.mutate({
         mutation: require('~/graphql/AddSurvey'),

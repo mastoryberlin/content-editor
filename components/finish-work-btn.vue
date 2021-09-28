@@ -27,7 +27,7 @@
         </v-card-title>
 
         <v-card-text>
-          <v-form @submit.prevent="$emit('commit', commitMessage)">
+          <v-form @submit.prevent="$emit('commit', commitMessage); onCommit();">
             Please enter some words that describe the changes you have made.
             <v-text-field
               v-model="commitMessage"
@@ -38,10 +38,10 @@
 
         <v-card-actions>
           <v-spacer />
-          <v-btn type="submit" color="green" @click="$emit('commit', commitMessage)">
+          <v-btn type="submit" color="green" @click="$emit('commit', commitMessage); onCommit();">
             OK
           </v-btn>
-          <v-btn @click="showCommitMessageDialog = false">
+          <v-btn @click="closeDialog">
             Cancel
           </v-btn>
           <v-spacer />
@@ -76,6 +76,27 @@ export default {
     label: 'Mark work as finished',
   }),
   computed: {
+    storyId() {
+      return this.$route.params.story
+    },
+    episodeId() {
+      return this.$route.params.episode
+    },
+  },
+  methods: {
+    onCommit() {
+      const payload = {
+        storyId: this.storyId,
+        episodeId: this.episodeId,
+        commitMessage: this.commitMessage,
+      }
+      this.$axios.post('https://proc.mastory.io/content-editor/commit/message-flow', payload)
+      this.closeDialog()
+    },
+    closeDialog() {
+      this.showCommitMessageDialog = false
+      this.commitMessage = ''
+    },
   },
 }
 </script>
