@@ -24,19 +24,19 @@
       <template v-if="showChangePasswordSection">
         <v-text-field
           v-model="password"
-          :append-icon="showPassword1 ? 'mdi-eye' : 'mdi-eye-off'"
-          :type="showPassword1 ? 'text' : 'password'"
+          :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+          :type="showPassword ? 'text' : 'password'"
           label="New password"
           :rules="[password !== '' || 'This field may not be left empty']"
-          @click:append="showPassword1 = !showPassword1"
+          @click:append="showPassword = !showPassword"
         />
         <v-text-field
           v-model="passwordRepeated"
-          :append-icon="showPassword2 ? 'mdi-eye' : 'mdi-eye-off'"
-          :type="showPassword2 ? 'text' : 'password'"
+          :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+          :type="showPassword ? 'text' : 'password'"
           label="Enter new password again"
           :rules="[passwordRepeated === password || 'This field must match the password you entered above']"
-          @click:append="showPassword2 = !showPassword2"
+          @click:append="showPassword = !showPassword"
         />
         <v-btn
           :disabled="password === '' || password !== passwordRepeated"
@@ -86,8 +86,7 @@ export default {
     passwordRepeated: '',
     showPasswordChangedHint: false,
     showSavedHint: false,
-    showPassword1: false,
-    showPassword2: false,
+    showPassword: false,
   }),
   computed: {
     ...mapState('user', [
@@ -103,8 +102,7 @@ export default {
         if (resp.success) {
           this.password = ''
           this.passwordRepeated = ''
-          this.showPassword1 = false
-          this.showPassword2 = false
+          this.showPassword = false
           this.showChangePasswordSection = false
           this.showPasswordChangedHint = true
         }
