@@ -18,7 +18,7 @@ const getHeaders = () => {
 }
 
 const httpLink = new HttpLink({
-  uri: process.env.NUXT_ENV_HASURA_URL + process.env.NUXT_ENV_HASURA_ENDPOINT,
+  uri: 'https://' + process.env.NUXT_ENV_HASURA_URL + process.env.NUXT_ENV_HASURA_ENDPOINT,
   // credentials: 'same-origin',
   headers: getHeaders()
 })
@@ -28,7 +28,7 @@ if (process.server) {
   // Server side
 //   const ws = require('ws')
 //   wsLink = new WebSocketLink({
-//     uri: 'wss://dev-graphql-engine.mastory.io/v1/graphql',
+//     uri: 'wss://' + process.env.NUXT_ENV_HASURA_URL + process.env.NUXT_ENV_HASURA_ENDPOINT,
 //     options: {
 //       reconnect: true,
 //       connectionParams () {
@@ -43,7 +43,7 @@ if (process.server) {
 } else {
   // Client side
   const wsLink = new WebSocketLink({
-    uri: 'wss://dev-graphql-engine.mastory.io/v1/graphql',
+    uri: 'wss://' + process.env.NUXT_ENV_HASURA_URL + process.env.NUXT_ENV_HASURA_ENDPOINT,
     options: {
       reconnect: true,
       connectionParams () {
