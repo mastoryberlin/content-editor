@@ -14,22 +14,19 @@
           v-bind="attrs"
           v-on="on"
         >
-          <v-icon color="green">
-            mdi-check-bold
-          </v-icon>
-          Mark as finished {{ mayCommit ? commitMessageExt : 'and request approval' }}
+          Commit this state
         </v-btn>
       </template>
 
       <v-card>
         <v-card-title class="text-h5">
-          Create a pull request
+          Commit your work
         </v-card-title>
 
         <v-card-text>
-          <v-form @submit.prevent="$emit('commit', commitMessage); createPR();">
+          <v-form @submit.prevent="$emit('commit', commitMessage); onCommit();">
             <v-text-field
-              v-model="PRTitle"
+              v-model="commitMessage"
               autofocus
             />
           </v-form>
@@ -37,7 +34,7 @@
 
         <v-card-actions>
           <v-spacer />
-          <v-btn type="submit" color="green" @click="$emit('commit', commitMessage); createPR();">
+          <v-btn type="submit" color="green" @click="$emit('commit', commitMessage); onCommit();">
             OK
           </v-btn>
           <v-btn @click="closeDialog">
@@ -57,7 +54,7 @@ export default {
   props: {
     tabType: {
       type: String,
-      default: null,
+      default: '',
     },
     loading: {
       type: Boolean,
@@ -75,7 +72,7 @@ export default {
   emits: ['commit'],
   data: () => ({
     showCommitMessageDialog: false,
-    PRTitle: '',
+    commitMessage: '',
   }),
   computed: {
     storyId() {
@@ -86,21 +83,22 @@ export default {
     },
   },
   methods: {
-    createPR() {
+    onCommit() {
       const payload = {
         storyId: this.storyId,
-        title: this.PRTitle,
+        episodeId: this.episodeId,
+        commitMessage: this.commitMessage,
       }
       if (this.tabType === 'messageFlow') {
-        this.$axios.post('https://proc.mastory.io/content-editor/issue-pr/message-flow', payload)
+        this.$axios.post('https://proc.mastory.io/content-editor/commit/message-flow', payload)
       } else {
-        this.$axios.post('https://proc.mastory.io/content-editor/issue-pr/math-challenge', payload)
+        this.$axios.post('https://proc.mastory.io/content-editor/commit/math-challenge', payload)
       }
       this.closeDialog()
     },
     closeDialog() {
       this.showCommitMessageDialog = false
-      this.PRTitle = ''
+      this.commitMessage = ''
     },
   },
 }

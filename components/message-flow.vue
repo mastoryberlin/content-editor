@@ -1,5 +1,5 @@
 <template>
-  <div class="">
+  <div>
     <template v-if="$apollo.loading">
       <v-skeleton-loader
         v-for="n in 5"
@@ -50,9 +50,10 @@
             />
           </container>
         </template>
-        <finish-work-btn />
+        <finish-work-btn :tab-type="'messageFlow'" />
+        <commit-work-btn :tab-type="'messageFlow'" />
 
-      <!-- <finish-work-btn
+        <!-- <finish-work-btn
       v-if="data.story_chapter_by_pk.edit.state === 'details'"
         :may-commit="mayCommitMessageFlow"
         :loading="isCommittingMessageFlow"
@@ -65,12 +66,10 @@
 
 <script>
 import { Container } from 'vue-smooth-dnd'
-import FinishWorkBtn from './finish-work-btn.vue'
 
 export default {
   components: {
     Container,
-    FinishWorkBtn,
   },
   props: {
     episode: {
@@ -109,6 +108,7 @@ export default {
     },
   },
   methods: {
+
     addSurvey() {
       this.$apollo.mutate({
         mutation: require('~/graphql/AddSurvey'),

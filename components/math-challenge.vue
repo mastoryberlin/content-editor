@@ -1,4 +1,4 @@
-<template lang="html">
+<template>
   <div class="">
     <template v-if="$apollo.loading">
       <v-skeleton-loader
@@ -33,10 +33,13 @@
         Click here to add a math challenge for this episode.
       </span>
     </privileged-area>
+    <finish-work-btn :tab-type="'mathChallenge'" />
+    <commit-work-btn :tab-type="'mathChallenge'" />
   </div>
 </template>
 
 <script>
+
 export default {
   props: {
     episode: {
