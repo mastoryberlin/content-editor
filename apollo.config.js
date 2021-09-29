@@ -7,9 +7,7 @@ import { getMainDefinition } from 'apollo-utilities'
 
 const getHeaders = () => {
   const headers = {
-    // 'X-Hasura-Role': 'teacher',
-    // 'x-hasura-user-token': '8ac3a21e-cf14-4900-ab21-623a11687c9a'
-    'x-hasura-admin-secret': process.env.NUXT_ENV_HASURA_TOKEN
+    'x-hasura-admin-secret': process.env.NUXT_ENV_HASURA_ADMIN_SECRET
   }
   // const token = window.localStorage.getItem('apollo-token')
   // if (token) {
@@ -20,7 +18,7 @@ const getHeaders = () => {
 }
 
 const httpLink = new HttpLink({
-  uri: 'https://dev-graphql-engine.mastory.io/v1/graphql',
+  uri: 'https://' + process.env.NUXT_ENV_HASURA_URL + process.env.NUXT_ENV_HASURA_ENDPOINT,
   // credentials: 'same-origin',
   headers: getHeaders()
 })
@@ -28,24 +26,24 @@ const httpLink = new HttpLink({
 let link
 if (process.server) {
   // Server side
-//   const ws = require('ws')
-//   wsLink = new WebSocketLink({
-//     uri: 'wss://dev-graphql-engine.mastory.io/v1/graphql',
-//     options: {
-//       reconnect: true,
-//       connectionParams () {
-//         return {
-//           headers: getHeaders()
-//         }
-//       }
-//     },
-//     webSocketImpl: ws
-//   })
+  //   const ws = require('ws')
+  //   wsLink = new WebSocketLink({
+  //     uri: 'wss://' + process.env.NUXT_ENV_HASURA_URL + process.env.NUXT_ENV_HASURA_ENDPOINT,
+  //     options: {
+  //       reconnect: true,
+  //       connectionParams () {
+  //         return {
+  //           headers: getHeaders()
+  //         }
+  //       }
+  //     },
+  //     webSocketImpl: ws
+  //   })
   link = httpLink
 } else {
   // Client side
   const wsLink = new WebSocketLink({
-    uri: 'wss://dev-graphql-engine.mastory.io/v1/graphql',
+    uri: 'wss://' + process.env.NUXT_ENV_HASURA_URL + process.env.NUXT_ENV_HASURA_ENDPOINT,
     options: {
       reconnect: true,
       connectionParams () {
