@@ -26,19 +26,19 @@ const httpLink = new HttpLink({
 let link
 if (process.server) {
   // Server side
-//   const ws = require('ws')
-//   wsLink = new WebSocketLink({
-//     uri: 'wss://' + process.env.NUXT_ENV_HASURA_URL + process.env.NUXT_ENV_HASURA_ENDPOINT,
-//     options: {
-//       reconnect: true,
-//       connectionParams () {
-//         return {
-//           headers: getHeaders()
-//         }
-//       }
-//     },
-//     webSocketImpl: ws
-//   })
+  //   const ws = require('ws')
+  //   wsLink = new WebSocketLink({
+  //     uri: 'wss://' + process.env.NUXT_ENV_HASURA_URL + process.env.NUXT_ENV_HASURA_ENDPOINT,
+  //     options: {
+  //       reconnect: true,
+  //       connectionParams () {
+  //         return {
+  //           headers: getHeaders()
+  //         }
+  //       }
+  //     },
+  //     webSocketImpl: ws
+  //   })
   link = httpLink
 } else {
   // Client side
