@@ -46,6 +46,7 @@
               :all-messages-in-this-phase="phases[phaseIndex].prompts"
               :message="message"
               :deletable="phases[phaseIndex].prompts.length > 1"
+              :disabled="editingProhibited"
               :course-name="storyId"
             />
           </container>
@@ -66,6 +67,7 @@
 
 <script>
 import { Container } from 'vue-smooth-dnd'
+import { mapGetters } from 'vuex'
 
 export default {
   components: {
@@ -100,6 +102,13 @@ export default {
   data: () => ({
   }),
   computed: {
+    ...mapGetters('user', ['may']),
+    editingProhibited() {
+      const needs = 'edit_episode_narrative'
+      const to = 'edit'
+      const { may, storyId } = this
+      return to === 'edit' && !may(needs, storyId)
+    },
     storyId() {
       return this.$route.params.story
     },

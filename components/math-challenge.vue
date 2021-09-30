@@ -21,6 +21,7 @@
         <worksheet-card
           v-for="(worksheet, n) in worksheets"
           :key="worksheet.id"
+          :disabled="editingProhibited"
           :worksheet="worksheet"
           @add-worksheet="addWorksheet(n + 2)"
         />
@@ -39,6 +40,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 
 export default {
   props: {
@@ -76,6 +78,13 @@ export default {
     },
     worksheets() {
       return this.challenge.geogebra_worksheets
+    },
+    ...mapGetters('user', ['may']),
+    editingProhibited() {
+      const needs = 'edit_episode_math'
+      const to = 'edit'
+      const { may, storyId } = this
+      return to === 'edit' && !may(needs, storyId)
     },
   },
   methods: {

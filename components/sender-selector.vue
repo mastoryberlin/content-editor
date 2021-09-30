@@ -9,6 +9,7 @@
       <v-btn
         v-for="t in Object.keys(senderIds)"
         :key="t"
+        :disabled="disabled"
         class="sender-selector-option"
       >
         {{ senderIds[t].icon }}
@@ -22,54 +23,58 @@
 <script>
 export default {
   props: {
+    disabled: {
+      type: Boolean,
+      default: null,
+    },
     message: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   data: () => ({
     senderIds: {
       Professor: {
-        icon: 'professor'
+        icon: 'professor',
       },
       Alicia: {
-        icon: 'alicia'
+        icon: 'alicia',
 
       },
       Nick: {
 
-        icon: 'nick'
+        icon: 'nick',
 
       },
       VZ: {
 
-        icon: 'vz'
+        icon: 'vz',
 
-      }
+      },
     },
-    open: false
+    open: false,
   }),
   computed: {
-    displayType () {
+    displayType() {
       return 'This message has the type ' + this.message.type
     },
     type: {
-      get () {
+      get() {
         return this.message.sender_id
       },
-      set (v) {
+      set(v) {
         if (v && v !== this.message.sender_id) {
           this.$apollo.mutate({
             mutation: require('~/graphql/UpdateMessageSender'),
             variables: {
               id: this.message.id,
-              senderId: v
-            }
+              senderId: v,
+            },
           })
         }
-      }
-    }
-  }
+      },
+    },
+  },
 }
 
 </script>
