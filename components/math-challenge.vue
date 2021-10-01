@@ -1,4 +1,4 @@
-<template lang="html">
+<template>
   <div class="">
     <template v-if="$apollo.loading">
       <v-skeleton-loader
@@ -21,6 +21,7 @@
         <worksheet-card
           v-for="(worksheet, n) in worksheets"
           :key="worksheet.id"
+          :disabled="editingProhibited"
           :worksheet="worksheet"
           @add-worksheet="addWorksheet(n + 2)"
         />
@@ -33,10 +34,14 @@
         Click here to add a math challenge for this episode.
       </span>
     </privileged-area>
+    <finish-work-btn :tab-type="'mathChallenge'" />
+    <commit-work-btn :tab-type="'mathChallenge'" />
   </div>
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
+
 export default {
   props: {
     episode: {
@@ -73,6 +78,13 @@ export default {
     },
     worksheets() {
       return this.challenge.geogebra_worksheets
+    },
+    ...mapGetters('user', ['may']),
+    editingProhibited() {
+      const needs = 'edit_episode_math'
+      const to = 'edit'
+      const { may, storyId } = this
+      return to === 'edit' && !may(needs, storyId)
     },
   },
   methods: {

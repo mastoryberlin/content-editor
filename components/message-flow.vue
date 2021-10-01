@@ -1,5 +1,5 @@
-<template lang="html">
-  <div class="">
+<template>
+  <div>
     <template v-if="$apollo.loading">
       <v-skeleton-loader
         v-for="n in 5"
@@ -46,12 +46,15 @@
               :all-messages-in-this-phase="phases[phaseIndex].prompts"
               :message="message"
               :deletable="phases[phaseIndex].prompts.length > 1"
+              :disabled="editingProhibited"
               :course-name="storyId"
             />
           </container>
         </template>
+        <finish-work-btn :tab-type="'messageFlow'" />
+        <commit-work-btn :tab-type="'messageFlow'" />
 
-      <!-- <finish-work-btn
+        <!-- <finish-work-btn
       v-if="data.story_chapter_by_pk.edit.state === 'details'"
         :may-commit="mayCommitMessageFlow"
         :loading="isCommittingMessageFlow"
@@ -64,6 +67,7 @@
 
 <script>
 import { Container } from 'vue-smooth-dnd'
+import { mapGetters } from 'vuex'
 
 export default {
   components: {
@@ -98,6 +102,13 @@ export default {
   data: () => ({
   }),
   computed: {
+    ...mapGetters('user', ['may']),
+    editingProhibited() {
+      const needs = 'edit_episode_narrative'
+      const to = 'edit'
+      const { may, storyId } = this
+      return to === 'edit' && !may(needs, storyId)
+    },
     storyId() {
       return this.$route.params.story
     },
@@ -106,6 +117,7 @@ export default {
     },
   },
   methods: {
+
     addSurvey() {
       this.$apollo.mutate({
         mutation: require('~/graphql/AddSurvey'),
