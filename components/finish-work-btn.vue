@@ -27,7 +27,7 @@
         </v-card-title>
 
         <v-card-text>
-          <v-form @submit.prevent="$emit('commit', commitMessage); createPR();">
+          <v-form @submit.prevent="createPR">
             <v-text-field
               v-model="PRTitle"
               autofocus
@@ -37,7 +37,7 @@
 
         <v-card-actions>
           <v-spacer />
-          <v-btn type="submit" color="green" @click="$emit('commit', commitMessage); createPR();">
+          <v-btn type="submit" color="green" @click="createPR">
             OK
           </v-btn>
           <v-btn @click="closeDialog">
