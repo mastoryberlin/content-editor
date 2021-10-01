@@ -1,10 +1,6 @@
 <template lang="html">
-  <apollo-query
-    v-slot="{ result: { loading, error, data } }"
-    :query="require('~/graphql/GetStory')"
-    :variables="{id: storyId}"
-  >
-    <div v-if="loading">
+  <div>
+    <div v-if="$apollo.loading">
       <v-skeleton-loader
         v-for="n in 5"
         :key="n"
@@ -12,19 +8,15 @@
       />
     </div>
 
-    <div v-else-if="error">
+    <div v-else-if="$apollo.error">
       An error occurred!
     </div>
 
-    <div
-      v-else-if="data"
-      class="content-editor"
+    <privileged-area
+      v-else-if="story"
+      needs="edit_episode_specs"
+      to="edit"
     >
-      <apollo-subscribe-to-more
-        :document="require('~/graphql/RefreshStory')"
-        :variables="{id: storyId}"
-        :update-query="refreshStory"
-      />
       <v-tabs v-model="tab">
         <v-tab v-text="'Specs'" />
         <v-tab v-text="'Meta'" />
@@ -35,10 +27,10 @@
         <v-tab-item class="content-editor-specs">
           <v-overlay
             absolute
-            :value="data.story_by_pk.edit.state === 'episodes'"
+            :value="story.edit.state === 'episodes'"
           >
             <p>
-              We are currently editing <strong>individual episodes</strong> of "{{ data.story_by_pk.title }}".
+              We are currently editing <strong>individual episodes</strong> of "{{ title }}".
             </p>
 
             <p>
@@ -57,7 +49,7 @@
           </v-overlay>
 
           <p>
-            Enter here the story specs for “{{ data.story_by_pk.title }}”
+            Enter here the story specs for “{{ title }}”
             by adding a new card for each episode.
           </p>
 
@@ -71,7 +63,7 @@
             <freeflow-specs-field
               scope="story"
               field="description"
-              :data-object="data.story_by_pk"
+              :data-object="story"
               :ref-id="storyId"
               @generate-specs="generateSpecsFromFreeflow"
             />
@@ -85,10 +77,10 @@
           <container
             group-name="story-specs"
             drag-handle-selector=".content-editor-draggable-handle"
-            :get-child-payload="(index) => ({episodeId: data.story_by_pk.chapters[index].id})"
+            :get-child-payload="(index) => ({episodeId: episodes[index].id})"
             @drop="onDrop(data, $event)"
           >
-            <draggable v-for="(episode, i) in data.story_by_pk.chapters" :key="i">
+            <draggable v-for="(episode, i) in episodes" :key="i">
               <v-sheet
                 elevation="2"
                 rounded
@@ -102,7 +94,6 @@
                       >
                         mdi-drag
                       </v-icon>
-
                     </v-col>
 
                     <v-col class="content-editor-draggable-content">
@@ -115,7 +106,7 @@
                           full-width
                           rows="1"
                           auto-grow
-                          :prefix="`E.${i+1}: `"
+                          :prefix="`E.${episode.number}: `"
                           background-color="white"
                           label="Enter a title for this episode"
                           :disabled="!!episode.editedBy"
@@ -164,7 +155,7 @@
                             </v-tooltip>
 
                             <v-tooltip
-                              v-if="data.story_by_pk.chapters.length > 1"
+                              v-if="episodes.length > 1"
                               bottom
                             >
                               <template #activator="{on, attrs}">
@@ -251,7 +242,7 @@
           </container>
 
           <finish-work-btn
-            v-if="data.story_by_pk.edit.state === 'specs'"
+            v-if="story.edit.state === 'specs'"
             :may-commit="mayCommit"
             commit-message-ext="to enable editing individual episodes"
             :loading="isCommittingStorySpecs"
@@ -262,7 +253,7 @@
         <v-tab-item class="content-editor-meta">
           <v-text-field
             label="Story Title"
-            :value="data.story_by_pk.title"
+            :value="title"
             @change="$apollo.mutate({
               mutation: require('~/graphql/UpdateStoryTitle'),
               variables: {id: storyId, title: $event}
@@ -274,8 +265,8 @@
           <alpha-test />
         </v-tab-item>
       </v-tabs-items>
-    </div>
-  </apollo-query>
+    </privileged-area>
+  </div>
 </template>
 
 <script>
@@ -293,13 +284,40 @@ export default {
     showFreeflow: false,
     isCommittingStorySpecs: false,
     isReopeningStorySpecs: false,
+    story: null,
   }),
+  apollo: {
+    story: {
+      query: require('~/graphql/GetStory'),
+      variables() {
+        return { id: this.storyId }
+      },
+      update: data => data.story_by_pk,
+      subscribeToMore: {
+        document: require('~/graphql/RefreshStory'),
+        variables() {
+          return { id: this.storyId }
+        },
+        updateQuery: (previousResult, { subscriptionData }) => {
+          const newResult = { ...previousResult }
+          newResult.story_by_pk = JSON.parse(JSON.stringify(subscriptionData.data.story_by_pk))
+          return newResult
+        },
+      },
+    },
+  },
   head: {
     title: 'Story View',
   },
   computed: {
     storyId() {
       return this.$route.params.story
+    },
+    title() {
+      return this.story.title
+    },
+    episodes() {
+      return this.story.chapters
     },
     privileges() {
       const priv = this.$store.state.user.privileges
@@ -366,34 +384,34 @@ export default {
     },
 
     // Handle subscription updates
-    refreshStory(previousResult, { subscriptionData }) {
-      console.log('refreshStory', { previousResult, subscriptionData })
-      const previous = previousResult.story_by_pk
-      const updated = subscriptionData.data.story_by_pk
-      if (this.noUpdatesFrom) {
-        const { id, field } = this.noUpdatesFrom
-        if (id) {
-          // some episode is being edited
-          const eps = updated.chapters
-          const ep = eps.find(e => e.id === id)
-          const index = eps.indexOf(ep)
-          eps[index] = JSON.parse(JSON.stringify(previous.chapters[index]))
-        } else {
-          // story's top level properties are being edited
-          delete updated[field]
-        }
-      }
-      const newStory = {
-        story_by_pk: {
-          id: previous.id,
-          ...updated,
-        },
-      }
-      newStory.story_by_pk.chapters = JSON.parse(JSON.stringify(updated.chapters))
-      newStory.story_by_pk.edit.state = updated.edit.state
-      console.log('returning', newStory)
-      return newStory
-    },
+    // refreshStory(previousResult, { subscriptionData }) {
+    //   console.log('refreshStory', { previousResult, subscriptionData })
+    //   const previous = previousResult.story_by_pk
+    //   const updated = subscriptionData.data.story_by_pk
+    //   if (this.noUpdatesFrom) {
+    //     const { id, field } = this.noUpdatesFrom
+    //     if (id) {
+    //       // some episode is being edited
+    //       const eps = updated.chapters
+    //       const ep = eps.find(e => e.id === id)
+    //       const index = eps.indexOf(ep)
+    //       eps[index] = JSON.parse(JSON.stringify(previous.chapters[index]))
+    //     } else {
+    //       // story's top level properties are being edited
+    //       delete updated[field]
+    //     }
+    //   }
+    //   const newStory = {
+    //     story_by_pk: {
+    //       id: previous.id,
+    //       ...updated,
+    //     },
+    //   }
+    //   newStory.story_by_pk.chapters = JSON.parse(JSON.stringify(updated.chapters))
+    //   newStory.story_by_pk.edit.state = updated.edit.state
+    //   console.log('returning', newStory)
+    //   return newStory
+    // },
 
     async addEpisode({ after, duplicate = false, data }) {
       const editField = data.story_by_pk.edit
@@ -443,7 +461,7 @@ export default {
         },
         title: duplicate ? after.title : '',
       })
-  
+
       const shortcut = editField.shortcut
       if (shortcut) {
         const { id } = await this.$shortcut.createStory({ name: 'Episode ' + number, project_id: shortcut.project, epic_id: shortcut.epic })
