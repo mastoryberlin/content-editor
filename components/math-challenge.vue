@@ -3,12 +3,17 @@
     <template v-if="$apollo.loading">
       <v-skeleton-loader v-for="n in 5" :key="n" type="list-item" />
     </template>
-    <template v-else-if="$apollo.error">An error occured</template>
+
+    <template v-else-if="$apollo.error">
+      An error occured
+    </template>
+
     <privileged-area v-else needs="edit_episode_math" to="edit">
       <template v-if="challenge">
         <worksheet-card
           v-for="(worksheet, n) in worksheets"
           :key="worksheet.id"
+          :disabled="editingProhibited"
           :worksheet="worksheet"
           @add-worksheet="addWorksheet(n + 2)"
         />
@@ -21,10 +26,16 @@
         Click here to add a math challenge for this episode.
       </span>
     </privileged-area>
+    <div class="d-flex flex-row justify-space-between ma-5">
+      <finish-work-btn :tab-type="'message-flow'" :button-type="'issue-pr'" />
+      <finish-work-btn :tab-type="'message-flow'" :button-type="'commit'" />
+    </div>
   </div>
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
+
 export default {
   props: {
     episode: {
@@ -61,6 +72,13 @@ export default {
     },
     worksheets() {
       return this.challenge.geogebra_worksheets
+    },
+    ...mapGetters('user', ['may']),
+    editingProhibited() {
+      const needs = 'edit_episode_math'
+      const to = 'edit'
+      const { may, storyId } = this
+      return to === 'edit' && !may(needs, storyId)
     },
   },
   methods: {

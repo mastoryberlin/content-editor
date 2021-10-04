@@ -15,15 +15,22 @@
     </v-card-title>
 
     <v-card-text>
-      <v-text-field :value="shortDescription" label="Short description of the worksheet for teachers" @change="shortDescription = $event" />
-      <v-textarea :value="longDescription" label="Long description of the worksheet for teachers" @change="longDescription = $event" />
+      <v-text-field :disabled="disabled" :value="shortDescription" label="Short description of the worksheet for teachers" @change="shortDescription = $event" />
+      <v-textarea :disabled="disabled" :value="longDescription" label="Long description of the worksheet for teachers" @change="longDescription = $event" />
       <v-container>
         <v-row cols="12">
           <v-col md="12" lg="8">
             <div :id="'ggb-' + id" />
           </v-col>
           <v-col md="12" lg="4">
-            <v-file-input v-model="file" label="Choose a GeoGebra file (.ggb) to upload it" show-size accept=".ggb" @change="loadGGB" />
+            <v-file-input
+              v-model="file"
+              :disabled="disabled"
+              label="Choose a GeoGebra file (.ggb) to upload it"
+              show-size
+              accept=".ggb"
+              @change="loadGGB"
+            />
             <v-autocomplete
               v-model="inputs"
               auto-select-first
@@ -31,6 +38,7 @@
               clearable
               deletable-chips
               multiple
+              :disabled="disabled"
               :items="allObjectNames"
               label="Input variables"
               hint="Enter the IDs of all GeoGebra objects in the worksheet which serve as input parameters"
@@ -42,6 +50,7 @@
               clearable
               deletable-chips
               multiple
+              :disabled="disabled"
               :items="allObjectNames"
               label="Output variables"
               hint="Enter the IDs of all GeoGebra objects in the worksheet which serve as output parameters"
@@ -70,6 +79,10 @@
 
 export default {
   props: {
+    disabled: {
+      type: Boolean,
+      default: true,
+    },
     worksheet: {
       type: Object,
       required: true,

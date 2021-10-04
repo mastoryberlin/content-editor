@@ -23,6 +23,7 @@
                 class="content-editor-draggable-logic"
                 filled
                 rounded
+                :disabled="disabled"
                 single-line
                 full-width
                 rows="1"
@@ -71,9 +72,14 @@
               </v-textarea>
             </div>
 
-            <type-selector :message="message" :children="children" />
+            <type-selector
+              :disabled="disabled"
+              :message="message"
+              :children="children"
+            />
             <sender-selector
               v-if="message.type !== 'nestable'"
+              :disabled="disabled"
               :message="message"
             />
 
@@ -82,6 +88,7 @@
                 v-model="file"
                 :label="'Pick ' + message.type + ' file for upload'"
                 :accept="acceptedFiles"
+                :disabled="disabled"
                 @change="createBlobURL"
               />
               <!-- <v-textarea
@@ -140,6 +147,7 @@
               auto-grow
               rows="2"
               label="Message text"
+              :disabled="disabled"
               @change="changeMessage({ element: 'text', to: $event })"
             />
 
@@ -176,6 +184,7 @@
         <v-btn
           fab
           size="12"
+          :disabled="disabled"
           color="green"
           class="content-editor-draggable-add"
           @click="addMessage({ after: message })"
@@ -206,6 +215,10 @@ export default {
       required: true,
     },
     deletable: {
+      type: Boolean,
+      default: true,
+    },
+    disabled: {
       type: Boolean,
       default: true,
     },
