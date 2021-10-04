@@ -4,10 +4,6 @@
       <v-banner icon="mdi-lock" sticky color="orange">
         You cannot change data in this area.
       </v-banner>
-      <v-overlay
-        absolute
-        opacity="0"
-      />
     </div>
 
     <!-- TODO <span v-if="to === 'commit'">

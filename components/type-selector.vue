@@ -12,6 +12,7 @@
       <v-btn
         v-for="t in typeNames"
         :key="t"
+        :disabled="disabled"
         class="type-selector-option"
       >
         <v-icon :color="types[t].color">
@@ -26,6 +27,10 @@
 <script>
 export default {
   props: {
+    disabled: {
+      type: Boolean,
+      default: null,
+    },
     message: {
       type: Object,
       required: true,
@@ -65,7 +70,7 @@ export default {
     },
   }),
   computed: {
-    disabled() {
+    disabledButton() {
       const children = this.children
       return !!children && children.length > 1
     },
