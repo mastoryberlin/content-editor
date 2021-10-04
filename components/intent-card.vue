@@ -284,7 +284,6 @@ export default {
       }
     },
     async addSubintent() {
-      console.log('5555555555555')
       if (this.keepAddSubintentDialogOpen) {
         this.$refs.addSubintentForm.resetValidation()
         this.$refs.addSubintentFormReplicaField.select()

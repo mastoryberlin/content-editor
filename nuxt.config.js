@@ -79,7 +79,7 @@ export default {
   },
 
   eslint: {
-    fix: false,
+    fix: true,
   },
 
   // Vuetify module configuration: https://go.nuxtjs.dev/config-vuetify

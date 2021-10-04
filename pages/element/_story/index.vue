@@ -179,6 +179,34 @@
                     </v-col>
 
                     <v-divider class="mx-4" vertical />
+
+                    <v-col class="content-editor-draggable-meta">
+                      <v-container>
+                        <v-row cols="4">
+                          <v-col
+                            v-for="character in [
+                              'Professor',
+                              'Alicia',
+                              'Nick',
+                              'VZ',
+                            ]"
+                            :key="character"
+                          >
+                            <mood-selector
+                              :phase="episode.sections[0]"
+                              :npc="character"
+                            />
+                          </v-col>
+                        </v-row>
+
+                        <v-row>
+                          <features-selector
+                            :phase="episode.sections[0]"
+                            :data="story"
+                          />
+                        </v-row>
+                      </v-container>
+                    </v-col>
                   </v-row>
 
                   <v-btn
@@ -376,7 +404,7 @@ export default {
       const fakeSections = {
         episodeId: fakeId,
         number: 1,
-        meta: after.sections.length ? JSON.parse(JSON.stringify(after.sections[after.sections.length - 1].meta)) : '',
+        meta: JSON.parse(JSON.stringify(after.sections[after.sections.length - 1].meta)),
       }
       const variables = {
         storyId: this.storyId,
@@ -447,6 +475,14 @@ export default {
 
       const title = episode.title === '' ? '' : ', "' + episode.title + '"'
       if (confirm('Are you sure you want to delete episode ' + episode.number + title + '?')) {
+        if (episode.edit) {
+          const shortcutStoryID = episode.edit.shortcutStoryID
+          if (shortcutStoryID) {
+            try {
+              this.$shortcut.deleteStory(shortcutStoryID)
+            } catch (err) {}
+          }
+        }
         this.$db.delete('episode', episode, this.storyId)
       }
     },

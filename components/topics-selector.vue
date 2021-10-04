@@ -268,7 +268,6 @@ export default {
     deleteTopic(item) {
       const { name, id } = item
       if (confirm('Are you sure you want to delete the topic "' + name + '"?')) {
-        console.log('1111')
         try {
           this.$db.delete('topic', { id }, null)
         } catch (ex) {

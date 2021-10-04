@@ -82,11 +82,11 @@ export default {
     },
   },
   methods: {
-    addChallenge() {
+    async addChallenge() {
       const variables = {
         episodeId: this.episodeId,
       }
-      this.$db.add('challenge', null, variables, null)
+      await this.$db.add('challenge', null, variables, null)
     },
     addWorksheet(number = 1) {
       const variables = {
