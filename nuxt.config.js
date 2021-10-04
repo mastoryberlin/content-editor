@@ -73,10 +73,10 @@ export default {
   },
 
   apollo: {
-     clientConfigs: {
-       default: '~/apollo.config.js'
-     }
-   },
+    clientConfigs: {
+      default: '~/apollo.config.js'
+    }
+  },
 
   eslint: {
     fix: true
@@ -112,9 +112,9 @@ export default {
     //   },
     //   plugins: [
     //     ["@babel/plugin-proposal-private-property-in-object", { "loose": true }],
-      //   "@babel/syntax-dynamic-import",
-      //   "@babel/transform-runtime",
-      //   "@babel/transform-async-to-generator"
+    //   "@babel/syntax-dynamic-import",
+    //   "@babel/transform-runtime",
+    //   "@babel/transform-async-to-generator"
     //   ]
     // },
   }
