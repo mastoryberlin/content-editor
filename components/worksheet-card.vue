@@ -197,14 +197,12 @@ export default {
   methods: {
     deleteWorksheet() {
       if (confirm('Are you sure you want to delete this worksheet?')) {
-        this.$apollo.mutate({
-          mutation: require('~/graphql/DeleteWorksheet'),
-          variables: {
-            id: this.id,
-            challengeId: this.worksheet.challenge_id,
-            number: this.number,
-          },
-        })
+        const variables = {
+          id: this.id,
+          challengeId: this.worksheet.challenge_id,
+          number: this.number,
+        }
+        this.$db.delete('worksheet', variables, this.worksheet.challenge_id)
       }
     },
     loadGGB() {

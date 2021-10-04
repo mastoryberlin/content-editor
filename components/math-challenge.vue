@@ -1,22 +1,10 @@
-<template lang="html">
+<template>
   <div class="">
     <template v-if="$apollo.loading">
-      <v-skeleton-loader
-        v-for="n in 5"
-        :key="n"
-        type="list-item"
-      />
+      <v-skeleton-loader v-for="n in 5" :key="n" type="list-item" />
     </template>
-
-    <template v-else-if="$apollo.error">
-      An error occured
-    </template>
-
-    <privileged-area
-      v-else
-      needs="edit_episode_math"
-      to="edit"
-    >
+    <template v-else-if="$apollo.error">An error occured</template>
+    <privileged-area v-else needs="edit_episode_math" to="edit">
       <template v-if="challenge">
         <worksheet-card
           v-for="(worksheet, n) in worksheets"
@@ -76,22 +64,18 @@ export default {
     },
   },
   methods: {
-    async addChallenge() {
-      await this.$apollo.mutate({
-        mutation: require('~/graphql/AddChallenge'),
-        variables: {
-          episodeId: this.episodeId,
-        },
-      })
+    addChallenge() {
+      const variables = {
+        episodeId: this.episodeId,
+      }
+      this.$db.add('challenge', null, variables, null)
     },
     addWorksheet(number = 1) {
-      this.$apollo.mutate({
-        mutation: require('~/graphql/AddWorksheet'),
-        variables: {
-          challengeId: this.challenge.id,
-          number,
-        },
-      })
+      const variables = {
+        challengeId: this.challenge.id,
+        number,
+      }
+      this.$db.add('worksheet', null, variables, null)
     },
   },
 }

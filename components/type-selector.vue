@@ -109,14 +109,7 @@ export default {
                 senderId: child.sender_id,
               },
             })
-            this.$apollo.mutate({
-              mutation: require('~/graphql/DeleteMessage'),
-              variables: {
-                id: child.id,
-                number: child.number,
-                phaseId: my.section_id,
-              },
-            })
+            this.$db.delete('message', child, my.section_id)
           }
           this.$apollo.mutate({
             mutation: require('~/graphql/UpdateMessageType'),

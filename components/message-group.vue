@@ -29,33 +29,30 @@
                 auto-grow
                 background-color="purple lighten-3"
                 label="Flow control logic"
-                @change="changeMessage({element: 'logic', to: $event})"
+                @change="changeMessage({ element: 'logic', to: $event })"
               >
                 <template #append-outer>
                   <v-tooltip bottom>
-                    <template #activator="{on, attrs}">
+                    <template #activator="{ on, attrs }">
                       <v-hover v-slot="{ hover }">
                         <v-icon
                           v-bind="attrs"
                           class="ml-2"
                           :color="hover ? 'blue' : 'grey lighten-2'"
                           v-on="on"
-                          @click="addMessage({after: message, duplicate: true})"
+                          @click="
+                            addMessage({ after: message, duplicate: true })
+                          "
                         >
                           mdi-content-duplicate
                         </v-icon>
                       </v-hover>
                     </template>
-                    <span>
-                      Duplicate
-                    </span>
+                    <span> Duplicate </span>
                   </v-tooltip>
 
-                  <v-tooltip
-                    v-if="deletable"
-                    bottom
-                  >
-                    <template #activator="{on, attrs}">
+                  <v-tooltip v-if="deletable" bottom>
+                    <template #activator="{ on, attrs }">
                       <v-hover v-slot="{ hover }">
                         <v-icon
                           v-bind="attrs"
@@ -68,20 +65,19 @@
                         </v-icon>
                       </v-hover>
                     </template>
-                    <span>
-                      Delete
-                    </span>
+                    <span> Delete </span>
                   </v-tooltip>
                 </template>
               </v-textarea>
             </div>
 
             <type-selector :message="message" :children="children" />
-            <sender-selector v-if="message.type !== 'nestable'" :message="message" />
+            <sender-selector
+              v-if="message.type !== 'nestable'"
+              :message="message"
+            />
 
-            <template
-              v-if="enableFileUpload"
-            >
+            <template v-if="enableFileUpload">
               <v-file-input
                 v-model="file"
                 :label="'Pick ' + message.type + ' file for upload'"
@@ -96,9 +92,7 @@
                 label="or enter a URL directly"
                 @change="changeMessage({element: 'attachment', to: $event})"
               /> -->
-              <h4 v-if="preview">
-                PREVIEW - press button to upload
-              </h4>
+              <h4 v-if="preview">PREVIEW - press button to upload</h4>
               <div v-if="file !== null">
                 <v-btn
                   :loading="loading"
@@ -108,9 +102,7 @@
                   fab
                   @click="upload"
                 >
-                  <v-icon dark>
-                    mdi-cloud-upload
-                  </v-icon>
+                  <v-icon dark> mdi-cloud-upload </v-icon>
                 </v-btn>
 
                 <v-alert
@@ -119,15 +111,14 @@
                   type="error"
                   dismissible
                 >
-                  There was a problem uploading the file: {{ uploadFailedAlert.errorMessage }}
+                  There was a problem uploading the file:
+                  {{ uploadFailedAlert.errorMessage }}
                 </v-alert>
               </div>
 
               <div v-if="message.type === 'audio'">
                 <audio controls>
-                  <source
-                    :src="url || message.attachment"
-                  >
+                  <source :src="url || message.attachment" />
                 </audio>
               </div>
               <div v-else-if="message.type === 'video'">
@@ -149,7 +140,7 @@
               auto-grow
               rows="2"
               label="Message text"
-              @change="changeMessage({element: 'text', to: $event})"
+              @change="changeMessage({ element: 'text', to: $event })"
             />
 
             <!-- :get-child-payload="setDragIndex" -->
@@ -157,14 +148,18 @@
               v-else
               group-name="episode-messages"
               drag-handle-selector=".content-editor-draggable-handle"
-              @drag-start="setDragSource({
-                ...$event,
-                dragSource: message,
-              })"
-              @drop="moveMessage({
-                ...$event,
-                dragTarget: message,
-              })"
+              @drag-start="
+                setDragSource({
+                  ...$event,
+                  dragSource: message,
+                })
+              "
+              @drop="
+                moveMessage({
+                  ...$event,
+                  dragTarget: message,
+                })
+              "
             >
               <message-group
                 v-for="submessage in children"
@@ -175,24 +170,18 @@
                 :course-name="courseName"
               />
             </container>
-          </v-col><!-- content-editor-draggable-content -->
+          </v-col>
+          <!-- content-editor-draggable-content -->
         </v-row>
-
         <v-btn
           fab
           size="12"
           color="green"
           class="content-editor-draggable-add"
-          @click="addMessage({after: message})"
+          @click="addMessage({ after: message })"
         >
-          <v-icon color="white">
-            mdi-plus
-          </v-icon>
+          <v-icon color="white"> mdi-plus </v-icon>
         </v-btn>
-        </v-if>
-        </div>
-      </v-container>
-      </v-col>
       </v-container>
     </v-sheet>
   </draggable>
@@ -311,14 +300,7 @@ export default {
     async deleteMessage() {
       if (confirm('Are you sure you want to delete this message?')) {
         // this.updateEpisodeEditStateToSpecsIfNull(editField)
-        await this.$apollo.mutate({
-          mutation: require('~/graphql/DeleteMessage'),
-          variables: {
-            id: this.message.id,
-            number: this.message.number,
-            phaseId: this.message.section_id,
-          },
-        })
+        await this.$db.delete('message', this.message, this.message.section_id)
       }
     },
     ...mapMutations([
@@ -348,17 +330,14 @@ export default {
       }
       variables.phaseId = after.section_id
       variables.number = after.number + 1
-      await this.$apollo.mutate({
-        mutation: require('~/graphql/AddMessage'),
-        variables,
-      })
+      await this.$db.add('message', after, variables, after.section_id)
     },
   },
 }
 </script>
 
 <style lang="css" scoped>
-video{
+video {
   width: 100%;
 }
 </style>

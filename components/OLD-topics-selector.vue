@@ -1,16 +1,10 @@
-<template lang="html">
+<template>
   <div>
     <div v-if="$apollo.loading">
-      <v-skeleton-loader
-        v-for="n in 5"
-        :key="n"
-        type="list-item"
-      />
+      <v-skeleton-loader v-for="n in 5" :key="n" type="list-item" />
     </div>
 
-    <div v-else-if="$apollo.error">
-      An error occurred!
-    </div>
+    <div v-else-if="$apollo.error">An error occurred!</div>
 
     <div v-else>
       <apollo-subscribe-to-more
@@ -32,11 +26,7 @@
         <template #no-data>
           <v-list-item>
             <span class="subheading">Create</span>
-            <v-chip
-              color="blue lighten-3"
-              label
-              small
-            >
+            <v-chip color="blue lighten-3" label small>
               {{ search }}
             </v-chip>
           </v-list-item>
@@ -53,12 +43,7 @@
             <span class="pr-2">
               {{ item.name }}
             </span>
-            <v-icon
-              small
-              @click="parent.selectItem(item)"
-            >
-              $delete
-            </v-icon>
+            <v-icon small @click="parent.selectItem(item)"> $delete </v-icon>
           </v-chip>
         </template>
         <template #item="{ index, item }">
@@ -70,28 +55,23 @@
             background-color="transparent"
             hide-details
             solo
-            @change="$apollo.mutate({
-              mutation: require('~/graphql/UpdateTopicName'),
-              variables: { id: item.id, name: $event }
-            })"
+            @change="
+              $apollo.mutate({
+                mutation: require('~/graphql/UpdateTopicName'),
+                variables: { id: item.id, name: $event },
+              })
+            "
             @keyup.enter="edit(index, item)"
           />
-          <v-chip
-            v-else
-            :color="colorFromId(item)"
-            dark
-            label
-            small
-          >
+          <v-chip v-else :color="colorFromId(item)" dark label small>
             {{ item.name }}
           </v-chip>
           <v-spacer />
           <v-list-item-action @click.stop>
-            <v-btn
-              icon
-              @click.stop.prevent="edit(index, item)"
-            >
-              <v-icon>{{ editing !== item ? 'mdi-pencil' : 'mdi-check' }}</v-icon>
+            <v-btn icon @click.stop.prevent="edit(index, item)">
+              <v-icon>{{
+                editing !== item ? "mdi-pencil" : "mdi-check"
+              }}</v-icon>
             </v-btn>
           </v-list-item-action>
         </template>
@@ -105,14 +85,14 @@ export default {
   props: {
     phase: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   apollo: {
     allTopics: {
       query: require('~/graphql/GetTopics'),
-      update: data => data.topic
-    }
+      update: data => data.topic,
+    },
   },
   data: () => ({
     activator: null,
@@ -125,19 +105,19 @@ export default {
     menu: false,
     x: 0,
     search: null,
-    y: 0
+    y: 0,
   }),
   computed: {
     topics: {
-      get () {
+      get() {
         return this.phase.topic_whitelist.map((id) => {
           const top = this.allTopics.find(t => t.id === id)
           return {
-            id, name: top ? top.name : 'THIS TOPIC WAS DELETED!'
+            id, name: top ? top.name : 'THIS TOPIC WAS DELETED!',
           }
         })
       },
-      async set (v) {
+      async set(v) {
         this.$apollo.mutate({
           mutation: require('~/graphql/UpdatePhaseTopics'),
           variables: {
@@ -148,15 +128,15 @@ export default {
               } else if (typeof (t) === 'string') {
                 const { data: { insert_topic_one: { id } } } = await this.$apollo.mutate({
                   mutation: require('~/graphql/AddTopic'),
-                  variables: { name: t }
+                  variables: { name: t },
                 })
                 return id
               }
-            })
-          }
+            }),
+          },
         })
-      }
-    }
+      },
+    },
   },
 
   // watch: {
@@ -179,7 +159,7 @@ export default {
   // },
 
   methods: {
-    refreshAllTopics (previousResult, { subscriptionData }) {
+    refreshAllTopics(previousResult, { subscriptionData }) {
       console.log('refreshAllTopics', previousResult, subscriptionData)
       const newResult = { ...previousResult, ...subscriptionData }
       subscriptionData.data.topic.forEach((topic) => {
@@ -197,7 +177,7 @@ export default {
 
       return newResult
     },
-    edit (index, item) {
+    edit(index, item) {
       if (!this.editing) {
         this.editing = item
         this.editingIndex = index
@@ -206,7 +186,7 @@ export default {
         this.editingIndex = -1
       }
     },
-    filter (item, queryText, itemText) {
+    filter(item, queryText, itemText) {
       if (item.header) { return false }
 
       const hasValue = val => val != null ? val : ''
@@ -218,7 +198,7 @@ export default {
         .toLowerCase()
         .includes(query.toString().toLowerCase())
     },
-    colorFromId (item) {
+    colorFromId(item) {
       return 'gray lighten-3'
       // if (!item) { return 'gray lighten-3' }
       // const id = item.id
@@ -229,8 +209,8 @@ export default {
       //   index += char.codePointAt(0)
       // }
       // return this.colors[index % n] + ' lighten-3'
-    }
-  }
+    },
+  },
 }
 </script>
 

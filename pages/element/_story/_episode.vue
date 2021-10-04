@@ -1,28 +1,19 @@
-<template lang="html">
+<template>
   <apollo-query
     v-slot="{ result: { loading, error, data } }"
     :query="require('~/graphql/GetEpisode')"
-    :variables="{id: episodeId}"
+    :variables="{ id: episodeId }"
   >
     <div v-if="loading">
-      <v-skeleton-loader
-        v-for="n in 5"
-        :key="n"
-        type="list-item"
-      />
+      <v-skeleton-loader v-for="n in 5" :key="n" type="list-item" />
     </div>
 
-    <div v-else-if="error">
-      An error occurred!
-    </div>
+    <div v-else-if="error">An error occurred!</div>
 
-    <div
-      v-else-if="data"
-      class="content-editor"
-    >
+    <div v-else-if="data" class="content-editor">
       <apollo-subscribe-to-more
         :document="require('~/graphql/RefreshEpisode')"
-        :variables="{id: episodeId}"
+        :variables="{ id: episodeId }"
         :update-query="refreshEpisode"
       />
       <v-tabs v-model="tab" @change="addTabToURL">
@@ -40,9 +31,7 @@
           <!-- SPECS TAB -->
           <!-- =============================================================================== -->
 
-          <episode-tab
-            :episode="data.story_chapter_by_pk"
-          >
+          <episode-tab :episode="data.story_chapter_by_pk">
             <container
               behaviour="contain"
               orientation="vertical"
@@ -50,7 +39,10 @@
               group-name="episode-specs"
               @drop="onDrop"
             >
-              <draggable v-for="(phase, phaseIndex) in data.story_chapter_by_pk.sections" :key="phase.id">
+              <draggable
+                v-for="(phase, phaseIndex) in data.story_chapter_by_pk.sections"
+                :key="phase.id"
+              >
                 <v-sheet
                   elevation="2"
                   rounded
@@ -59,9 +51,7 @@
                   <v-container>
                     <v-row cols="12">
                       <v-col class="content-editor-draggable-sidebar">
-                        <v-icon
-                          class="content-editor-draggable-handle"
-                        >
+                        <v-icon class="content-editor-draggable-handle">
                           mdi-drag
                         </v-icon>
                       </v-col>
@@ -80,33 +70,47 @@
                             :prefix="`#${phaseIndex + 1}: `"
                             background-color="white"
                             label="Enter a title for this phase"
-                            @change="edit('phase', phase.id, 'title', $event, data.story_chapter_by_pk.edit)"
+                            @change="
+                              edit(
+                                'phase',
+                                phase.id,
+                                'title',
+                                $event,
+                                data.story_chapter_by_pk.edit
+                              )
+                            "
                           >
                             <template #append-outer>
                               <v-tooltip bottom>
-                                <template #activator="{on, attrs}">
+                                <template #activator="{ on, attrs }">
                                   <v-hover v-slot="{ hover }">
                                     <v-icon
                                       v-bind="attrs"
                                       class="ml-2"
                                       :color="hover ? 'blue' : 'grey lighten-2'"
                                       v-on="on"
-                                      @click="addPhase({after: phase, duplicate: true, data})"
+                                      @click="
+                                        addPhase({
+                                          after: phase,
+                                          duplicate: true,
+                                          data,
+                                        })
+                                      "
                                     >
                                       mdi-content-duplicate
                                     </v-icon>
                                   </v-hover>
                                 </template>
-                                <span>
-                                  Duplicate
-                                </span>
+                                <span> Duplicate </span>
                               </v-tooltip>
 
                               <v-tooltip
-                                v-if="data.story_chapter_by_pk.sections.length > 1"
+                                v-if="
+                                  data.story_chapter_by_pk.sections.length > 1
+                                "
                                 bottom
                               >
-                                <template #activator="{on, attrs}">
+                                <template #activator="{ on, attrs }">
                                   <v-hover v-slot="{ hover }">
                                     <v-icon
                                       v-bind="attrs"
@@ -119,9 +123,7 @@
                                     </v-icon>
                                   </v-hover>
                                 </template>
-                                <span>
-                                  Delete
-                                </span>
+                                <span> Delete </span>
                               </v-tooltip>
                             </template>
                           </v-textarea>
@@ -135,27 +137,34 @@
                             auto-grow
                             rows="2"
                             label="Enter the specs for this phase here"
-                            @change="edit('phase', phase.id, 'specs', $event, data.story_chapter_by_pk.edit)"
+                            @change="
+                              edit(
+                                'phase',
+                                phase.id,
+                                'specs',
+                                $event,
+                                data.story_chapter_by_pk.edit
+                              )
+                            "
                           />
                         </div>
                       </v-col>
 
-                      <v-divider
-                        class="mx-4"
-                        vertical
-                      />
+                      <v-divider class="mx-4" vertical />
 
                       <v-col class="content-editor-draggable-meta">
                         <v-container>
                           <v-row cols="4">
                             <v-col
-                              v-for="character in ['Professor', 'Alicia', 'Nick', 'VZ']"
+                              v-for="character in [
+                                'Professor',
+                                'Alicia',
+                                'Nick',
+                                'VZ',
+                              ]"
                               :key="character"
                             >
-                              <mood-selector
-                                :phase="phase"
-                                :npc="character"
-                              />
+                              <mood-selector :phase="phase" :npc="character" />
                             </v-col>
                           </v-row>
 
@@ -181,11 +190,9 @@
                       size="12"
                       color="green"
                       class="content-editor-draggable-add"
-                      @click="addPhase({after: phase, data})"
+                      @click="addPhase({ after: phase, data })"
                     >
-                      <v-icon color="white">
-                        mdi-plus
-                      </v-icon>
+                      <v-icon color="white">mdi-plus</v-icon>
                     </v-btn>
                   </v-container>
                 </v-sheet>
@@ -264,26 +271,38 @@
           <v-text-field
             label="Episode Title"
             :value="data.story_chapter_by_pk.title"
-            @change="edit('episode', episodeId, 'title', $event, data.story_chapter_by_pk.edit)"
+            @change="
+              edit(
+                'episode',
+                episodeId,
+                'title',
+                $event,
+                data.story_chapter_by_pk.edit
+              )
+            "
           />
 
           <v-text-field
             label="Promises"
             :value="data.story_chapter_by_pk.edit.promises || ''"
-            @change="$apollo.mutate({
-              mutation: require('~/graphql/UpdateEpisodePromises'),
-              variables: {
-                id: episodeId,
-                promises: [$event]
-              }
-            })"
+            @change="
+              $apollo.mutate({
+                mutation: require('~/graphql/UpdateEpisodePromises'),
+                variables: {
+                  id: episodeId,
+                  promises: [$event],
+                },
+              })
+            "
           />
         </v-tab-item>
       </v-tabs-items>
 
       <specs-have-changed-warning
-        v-if="data.story_chapter_by_pk.story.edit.state !== 'specs'
-          && data.story_chapter_by_pk.edit.warnStorySpecsHaveChanged"
+        v-if="
+          data.story_chapter_by_pk.story.edit.state !== 'specs' &&
+          data.story_chapter_by_pk.edit.warnStorySpecsHaveChanged
+        "
         title="The story specs for this episode have changed!"
         btn-text="Yes, the episode is alright like this"
         @confirm="closeStorySpecsHaveChangedWarning"
@@ -421,17 +440,8 @@ export default {
           meta: { mood: {}, topics: [], features: [], challenges: [] },
         })
       }
-      const request = await this.$apollo.mutate({
-        mutation: require('~/graphql/AddPhase'),
-        variables,
-      })
+      const request = await this.$db.add('phase', after, variables, this.episodeId)
       console.log('mutation AddPhase returned', request.data)
-      this.$apollo.mutate({
-        mutation: require('~/graphql/AddMessage'),
-        variables: {
-          phaseId: request.data.insert_story_section_one.id,
-        },
-      })
     },
     deletePhase(phase, data) {
       if (confirm('Are you sure you want to delete phase ' + phase.number + ', "' + phase.title + '"?')) {
@@ -528,14 +538,11 @@ export default {
           data,
         })
         const difference = addedIndex - removedIndex
-        await this.$apollo.mutate({
-          mutation: require('~/graphql/DeletePhase'),
-          variables: {
-            id: item.id,
-            episodeId: this.episodeId,
-            number: item.number,
-          },
-        })
+        const variables = {
+          id: item.id,
+          number: item.number,
+        }
+        this.$db.delete('phase', variables, this.episodeId)
         await this.$apollo.mutate({
           mutation: require('~/graphql/AddPhase'),
           variables: {
