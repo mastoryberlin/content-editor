@@ -97,7 +97,7 @@ export default {
           commitMessage: this.changeText,
         }
       }
-      const path = 'https://proc.mastory.io/content-editor/' + this.buttonType + '/' + this.tabType
+      const path = 'https://' + process.env.NUXT_ENV_PROC_URL + '/content-editor/' + this.buttonType + '/' + this.tabType
       this.$axios.post(path, payload)
       this.closeDialog()
     },

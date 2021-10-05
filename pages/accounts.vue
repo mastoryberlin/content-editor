@@ -59,7 +59,7 @@ export default {
     },
   },
   async asyncData({ $axios }) {
-    const response = await $axios.$get('https://proc.mastory.io/content-editor/user/roles')
+    const response = await $axios.$get('https://' + process.env.NUXT_ENV_PROC_URL + '/content-editor/user/roles')
     const userRoles = response.success ? response.userRoles : null
     return { userRoles }
   },
@@ -120,7 +120,7 @@ export default {
         delete newRoles.superadmin
       }
       if (confirm(question)) {
-        this.$axios.post('https://proc.mastory.io/content-editor/user/roles', {
+        this.$axios.post('https://' + process.env.NUXT_ENV_PROC_URL + '/content-editor/user/roles', {
           userName: this.account,
           roles: newRoles,
         })
@@ -134,7 +134,7 @@ export default {
       } else {
         newRoles[story] = newRole
       }
-      this.$axios.post('https://proc.mastory.io/content-editor/user/roles', {
+      this.$axios.post('https://' + process.env.NUXT_ENV_PROC_URL + '/content-editor/user/roles', {
         userName: this.account,
         roles: newRoles,
       })
@@ -144,14 +144,14 @@ export default {
       const newUserName = prompt('Please enter a login name for the new user!')
       if (newUserName) {
         this.userRoles.push({ id: newUserName, roles: {} })
-        this.$axios.post('https://proc.mastory.io/content-editor/user', {
+        this.$axios.post('https://' + process.env.NUXT_ENV_PROC_URL + '/content-editor/user', {
           userName: newUserName,
           initialPassword: 'TOP SECRET',
         })
       }
     },
     deleteUser() {
-      this.$axios.delete('https://proc.mastory.io/content-editor/user', {
+      this.$axios.delete('https://' + process.env.NUXT_ENV_PROC_URL + '/content-editor/user', {
         params: {
           user: this.account,
         },

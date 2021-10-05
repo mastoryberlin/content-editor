@@ -17,7 +17,7 @@ export const actions = {
     // const url = (
     //   process.env.BACKEND === 'local'
     //     ? 'ws://localhost:4000'
-    //     : 'wss://proc.mastory.io'
+    //     : 'wss://' + process.env.NUXT_ENV_PROC_URL + ''
     // ) + '/content'
     const url = 'ws://localhost:4000/content'
     const ws = await new WebSocket(url)
