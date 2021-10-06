@@ -1,8 +1,11 @@
-mutation DeleteMessage($id: uuid!, $number: Int!, $phaseId: uuid!) {
-  delete_prompt_by_pk(id: $id) {
+mutation DeleteMessage($id: uuid!, $number: Int!, $phaseId: uuid!, $parent: uuid = "", $parentIsNull: Boolean = true) {
+  deleteMessage: delete_prompt_by_pk(id: $id) {
     id
   }
-  update_prompt(where: {section_id: {_eq: $phaseId}, _and: {number: {_gt: $number}}}, _inc: {number: -1}) {
+  closeGapTopLevel: update_prompt(where: {section_id: {_eq: $phaseId}, _and: {number: {_gt: $number}, _and: {parent: {_is_null: true}}}}, _inc: {number: -1}) @include(if: $parentIsNull){
+    affected_rows
+  }
+  closeGapWithinSameParent: update_prompt(where: {section_id: {_eq: $phaseId}, _and: {number: {_gt: $number}, _and: {parent: {_eq: $parent}}}}, _inc: {number: -1}) @skip(if: $parentIsNull){
     affected_rows
   }
 }

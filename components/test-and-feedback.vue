@@ -1,22 +1,12 @@
-<template lang="html">
-  <div class="">
+<template>
+  <div>
     <template v-if="$apollo.loading">
-      <v-skeleton-loader
-        v-for="n in 5"
-        :key="n"
-        type="list-item"
-      />
+      <v-skeleton-loader v-for="n in 5" :key="n" type="list-item" />
     </template>
 
-    <template v-else-if="$apollo.error">
-      An error occured
-    </template>
+    <template v-else-if="$apollo.error"> An error occured </template>
 
-    <privileged-area
-      v-else
-      needs="edit_episode_intents"
-      to="edit"
-    >
+    <privileged-area v-else needs="edit_episode_intents" to="edit">
       <template v-if="surveys">
         <survey-card
           v-for="(survey, n) in surveys"
@@ -70,12 +60,10 @@ export default {
   },
   methods: {
     addSurvey() {
-      this.$apollo.mutate({
-        mutation: require('~/graphql/AddSurvey'),
-        variables: {
-          episodeId: this.episodeId,
-        },
-      })
+      const variables = {
+        episodeId: this.episodeId,
+      }
+      this.$db.add('survey', null, variables, this.episodeId)
     },
   },
 }

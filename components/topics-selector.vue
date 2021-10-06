@@ -1,17 +1,11 @@
-<template lang="html">
+<template>
   <v-row>
     <v-col>
       <template v-if="$apollo.loading">
-        <v-skeleton-loader
-          v-for="n in 5"
-          :key="n"
-          type="list-item"
-        />
+        <v-skeleton-loader v-for="n in 5" :key="n" type="list-item" />
       </template>
 
-      <template v-else-if="$apollo.error">
-        An error occurred!
-      </template>
+      <template v-else-if="$apollo.error">An error occurred!</template>
 
       <template v-else>
         <apollo-subscribe-to-more
@@ -42,10 +36,12 @@
               background-color="transparent"
               hide-details
               solo
-              @change="$apollo.mutate({
-                mutation: require('~/graphql/UpdateTopicName'),
-                variables: { id: item.id, name: $event }
-              })"
+              @change="
+                $apollo.mutate({
+                  mutation: require('~/graphql/UpdateTopicName'),
+                  variables: { id: item.id, name: $event },
+                })
+              "
               @keyup.enter="editTopicName(index, item)"
             />
             <template v-else>
@@ -55,27 +51,19 @@
             <v-spacer />
 
             <v-list-item-action @click.stop>
-              <v-hover v-slot="{hover}">
-                <v-btn
-                  icon
-                  @click.stop.prevent="editTopicName(index, item)"
-                >
+              <v-hover v-slot="{ hover }">
+                <v-btn icon @click.stop.prevent="editTopicName(index, item)">
                   <v-icon :color="hover ? 'blue' : null">
-                    {{ editing !== item ? 'mdi-pencil' : 'mdi-check' }}
+                    {{ editing !== item ? "mdi-pencil" : "mdi-check" }}
                   </v-icon>
                 </v-btn>
               </v-hover>
             </v-list-item-action>
 
             <v-list-item-action @click.stop>
-              <v-hover v-slot="{hover}">
-                <v-btn
-                  icon
-                  @click.stop.prevent="deleteTopic(item)"
-                >
-                  <v-icon :color="hover ? 'red' : null">
-                    mdi-delete
-                  </v-icon>
+              <v-hover v-slot="{ hover }">
+                <v-btn icon @click.stop.prevent="deleteTopic(item)">
+                  <v-icon :color="hover ? 'red' : null"> mdi-delete </v-icon>
                 </v-btn>
               </v-hover>
             </v-list-item-action>
@@ -92,28 +80,17 @@
               <span class="pr-2">
                 {{ item.name }}
               </span>
-              <v-icon
-                small
-                @click="parent.selectItem(item)"
-              >
-                $delete
-              </v-icon>
+              <v-icon small @click="parent.selectItem(item)"> $delete </v-icon>
             </v-chip>
           </template>
 
           <template #append-outer>
             <v-menu>
-              <template #activator="{on, attrs}">
-                <v-icon v-bind="attrs" v-on="on">
-                  mdi-dots-vertical
-                </v-icon>
+              <template #activator="{ on, attrs }">
+                <v-icon v-bind="attrs" v-on="on"> mdi-dots-vertical </v-icon>
               </template>
               <v-list>
-                <v-list-item
-                  v-for="(item, index) in menu"
-                  :key="index"
-                  link
-                >
+                <v-list-item v-for="(item, index) in menu" :key="index" link>
                   <v-list-item-title @click="item.action">
                     {{ item.title }}
                   </v-list-item-title>
@@ -292,10 +269,7 @@ export default {
       const { name, id } = item
       if (confirm('Are you sure you want to delete the topic "' + name + '"?')) {
         try {
-          this.$apollo.mutate({
-            mutation: require('~/graphql/DeleteTopic'),
-            variables: { id },
-          })
+          this.$db.delete('topic', { id }, null)
         } catch (ex) {
           alert('"' + name + '" could not be deleted.\nProbably the topic is already used somewhere and/or has\nexample student messages defined.')
         }

@@ -1,9 +1,11 @@
-mutation AddMessage($phaseId: uuid!, $number: Int! = 1, $sender_id: String! = "Professor", $logic: String! ="", $type: String! = "text", $text: String! = "", $attachment: String = null, $parent: uuid = null) {
-  update_prompt(where: {section_id: {_eq: $phaseId}, _and: {number: {_gte: $number}}}, _inc: {number: 1}) {
+mutation AddMessage($phaseId: uuid!, $number: Int! = 1, $sender_id: String! = "Professor", $logic: String! = "", $type: String! = "text", $text: String! = "", $attachment: String = null, $parent: uuid = null, $parentIsNull: Boolean = true) {
+  makeRoomTopLevel: update_prompt(where: {section_id: {_eq: $phaseId}, _and: {number: {_gte: $number}, _and: {parent: {_is_null: true}}}}, _inc: {number: 1}) @include(if: $parentIsNull) {
     affected_rows
   }
-
-  insert_prompt_one(object: {section_id: $phaseId, number: $number, sender_id: $sender_id, logic : $logic, type: $type, text: $text, attachment: $attachment, parent: $parent}) {
+  makeRoomWithinSameParent: update_prompt(where: {section_id: {_eq: $phaseId}, _and: {number: {_gte: $number}, _and: {parent: {_eq: $parent}}}}, _inc: {number: 1}) @skip(if: $parentIsNull) {
+    affected_rows
+  }
+  addMessage: insert_prompt_one(object: {section_id: $phaseId, number: $number, sender_id: $sender_id, logic: $logic, type: $type, text: $text, attachment: $attachment, parent: $parent}) {
     id
     number
   }

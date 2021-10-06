@@ -1,0 +1,6 @@
+query GetAllEpisodes($storyId: uuid = "") {
+  story_chapter(where: {story_id: {_eq: $storyId}}) {
+    id
+    number
+  }
+}

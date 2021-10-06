@@ -9,25 +9,25 @@ export default {
     titleTemplate: '%s - Mastory Content Editor',
     title: 'Story Selection',
     htmlAttrs: {
-      lang: 'en'
+      lang: 'en',
     },
     script: [
       {
-        src: 'https://www.geogebra.org/apps/deployggb.js'
-      }
+        src: 'https://www.geogebra.org/apps/deployggb.js',
+      },
     ],
     meta: [
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { hid: 'description', name: 'description', content: '' }
+      { hid: 'description', name: 'description', content: '' },
     ],
     link: [
-      { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
-    ]
+      { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+    ],
   },
 
   server: {
-    port: 5000
+    port: 5000,
   },
 
   // Global CSS: https://go.nuxtjs.dev/config-css
@@ -52,14 +52,14 @@ export default {
     // https://go.nuxtjs.dev/eslint
     '@nuxtjs/eslint-module',
     // https://go.nuxtjs.dev/vuetify
-    '@nuxtjs/vuetify'
+    '@nuxtjs/vuetify',
   ],
 
   // Modules: https://go.nuxtjs.dev/config-modules
   modules: [
     // https://go.nuxtjs.dev/axios
     '@nuxtjs/axios',
-    '@nuxtjs/apollo'
+    '@nuxtjs/apollo',
   ],
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
@@ -73,13 +73,13 @@ export default {
   },
 
   apollo: {
-     clientConfigs: {
-       default: '~/apollo.config.js'
-     }
-   },
+    clientConfigs: {
+      default: '~/apollo.config.js',
+    },
+  },
 
   eslint: {
-    fix: true
+    fix: true,
   },
 
   // Vuetify module configuration: https://go.nuxtjs.dev/config-vuetify
@@ -95,10 +95,10 @@ export default {
           info: colors.teal.lighten1,
           warning: colors.amber.base,
           error: colors.deepOrange.accent4,
-          success: colors.green.accent3
-        }
-      }
-    }
+          success: colors.green.accent3,
+        },
+      },
+    },
   },
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
@@ -112,10 +112,10 @@ export default {
     //   },
     //   plugins: [
     //     ["@babel/plugin-proposal-private-property-in-object", { "loose": true }],
-      //   "@babel/syntax-dynamic-import",
-      //   "@babel/transform-runtime",
-      //   "@babel/transform-async-to-generator"
+    //   "@babel/syntax-dynamic-import",
+    //   "@babel/transform-runtime",
+    //   "@babel/transform-async-to-generator"
     //   ]
     // },
-  }
+  },
 }
