@@ -1,7 +1,7 @@
 <template lang="html">
   <v-expansion-panel>
     <v-expansion-panel-header>
-      ({{ number }}) What might students say about “{{ topic.name }}”?
+      ({{ number }}) What might students say about "{{ topic.name }}"?
     </v-expansion-panel-header>
 
     <v-expansion-panel-content>
@@ -160,13 +160,11 @@ export default {
       } else {
         this.showAddIntentDialog = false
       }
-      this.$apollo.mutate({
-        mutation: require('~/graphql/AddIntent'),
-        variables: {
-          topic_id: this.topic.id,
-          name: this.addIntentName,
-        },
-      })
+      const variables = {
+        topic_id: this.topic.id,
+        name: this.addIntentName,
+      }
+      this.$db.add('intent', null, variables, null)
       if (!this.keepAddIntentDialogOpen) {
         this.addIntentName = ''
       }

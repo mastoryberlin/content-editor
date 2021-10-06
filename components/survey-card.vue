@@ -1,4 +1,4 @@
-<template lang="html">
+<template>
   <v-card class="ma-7">
     <v-card-title v-if="title">
       {{ title }}
@@ -157,36 +157,29 @@ export default {
   methods: {
     deleteSurvey() {
       if (confirm('Are you sure you want to delete this survey? This will also delete all questions irreversibly!')) {
-        this.$apollo.mutate({
-          mutation: require('~/graphql/DeleteSurvey'),
-          variables: {
-            id: this.id,
-          },
-        })
+        const variables = {
+          id: this.id,
+        }
+        this.$db.delete('survey', variables, null)
       }
     },
     addQuestion() {
-      this.$apollo.mutate({
-        mutation: require('~/graphql/AddQuestion'),
-        variables: {
-          survey_id: this.id,
-          number: this.questionsCount + 1,
-          question: this.questionToAdd,
-          type: this.nextType,
-        },
-      })
+      const variables = {
+        survey_id: this.id,
+        number: this.questionsCount + 1,
+        question: this.questionToAdd,
+        type: this.nextType,
+      }
+      this.$db.add('question', null, variables, null) // TODO: no need parent
       this.$refs.addQuestionField.$refs.input.select()
     },
     deleteQuestion(q) {
       if (confirm('Are you sure you want to delete Question ' + q.number + '?')) {
-        this.$apollo.mutate({
-          mutation: require('~/graphql/DeleteQuestion'),
-          variables: {
-            id: q.id,
-            number: q.number,
-            survey_id: this.id,
-          },
-        })
+        const variables = {
+          id: q.id,
+          number: q.number,
+        }
+        this.$db.delete('question', variables, this.id)
       }
     },
     changeQuestionType(q, t) {

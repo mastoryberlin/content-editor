@@ -4,22 +4,12 @@
       v-slot="{ result: { loading, error, data } }"
       :query="require('~/graphql/GetStories')"
     >
-      <v-navigation-drawer
-        v-model="drawer"
-        fixed
-        app
-      >
+      <v-navigation-drawer v-model="drawer" fixed app>
         <div v-if="loading">
-          <v-skeleton-loader
-            v-for="n in 5"
-            :key="n"
-            type="list-item"
-          />
+          <v-skeleton-loader v-for="n in 5" :key="n" type="list-item" />
         </div>
 
-        <div v-else-if="error">
-          An error occurred!
-        </div>
+        <div v-else-if="error">An error occurred!</div>
 
         <div v-else-if="data">
           <apollo-subscribe-to-more
@@ -34,59 +24,66 @@
             selection-type="independent"
             class="nav"
             color="black"
-            :items="data.story.filter((s) => {
-              const id = s.id
-              return (privileges && (privileges['superadmin'] || privileges[id] && privileges[id].includes('view')))
-            })"
+            :items="
+              data.story.filter((s) => {
+                const id = s.id;
+                return (
+                  privileges &&
+                  (privileges['superadmin'] ||
+                    (privileges[id] && privileges[id].includes('view')))
+                );
+              })
+            "
             :open="[storyIdFromRoute]"
             item-text="title"
             item-children="chapters"
             hoverable
             @update:active="navigate($event, data.story)"
           >
-            <template #prepend="{item}">
-              {{ item.story ? `E${episodeIndex(item, data.story) + 1}: ` : null }}
+            <template #prepend="{ item }">
+              {{
+                item.story ? `E${episodeIndex(item, data.story) + 1}: ` : null
+              }}
             </template>
           </v-treeview>
         </div>
+        <v-btn block @click="addStory"> Add Story </v-btn>
       </v-navigation-drawer>
-      <v-app-bar
-        fixed
-        app
-      >
+      <v-app-bar fixed app>
         <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
         <v-toolbar-title>
-          Mastory Content Editor <span class="mx-4 text-subtitle-2" v-text="version" />
+          Mastory Content Editor
+          <span class="mx-4 text-subtitle-2" v-text="version" />
         </v-toolbar-title>
 
         <v-spacer />
 
         <template v-if="storyIdFromRoute">
           <template v-for="(state, i) in globalState.names">
-            <v-icon
-              v-if="i > 0"
-              :key="'arrow' + i"
-              class="mx-1"
-            >
+            <v-icon v-if="i > 0" :key="'arrow' + i" class="mx-1">
               mdi-arrow-right
             </v-icon>
 
             <v-tooltip :key="'tooltip' + i" bottom>
-              <template #activator="{on, attrs}">
+              <template #activator="{ on, attrs }">
                 <v-avatar
                   :key="'avatar' + i"
                   class="content-editor-global-state-indicator"
-                  :color="data && isGlobalState(state, data.story) ? globalState.color[i] : '#dddddd'"
+                  :color="
+                    data && isGlobalState(state, data.story)
+                      ? globalState.color[i]
+                      : '#dddddd'
+                  "
                   v-bind="attrs"
                   v-on="on"
                 >
                   <v-icon
                     :key="'icon' + i"
-                    :color="data && isGlobalState(state, data.story) ? 'black' : null"
+                    :color="
+                      data && isGlobalState(state, data.story) ? 'black' : null
+                    "
                   >
-                    mdi-{{
-                      globalState.icons[i]
-                    }}
+                    mdi-{{ globalState.icons[i] }}
                   </v-icon>
                 </v-avatar>
               </template>
@@ -142,9 +139,7 @@
           <nuxt />
         </v-container>
       </v-main>
-      <v-footer
-        app
-      >
+      <v-footer app>
         <span>&copy; {{ new Date().getFullYear() }} Mastory</span>
       </v-footer>
     </apollo-query>
@@ -253,6 +248,9 @@ export default {
         s.chapters = [...newQueryResult[i].chapters]
       })
       return newStories
+    },
+    addStory() {
+      this.$db.add('story', null, { title: 'New Story', description: 'New Story Description' }, null)
     },
     navigate([selected], stories) {
       const isStory = stories.find(s => s.id === selected)

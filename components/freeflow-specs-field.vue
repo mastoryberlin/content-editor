@@ -1,13 +1,16 @@
-<template lang="html">
-  <div class="">
+<template>
+  <div>
     <p>
-      Write the {{ scope }} specs as you wish, then organize them into paragraphs to reflect the division into {{ subscope }}s
+      Write the {{ scope }} specs as you wish, then organize them into
+      paragraphs to reflect the division into {{ subscope }}s
     </p>
 
     <v-textarea
       class="ma-5 text-h6"
       :value="dataObject[field]"
-      :label="labelTextField || 'Free-flow description of the ' + scope + ' specs'"
+      :label="
+        labelTextField || 'Free-flow description of the ' + scope + ' specs'
+      "
       solo
       rows="1"
       auto-grow
@@ -17,17 +20,26 @@
 
     <template v-if="newCardsCount > 0">
       <p>
-        Once you are finished writing, I can generate {{ scope === 'story' ? 'an episode' : 'a phase' }} card from each paragraph above.
+        Once you are finished writing, I can generate
+        {{ scope === "story" ? "an episode" : "a phase" }} card from each
+        paragraph above.
       </p>
 
       <p>
         Please choose a place to insert them:
-        <v-radio-group
-          v-model="appendPrepend"
-          :items="['append', 'prepend']"
-        >
-          <v-radio :label="'Add generated ' + (scope === 'story' ? 'episode' : 'phase') + ' cards to the end of the existing list'" value="append" />
-          <v-radio label="Prepend the existing list with newly generated cards" value="prepend" />
+        <v-radio-group v-model="appendPrepend" :items="['append', 'prepend']">
+          <v-radio
+            :label="
+              'Add generated ' +
+                (scope === 'story' ? 'episode' : 'phase') +
+                ' cards to the end of the existing list'
+            "
+            value="append"
+          />
+          <v-radio
+            label="Prepend the existing list with newly generated cards"
+            value="prepend"
+          />
         </v-radio-group>
       </p>
 
@@ -49,73 +61,73 @@ export default {
   props: {
     scope: {
       type: String,
-      required: true
+      required: true,
     },
     dataObject: {
       type: Object,
-      required: true
+      required: true,
     },
     refId: {
       type: String,
-      default: null
+      default: null,
     },
     field: {
       type: String,
-      required: true
+      required: true,
     },
     labelTextField: {
       type: String,
-      default: null
-    }
+      default: null,
+    },
   },
   data: () => ({
     text: null,
-    appendPrepend: 'append'
+    appendPrepend: 'append',
   }),
   computed: {
-    subscope () {
+    subscope() {
       return this.scope === 'story' ? 'episode' : 'phase'
     },
-    existingCardsCount () {
+    existingCardsCount() {
       switch (this.scope) {
         case 'story': return this.dataObject.chapters.length
         case 'episode': return this.dataObject.sections.length
         default: return 0
       }
     },
-    paragraphs () {
+    paragraphs() {
       const text = this.text || this.dataObject[this.field]
       return text.split(/\n+/).filter(s => s && !/^\s+$/.test(s))
     },
-    newCardsCount () {
+    newCardsCount() {
       return this.paragraphs.length
     },
-    newCardsRange () {
+    newCardsRange() {
       const begin = this.appendPrepend === 'append'
         ? this.existingCardsCount + 1
         : 1
       const end = begin + this.newCardsCount - 1
       return [begin, end]
     },
-    newCardsDisplayRange () {
+    newCardsDisplayRange() {
       const rg = this.newCardsRange
       if (rg[0] >= rg[1]) { return rg[0] } else { return this.newCardsRange.join(' through ') }
-    }
+    },
   },
   methods: {
     ...mapMutations('autosave', [
-      'pushChange'
+      'pushChange',
     ]),
-    edit (v) {
+    edit(v) {
       this.pushChange({
         change: {
           mutation: require('~/graphql/Update' + this.scope.toCamelCase() + this.field.toCamelCase()),
-          variables: { id: this.refId || this.dataObject.id, [this.field]: v }
+          variables: { id: this.refId || this.dataObject.id, [this.field]: v },
         },
-        dispatch: this.$store.dispatch
+        dispatch: this.$store.dispatch,
       })
     },
-    async generateSpecs () {
+    async generateSpecs() {
       // TODO: Generalize to cover episode specs use case as well
       const scopeId = this.refId
       const firstNumber = this.newCardsRange[0]
@@ -130,9 +142,9 @@ export default {
             number: firstNumber + i,
             title: '',
             description: '',
-            specs: p
-          }))
-        }
+            specs: p,
+          })),
+        },
       })
       let meta
       if (this.appendPrepend === 'append') {
@@ -150,12 +162,12 @@ export default {
             number: 1,
             title: '',
             specs: '',
-            meta
-          }))
-        }
+            meta,
+          })),
+        },
       })
-    }
-  }
+    },
+  },
 }
 </script>
 

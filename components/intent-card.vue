@@ -297,22 +297,10 @@ export default {
       if (existingSubintent) {
         id = existingSubintent.id
       } else {
-        const resp = await this.$apollo.mutate({
-          mutation: require('~/graphql/AddSubintent'),
-          variables: {
-            intent_id: this.intent.id,
-            name: addSubintentName,
-          },
-        })
+        const resp = await this.$db.add('subintent', null, { name: addSubintentName }, this.intent.id)
         id = resp.data.insert_subintent_one.id
       }
-      this.$apollo.mutate({
-        mutation: require('~/graphql/AddReplica'),
-        variables: {
-          subintent_id: id,
-          message: this.addSubintentReplicaMessage,
-        },
-      })
+      this.$db.add('replica', null, { subintent_id: id, message: this.addSubintentReplicaMessage }, id)
       if (!this.keepAddSubintentDialogOpen) {
         this.addSubintentReplicaMessage = ''
         this.addSubintentName = ''
@@ -338,13 +326,7 @@ export default {
         if (existingSubintent) {
           subintentId = existingSubintent.id
         } else {
-          const resp = await this.$apollo.mutate({
-            mutation: require('~/graphql/AddSubintent'),
-            variables: {
-              intent_id: this.intent.id,
-              name: editSubintentName,
-            },
-          })
+          const resp = await this.$db.add('subintent', null, { name: editSubintentName }, this.intent.id)
           subintentId = resp.data.insert_subintent_one.id
         }
       }
@@ -362,12 +344,7 @@ export default {
     },
     async deleteReplica(replica) {
       if (confirm('Are you sure you want to delete this example?')) {
-        await this.$apollo.mutate({
-          mutation: require('~/graphql/DeleteReplica'),
-          variables: {
-            id: replica.id,
-          },
-        })
+        await this.$db.delete('replica', { id: replica.id }, null)
         this.deleteEmptySubintents()
       }
     },
@@ -380,10 +357,7 @@ export default {
         .filter(s => s.replicas_aggregate.aggregate.count === 0)
         .forEach((subintent) => {
           const { id } = subintent
-          this.$apollo.mutate({
-            mutation: require('~/graphql/DeleteSubintent'),
-            variables: { id },
-          })
+          this.$db.delete('subintent', { id }, null)
         })
     },
 

@@ -1,48 +1,50 @@
 <template>
-  <v-toolbar>
-    <v-spacer />
+  <v-dialog v-model="showCommitMessageDialog" max-width="500px">
+    <template #activator="{ on, attrs }">
+      <v-btn
+        elevation="7"
+        :loading="loading"
+        :disabled="loading"
+        v-bind="attrs"
+        v-on="on"
+      >
+        <div v-if="buttonType === 'issue-pr'">
+          <v-icon color="green">
+            mdi-check-bold
+          </v-icon>
+          Mark as finished
+          {{ mayCommit ? commitMessageExt : "and request approval" }}
+        </div>
+        <div v-else>
+          Commit
+        </div>
+      </v-btn>
+    </template>
 
-    <v-dialog v-model="showCommitMessageDialog" max-width="500px">
-      <template #activator="{ on, attrs }">
-        <v-btn
-          elevation="7"
-          :loading="loading"
-          :disabled="loading"
-          v-bind="attrs"
-          v-on="on"
-        >
-          <div v-if="buttonType === 'issue-pr'">
-            <v-icon color="green"> mdi-check-bold </v-icon>
-            Mark as finished
-            {{ mayCommit ? commitMessageExt : "and request approval" }}
-          </div>
-          <div v-else>Commit</div>
+    <v-card>
+      <v-card-title class="text-h5">
+        <span v-if="buttonType === 'issue-pr'"> Create a pull request </span>
+        <span v-else> Commit changes </span>
+      </v-card-title>
+
+      <v-card-text>
+        <v-form @submit.prevent="applyChanges">
+          <v-text-field v-model="changeText" autofocus />
+        </v-form>
+      </v-card-text>
+
+      <v-card-actions>
+        <v-spacer />
+        <v-btn type="submit" color="green" @click="applyChanges">
+          OK
         </v-btn>
-      </template>
-
-      <v-card>
-        <v-card-title class="text-h5">
-          <span v-if="buttonType === 'issue-pr'"> Create a pull request </span>
-          <span v-else> Commit changes </span>
-        </v-card-title>
-
-        <v-card-text>
-          <v-form @submit.prevent="applyChanges">
-            <v-text-field v-model="changeText" autofocus />
-          </v-form>
-        </v-card-text>
-
-        <v-card-actions>
-          <v-spacer />
-          <v-btn type="submit" color="green" @click="applyChanges"> OK </v-btn>
-          <v-btn @click="closeDialog"> Cancel </v-btn>
-          <v-spacer />
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <v-spacer />
-  </v-toolbar>
+        <v-btn @click="closeDialog">
+          Cancel
+        </v-btn>
+        <v-spacer />
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script>
