@@ -9,7 +9,7 @@ export default ({ app }, inject) => {
   inject('db', {
     $apollo: app.apolloProvider.defaultClient,
 
-    async add(type, previous = null, variables = {}, parentId = null) {
+    async add(type, previous = null, variables = {}, parentId = null) { // TODO: previous not needed
       console.log('[content-mutation] adding a ' + type)
       // TODO: Implement proper number handling with previous param
 
