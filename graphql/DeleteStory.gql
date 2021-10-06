@@ -1,0 +1,9 @@
+mutation DeleteStory($id: uuid!) {
+  delete_story_chapter(where: {story_id: {_eq: $id}}) {
+    affected_rows
+  }
+
+  delete_story_by_pk(id: $id) {
+    id
+  }
+}

@@ -189,6 +189,7 @@ export default {
   },
   mounted() {
     const { id, worksheet: { ggb } } = this
+    console.log('Mounted worksheet-card', ggb)
     const params = {
       id: 'ggbApplet-' + id,
       width: 800,
@@ -197,6 +198,7 @@ export default {
       country: 'US',
       appletOnLoad: (api) => {
         this.geogebra = api
+        console.log('Geogebra API object', this.geogebra)
       },
     }
     if (ggb) {
@@ -208,19 +210,18 @@ export default {
   methods: {
     deleteWorksheet() {
       if (confirm('Are you sure you want to delete this worksheet?')) {
-        this.$apollo.mutate({
-          mutation: require('~/graphql/DeleteWorksheet'),
-          variables: {
-            id: this.id,
-            challengeId: this.worksheet.challenge_id,
-            number: this.number,
-          },
-        })
+        const variables = {
+          id: this.id,
+          challengeId: this.worksheet.challenge_id,
+          number: this.number,
+        }
+        this.$db.delete('worksheet', variables, this.worksheet.challenge_id)
       }
     },
     loadGGB() {
       const { file, geogebra, forceUpdate } = this
       if (!!file && !!geogebra) {
+        console.log('Loading GGB file ' + file.name)
         const reader = new FileReader()
         reader.onload = (e) => {
           const ggbBase64 = btoa(e.target.result)

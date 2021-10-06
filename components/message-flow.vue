@@ -4,7 +4,9 @@
       <v-skeleton-loader v-for="n in 5" :key="n" type="list-item" />
     </template>
 
-    <template v-else-if="$apollo.error"> An error occurred! </template>
+    <template v-else-if="$apollo.error">
+      An error occurred!
+    </template>
 
     <privileged-area v-else needs="edit_episode_narrative" to="edit">
       <template v-if="phases">
@@ -47,8 +49,13 @@
             />
           </container>
         </template>
-        <finish-work-btn :tab-type="'message-flow'" :button-type="'issue-pr'" />
-        <finish-work-btn :tab-type="'message-flow'" :button-type="'commit'" />
+        <div class="d-flex flex-row justify-space-between ma-5">
+          <finish-work-btn
+            :tab-type="'message-flow'"
+            :button-type="'issue-pr'"
+          />
+          <finish-work-btn :tab-type="'message-flow'" :button-type="'commit'" />
+        </div>
 
         <!-- <finish-work-btn
       v-if="data.story_chapter_by_pk.edit.state === 'details'"

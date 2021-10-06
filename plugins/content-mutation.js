@@ -1,13 +1,15 @@
 import './extensions.js'
 
-const CONTENT_LAYERS = ['story', 'episode', 'phase', 'message']
-const DB_NAMES = ['story', 'story_chapter', 'story_section', 'prompt']
+const CONTENT_LAYERS = ['story', 'episode', 'phase', 'message', 'challenge',
+  'worksheet', 'survey', 'question', 'topic', 'intent', 'subintent', 'replica']
+const DB_NAMES = ['story', 'story_chapter', 'story_section', 'prompt', 'challenge',
+  'worksheet', 'survey', 'question', 'topic', 'intent', 'subintent', 'replica']
 
 export default ({ app }, inject) => {
   inject('db', {
     $apollo: app.apolloProvider.defaultClient,
 
-    async add(type, previous = null, variables = {}, parentId = null) {
+    async add(type, previous = null, variables = {}, parentId = null) { // TODO: previous not needed
       console.log('[content-mutation] adding a ' + type)
       // TODO: Implement proper number handling with previous param
 
@@ -18,7 +20,11 @@ export default ({ app }, inject) => {
         const childLayer = layer + 1
         childType = CONTENT_LAYERS[childLayer]
       }
-      if (layer > 0) {
+      // survey has no parent
+      // add subintentId for replica
+      // add surveyId for question
+      // topicId for intent in backend
+      if (layer >= 1 && layer <= 3 && !['replica', 'intent', 'survey', 'question'].includes(type)) {
         const parentIdVarName = CONTENT_LAYERS[layer - 1] + 'Id'
         if (parentId) {
           variables[parentIdVarName] = parentId
@@ -37,7 +43,7 @@ export default ({ app }, inject) => {
         // add a first item for all lower nesting levels recursively
         const dataField = 'insert_' + DB_NAMES[layer] + '_one'
         const id = resp.data[dataField].id
-        this.add(childType, {}, id)
+        this.add(childType, null, {}, id)
       }
     },
 
@@ -72,10 +78,14 @@ export default ({ app }, inject) => {
       }
 
       variables = { id: element.id }
+      if (type === 'question') {
+        variables.survey_id = parentId // add surveyId in backend
+      }
       if (element.number) {
         variables.number = element.number
       }
-      if (layer > 0) {
+      // topic question survey replica don't need parentId
+      if (layer > 0 && !['survey', 'question', 'topic', 'replica'].includes(type)) {
         const parentLayer = layer - 1
         const parentType = CONTENT_LAYERS[parentLayer]
         const parentField = DB_NAMES[parentLayer]
