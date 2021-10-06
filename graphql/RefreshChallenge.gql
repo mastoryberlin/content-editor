@@ -5,10 +5,11 @@ subscription GetChallenge($episodeId: uuid!) {
     short_description
     geogebra_worksheets(order_by: {number: asc}) {
       id
+      number
       ggb
       inputs
       outputs
-      number
+      document
       short_description
       long_description
       challenge_id

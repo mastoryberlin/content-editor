@@ -366,6 +366,12 @@ export default {
   &-interactions
     &-npc
       display: inline
+  &-worksheet
+    &-html textarea
+      font-family: monospace
+      font-size: 10pt
+      line-height: 1.5em
+      padding: 1em
 .v-overlay__content
   text-align: center
   & > p

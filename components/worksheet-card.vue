@@ -17,11 +17,15 @@
     <v-card-text>
       <v-text-field :disabled="disabled" :value="shortDescription" label="Short description of the worksheet for teachers" @change="shortDescription = $event" />
       <v-textarea :disabled="disabled" :value="longDescription" label="Long description of the worksheet for teachers" @change="longDescription = $event" />
+
       <v-container>
         <v-row cols="12">
           <v-col md="12" lg="8">
-            <div :id="'ggb-' + id" />
+            <div v-html="customWrapper" />
+            <!-- This is the GeoGebra applet to display the uploaded worksheet -->
+            <!-- <div :id="'ggb-' + id" /> -->
           </v-col>
+
           <v-col md="12" lg="4">
             <v-file-input
               v-model="file"
@@ -55,6 +59,16 @@
               label="Output variables"
               hint="Enter the IDs of all GeoGebra objects in the worksheet which serve as output parameters"
             />
+            <v-textarea
+              :value="html"
+              class="content-editor-worksheet-html"
+              label="Modify this HTML code to create a custom wrapper page for the GeoGebra applet"
+              auto-grow
+              rows="4"
+              clearable
+              @click:clear="clearHTML"
+              @change="html = $event"
+            />
           </v-col>
         </v-row>
       </v-container>
@@ -76,7 +90,8 @@
 
 <script>
 /* global GGBApplet */
-
+/* global setupInteractions */
+import he from 'he'
 export default {
   props: {
     disabled: {
@@ -95,6 +110,7 @@ export default {
     file: null,
     geogebra: null,
     forceUpdate: false,
+    applet: null,
   }),
   computed: {
     id() {
@@ -186,9 +202,48 @@ export default {
         })
       },
     },
+    customWrapper() {
+      const { html, id } = this
+      const preview = html.replace('id="ggb-element"', 'id="ggb-' + id + '"')
+      const script = he.unescape(
+        he.escape(html)
+          .match(/(?<=&lt;script&gt;)(?:(?:.|\n)*)(?=&lt;\/script&gt;)/gm)
+          .toString()
+      ).replace('function setupInteractions(', 'if (undefined === this.setupInteractions) {this.setupInteractions = {}}; this.setupInteractions["' + id + '"] = function setupInteractions(')
+      try {
+        const fn = Function(script) // eslint-disable-line no-new-func
+        fn()
+      } catch (err) {
+        console.log(err)
+      }
+      return preview
+    },
+    html: {
+      get() {
+        const doc = this.worksheet.document
+        const defaultHTML =
+          '<div id="ggb-element"></div> <!-- This div is mandatory within the HTML wrapper, as the mobile app will inject GeoGebra applet here --> \n' +
+          '<div id="ggb-interactions">\n' +
+          '  <script>\n' +
+          '  function setupInteractions(ggbApplet) {\n' +
+          '  }\n' +
+          '  <' + '/script>\n' + // Have to split up script tag or else ESLint + Nuxt get confused
+          '</div>'
+        return doc || defaultHTML
+      },
+      set(v) {
+        this.$apollo.mutate({
+          mutation: require('~/graphql/UpdateWorksheetDocument'),
+          variables: {
+            id: this.id,
+            document: v,
+          },
+        })
+      },
+    },
   },
   mounted() {
-    const { id, worksheet: { ggb } } = this
+    const { id, html, worksheet: { ggb } } = this
     const params = {
       id: 'ggbApplet-' + id,
       width: 800,
@@ -197,6 +252,25 @@ export default {
       country: 'US',
       appletOnLoad: (api) => {
         this.geogebra = api
+        const script = he.unescape(
+          he.escape(html)
+            .match(/(?<=&lt;script&gt;)(?:(?:.|\n)*)(?=&lt;\/script&gt;)/gm)
+            .toString()
+        ).replace('function setupInteractions(', 'if (undefined === this.setupInteractions) {this.setupInteractions = {}}; this.setupInteractions["' + id + '"] = function setupInteractions(')
+        try {
+          const fn = Function(script) // eslint-disable-line no-new-func
+          fn()
+        } catch (err) {
+          console.log(err)
+        }
+
+        if (setupInteractions && setupInteractions[id]) { // eslint-disable-line no-undef
+          try {
+            setupInteractions[id](api) // eslint-disable-line no-undef
+          } catch (err) {
+            console.log(err)
+          }
+        }
       },
     }
     if (ggb) {
@@ -204,6 +278,7 @@ export default {
     }
     const applet = new GGBApplet(params, true)
     applet.inject('ggb-' + id)
+    this.applet = applet
   },
   methods: {
     deleteWorksheet() {
@@ -235,6 +310,14 @@ export default {
           this.forceUpdate = !forceUpdate
         }
         reader.readAsBinaryString(file)
+      }
+    },
+    clearHTML() {
+      if (confirm(
+        'Are you sure you want to reset the custom HTML wrapper?\n' +
+        'Any HTML code entered so far will be permanently lost!'
+      )) {
+        this.html = null
       }
     },
   },
