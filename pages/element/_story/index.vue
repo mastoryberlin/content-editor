@@ -8,7 +8,7 @@
       </v-tabs>
 
       <v-tabs-items v-model="tab">
-        <v-tab-item class="content-editor-specs">
+        <v-tab-item class="content-editor-specs pa-2">
           <v-overlay absolute :value="story.edit.state === 'episodes'">
             <p>
               We are currently editing <strong>individual episodes</strong> of
@@ -243,8 +243,20 @@
               })
             "
           />
+          <v-text-field
+            label="Story Description"
+            :value="description"
+            @change="
+              $apollo.mutate({
+                mutation: require('~/graphql/UpdateStoryDescription'),
+                variables: { id: storyId, description: $event },
+              })
+            "
+          />
+          <v-btn color="error" :disabled="!isSuperAdmin" @click="deleteStory">
+            Delete Story
+          </v-btn>
         </v-tab-item>
-
         <v-tab-item v-if="isSuperAdmin" class="content-editor-alpha-test">
           <alpha-test />
         </v-tab-item>
@@ -300,6 +312,9 @@ export default {
     title() {
       return this.story.title
     },
+    description() {
+      return this.story.description
+    },
     episodes() {
       return this.story.chapters
     },
@@ -319,6 +334,11 @@ export default {
     },
   },
   methods: {
+    deleteStory() {
+      if (confirm('Are you sure you want to delete this story?')) {
+        this.$db.delete('story', { id: this.storyId }, null)
+      }
+    },
     generateSpecsFromFreeflow(text) {
       console.log(text)
     },
