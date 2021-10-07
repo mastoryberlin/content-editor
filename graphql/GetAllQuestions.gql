@@ -1,0 +1,6 @@
+query GetAllQuestions($surveyId: uuid = "") {
+  survey_question(where: {survey_id: {_eq: $surveyId}}) {
+    id
+    number
+  }
+}

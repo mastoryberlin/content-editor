@@ -1,9 +1,9 @@
-mutation DeleteQuestion($id: uuid!, $survey_id: uuid!, $number: Int!) {
+mutation DeleteQuestion($id: uuid!, $surveyId: uuid!, $number: Int!) {
   delete_survey_question_by_pk(id: $id) {
     id
   }
 
-  update_survey_question(where: {survey_id: {_eq: $survey_id}, _and: {number: {_gt: $number}}}, _inc: {number: -1}) {
+  update_survey_question(where: {survey_id: {_eq: $surveyId}, _and: {number: {_gt: $number}}}, _inc: {number: -1}) {
     affected_rows
   }
 }
