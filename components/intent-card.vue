@@ -14,7 +14,9 @@
         @blur="editing = false"
       />
       <em v-else v-text="name" />
-      <v-icon v-if="!editing" @click="editing = !editing"> mdi-pencil </v-icon>
+      <v-icon v-if="!editing" @click="editing = !editing">
+        mdi-pencil
+      </v-icon>
     </v-card-title>
 
     <v-card-subtitle v-if="hasSubintents" v-text="'like this:'" />
@@ -26,8 +28,7 @@
       <v-list subheader>
         <template v-for="sub in subintents">
           <v-subheader :key="sub.id">
-            <span>Examples of</span>&nbsp;<strong>{{ sub.name }}</strong
-            >&nbsp;<span>utterances:</span>
+            <span>Examples of</span>&nbsp;<strong>{{ sub.name }}</strong>&nbsp;<span>utterances:</span>
           </v-subheader>
           <v-list-item v-for="replica in sub.replicas" :key="replica.id">
             <!-- <template #activator> -->
@@ -94,8 +95,7 @@
               <v-card-text>
                 <p>
                   Enter here how a student might
-                  <em>{{ name }}</em
-                  >:
+                  <em>{{ name }}</em>:
                   <v-text-field
                     ref="addSubintentFormReplicaField"
                     v-model="addSubintentReplicaMessage"
@@ -142,8 +142,12 @@
 
               <v-card-actions>
                 <v-spacer />
-                <v-btn color="green" type="submit"> Add </v-btn>
-                <v-btn @click="showAddSubintentDialog = false"> Cancel </v-btn>
+                <v-btn color="green" type="submit">
+                  Add
+                </v-btn>
+                <v-btn @click="showAddSubintentDialog = false">
+                  Cancel
+                </v-btn>
                 <v-spacer />
               </v-card-actions>
             </v-card>
@@ -158,8 +162,7 @@
               <v-card-text>
                 <p>
                   Enter here how a student might
-                  <em>{{ name }}</em
-                  >:
+                  <em>{{ name }}</em>:
                   <v-text-field
                     ref="editSubintentFormReplicaField"
                     v-model="editSubintentReplicaMessage"
@@ -197,8 +200,12 @@
 
               <v-card-actions>
                 <v-spacer />
-                <v-btn color="green" type="submit"> Apply changes </v-btn>
-                <v-btn @click="showEditSubintentDialog = false"> Cancel </v-btn>
+                <v-btn color="green" type="submit">
+                  Apply changes
+                </v-btn>
+                <v-btn @click="showEditSubintentDialog = false">
+                  Cancel
+                </v-btn>
                 <v-spacer />
               </v-card-actions>
             </v-card>
@@ -214,7 +221,9 @@
       class="content-editor-draggable-add"
       @click="$emit('add-intent')"
     >
-      <v-icon color="white"> mdi-plus </v-icon>
+      <v-icon color="white">
+        mdi-plus
+      </v-icon>
     </v-btn>
   </v-card>
 </template>
