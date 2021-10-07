@@ -8,13 +8,13 @@
     >
       <v-container>
         <v-row cols="12">
-          <!-- <v-col v-if="deletable" class="content-editor-draggable-sidebar">
+          <v-col v-if="deletable" class="content-editor-draggable-sidebar">
             <v-icon
-            class="content-editor-draggable-handle"
+              class="content-editor-draggable-handle"
             >
               mdi-drag
             </v-icon>
-          </v-col> -->
+          </v-col>
 
           <v-col class="content-editor-draggable-content">
             <div class="content-editor-draggable-header">
@@ -99,7 +99,9 @@
                 label="or enter a URL directly"
                 @change="changeMessage({element: 'attachment', to: $event})"
               /> -->
-              <h4 v-if="preview">PREVIEW - press button to upload</h4>
+              <h4 v-if="preview">
+                PREVIEW - press button to upload
+              </h4>
               <div v-if="file !== null">
                 <v-btn
                   :loading="loading"
@@ -109,7 +111,9 @@
                   fab
                   @click="upload"
                 >
-                  <v-icon dark> mdi-cloud-upload </v-icon>
+                  <v-icon dark>
+                    mdi-cloud-upload
+                  </v-icon>
                 </v-btn>
 
                 <v-alert
@@ -125,7 +129,7 @@
 
               <div v-if="message.type === 'audio'">
                 <audio controls>
-                  <source :src="url || message.attachment" />
+                  <source :src="url || message.attachment">
                 </audio>
               </div>
               <div v-else-if="message.type === 'video'">
@@ -151,21 +155,25 @@
               @change="changeMessage({ element: 'text', to: $event })"
             />
 
-            <!-- :get-child-payload="setDragIndex" -->
             <container
               v-else
               group-name="episode-messages"
               drag-handle-selector=".content-editor-draggable-handle"
+              :get-child-payload="draggedMessage"
               @drag-start="
                 setDragSource({
                   ...$event,
                   dragSource: message,
+                  fromPhase: message.section_id,
+                  fromParentIsNull: false
                 })
               "
               @drop="
                 moveMessage({
                   ...$event,
                   dragTarget: message,
+                  toPhase: message.section_id,
+                  toParentIsNull: false
                 })
               "
             >
@@ -176,6 +184,7 @@
                 :message="submessage"
                 :deletable="children.length > 1"
                 :course-name="courseName"
+                :disabled="disabled"
               />
             </container>
           </v-col>
@@ -189,7 +198,9 @@
           class="content-editor-draggable-add"
           @click="addMessage({ after: message })"
         >
-          <v-icon color="white"> mdi-plus </v-icon>
+          <v-icon color="white">
+            mdi-plus
+          </v-icon>
         </v-btn>
       </v-container>
     </v-sheet>
@@ -197,7 +208,7 @@
 </template>
 
 <script>
-import { mapMutations } from 'vuex'
+import { mapMutations, mapActions } from 'vuex'
 import { Container, Draggable } from 'vue-smooth-dnd'
 
 export default {
@@ -265,6 +276,18 @@ export default {
     },
   },
   methods: {
+    ...mapMutations([
+      'setDraggedMessageInfo',
+      'setDragSource',
+    ]),
+    ...mapActions([
+      'moveMessage',
+    ]),
+    draggedMessage(index) {
+      const msg = this.children[index]
+      const id = msg.id
+      this.setDraggedMessageInfo({ id, index })
+    },
     async upload() {
       this.loading = true
       const fd = new FormData()
@@ -316,11 +339,6 @@ export default {
         await this.$db.delete('message', this.message, this.message.section_id)
       }
     },
-    ...mapMutations([
-      'moveMessage',
-      'setDragIndex',
-      'setDragSource',
-    ]),
     async changeMessage({ element, to }) {
       const variables = {
         id: this.message.id,

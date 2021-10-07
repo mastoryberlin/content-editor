@@ -3,19 +3,53 @@ export default {
     dragInfo: {
       dragSource: null,
       removedIndex: null,
+      messageId: null,
+      fromNumber: null,
+      fromPhase: null,
+      fromParentIsNull: false,
     },
-    isCommittingChanges: false,
+    // isCommittingChanges: false,
   }),
-  getters: {
-    featuresInPhase: state => (phaseId) => {
-      // const [story, episode] = phaseId.split('/')
-      // const st = state.stories.find(s => s.id === story)
-      // const ep = st.episodes.find(e => e.id === story + '/' + episode)
-      // const ph = ep.phases.find(p => p.id === phaseId)
-      // return ph.features
-    },
-  },
   mutations: {
+    setDraggedMessageInfo: (state, { id, number, index }) => {
+      console.log('setDraggedMessageInfo called with id: ' + id + ', index: ' + index)
+      state.dragInfo.messageId = id
+      state.dragInfo.fromNumber = number
+      state.dragInfo.removedIndex = index
+    },
+    setDragSource: (state, { isSource, dragSource, fromPhase, fromParentIsNull }) => {
+      if (isSource) {
+        console.log('setDragSource called, this isSource - setting dragSource=' + dragSource.id)
+        state.dragInfo.dragSource = dragSource
+        state.dragInfo.fromPhase = fromPhase
+        state.dragInfo.fromParentIsNull = fromParentIsNull
+      }
+    },
+    // setEditedBy: (state, { who, element }) => {
+    //   const parts = element.split('/')
+    //   const storiesRoot = state.stories
+    //   const st = storiesRoot.find(s => s.id === parts[0])
+    //   if (parts.length === 1) {
+    //     // Story is being edited
+    //     st.editedBy = who
+    //     return
+    //   }
+    //   const ep = st.episodes.find(e => e.id === `${parts[0]}/${parts[1]}`)
+    //   if (parts.length === 2) {
+    //     // Episode is being edited
+    //     ep.editedBy = who
+    //     return
+    //   }
+    //   const ph = ep.phases.find(p => p.id === `${parts[0]}/${parts[1]}/${parts[2]}`)
+    //   if (parts.length === 3) {
+    //     // Phase is being edited
+    //     ph.editedBy = who
+    //     return
+    //   }
+    //   // parts.length >= 4 -> Message is being edited
+    //   const msg = findMessage(element, state, ph)
+    //   msg.editedBy = who
+    // },
     // initializeStories: (state, retrievedStories) => {
     //   state.stories = retrievedStories
     // },
@@ -186,97 +220,6 @@ export default {
     //   }
     //   message[element] = to
     // },
-    // addMessage: (state, { after, duplicate }) => {
-    //   const { parent, index } = findMessage(after.id, state)
-    //   const msgs = parent.messages
-    //   let newIndex = msgs.length + 1
-    //   let newID = after.id.replace(/[^/]+$/, `m${newIndex}`)
-    //   while (msgs.find(m => m.id === newID)) {
-    //     newIndex += 1
-    //     newID = after.id.replace(/[^/]+$/, `m${newIndex}`)
-    //   }
-    //   const newMsg = duplicate
-    //     ? { ...after, id: newID }
-    //     : {
-    //         id: newID,
-    //         logic: '',
-    //         type: 'text',
-    //         text: ''
-    //       }
-    //   msgs.splice(index + 1, 0, newMsg)
-    //   updateMessageStructure(state, newID)
-    // },
-    // deleteMessage: (state, message) => {
-    //   const { parent, index } = findMessage(message.id, state)
-    //   if (confirm('Are you sure you want to delete this message?')) {
-    //     parent.messages.splice(index, 1)
-    //     updateMessageStructure(state, message.id)
-    //   }
-    // },
-    // moveMessage: (state, { dragTarget, addedIndex }) => {
-    //   const { dragSource, removedIndex } = state.dragInfo
-    //   console.log(`moveMessage called with dragSource.id: ${dragSource.id}, dragTarget.id: ${dragTarget.id}, ri: ${removedIndex}, ai: ${addedIndex}`)
-    //   if (removedIndex !== undefined && addedIndex !== null &&
-    //   (dragSource !== dragTarget || removedIndex !== addedIndex)) {
-    //     console.log('Actually doing it')
-    //     const msgs = dragSource.messages
-    //     const movedMessage = JSON.stringify(msgs[removedIndex])
-    //     console.log('movedMessage: ' + movedMessage)
-    //     const newFromMsgs = [...msgs]
-    //     newFromMsgs.splice(removedIndex, 1)
-    //     if (dragSource === dragTarget) {
-    //       newFromMsgs.splice(addedIndex, 0, JSON.parse(movedMessage))
-    //       dragSource.messages = newFromMsgs
-    //       updateMessageStructure(state, dragSource.id)
-    //     } else {
-    //       const newToMsgs = [...dragTarget.messages]
-    //       const msg = JSON.parse(movedMessage)
-    //       refactorMessageID(state, msg, dragSource.id, dragTarget.id)
-    //       newToMsgs.splice(addedIndex, 0, msg)
-    //       dragSource.messages = newFromMsgs
-    //       dragTarget.messages = newToMsgs
-    //       updateMessageStructure(state, dragSource.id)
-    //       updateMessageStructure(state, dragTarget.id)
-    //     }
-    //   } else {
-    //     console.log('Aborting')
-    //   }
-    // },
-    // setEditedBy: (state, { who, element }) => {
-    //   const parts = element.split('/')
-    //   const storiesRoot = state.stories
-    //   const st = storiesRoot.find(s => s.id === parts[0])
-    //   if (parts.length === 1) {
-    //     // Story is being edited
-    //     st.editedBy = who
-    //     return
-    //   }
-    //   const ep = st.episodes.find(e => e.id === `${parts[0]}/${parts[1]}`)
-    //   if (parts.length === 2) {
-    //     // Episode is being edited
-    //     ep.editedBy = who
-    //     return
-    //   }
-    //   const ph = ep.phases.find(p => p.id === `${parts[0]}/${parts[1]}/${parts[2]}`)
-    //   if (parts.length === 3) {
-    //     // Phase is being edited
-    //     ph.editedBy = who
-    //     return
-    //   }
-    //   // parts.length >= 4 -> Message is being edited
-    //   const msg = findMessage(element, state, ph)
-    //   msg.editedBy = who
-    // },
-    // setDragIndex: (state, index) => {
-    //   console.log('setDragIndex called with index: ' + index)
-    //   state.dragInfo.removedIndex = index
-    // },
-    // setDragSource: (state, { isSource, dragSource }) => {
-    //   if (isSource) {
-    //     console.log('setDragSource called, this isSource - setting dragSource=' + dragSource.id)
-    //     state.dragInfo.dragSource = dragSource
-    //   }
-    // },
     // beginCommittingChanges: (state) => {
     //   state.isCommittingChanges = true
     // },
@@ -289,6 +232,33 @@ export default {
     //   const response = await this.app.apolloProvider.defaultClient.query({query: require("~/graphql/GetStories")})
     //   commit("apolloTest", response.data.story)
     // },
+    moveMessage({ state }, { dragTarget, addedIndex, toPhase, toParentIsNull }) {
+      const { messageId, dragSource, removedIndex, fromNumber, fromPhase, fromParentIsNull } = state.dragInfo
+      // console.log('moveMessage called with dragSource.id: ' + dragSource.id + ', dragTarget.id: ' + dragTarget.id + ', ri: ' + removedIndex + ', ai: ' + addedIndex)
+      if (removedIndex !== undefined && addedIndex !== null &&
+      (dragSource !== dragTarget || removedIndex !== addedIndex)) {
+        const fromParent = fromParentIsNull ? null : dragSource.id
+        const toParent = toParentIsNull ? null : dragTarget.id
+        const toNumber = addedIndex + 1
+        // console.log('MoveMessage: id: ' + messageId + ', fromNumber: ' + fromNumber + ', toNumber: ' + toNumber + ', fromPhase: ' + fromPhase + ', toPhase: ' + toPhase + ', fromParent: ' + fromParent + ', toParent: ' + toParent + ', fromParentIsNull: ' + fromParentIsNull + ', toParentIsNull: ' + toParentIsNull)
+        this.app.apolloProvider.defaultClient.mutate({
+          mutation: require('~/graphql/MoveMessage'),
+          variables: {
+            id: messageId,
+            fromNumber,
+            toNumber,
+            fromParent,
+            toParent,
+            fromPhase,
+            toPhase,
+            fromParentIsNull,
+            toParentIsNull,
+          },
+        })
+      } else {
+        console.log('Aborting')
+      }
+    },
     lock(ctx, element) {
       // const ws = state.websocket.ws
       // if (ws) {
