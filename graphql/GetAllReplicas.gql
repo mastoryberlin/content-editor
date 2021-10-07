@@ -1,0 +1,5 @@
+query GetAllReplicas($subintentId: uuid = "") {
+  replica(where: {subintent_id: {_eq: $subintentId}}) {
+    id
+  }
+}

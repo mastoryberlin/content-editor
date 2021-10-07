@@ -1,0 +1,5 @@
+query GetAllIntents($topicId: uuid = "") {
+  intent(where: {topic_id: {_eq: $topicId}}) {
+    id
+  }
+}

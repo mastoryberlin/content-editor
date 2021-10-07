@@ -216,7 +216,9 @@
                     class="content-editor-draggable-add"
                     @click="addEpisode({ after: episode })"
                   >
-                    <v-icon color="white"> mdi-plus </v-icon>
+                    <v-icon color="white">
+                      mdi-plus
+                    </v-icon>
                   </v-btn>
                 </v-container>
               </v-sheet>
@@ -336,7 +338,17 @@ export default {
   methods: {
     deleteStory() {
       if (confirm('Are you sure you want to delete this story?')) {
-        this.$db.delete('story', { id: this.storyId }, null)
+        // TODO: don't need parentId
+        const hierarchyData = {
+          story: {
+            episode: {
+              phase: { message: true },
+              challenge: { worksheet: true },
+              survey: { question: true },
+            },
+          },
+        }
+        this.$db.delete(hierarchyData, null, { id: this.storyId }, null)
       }
     },
     generateSpecsFromFreeflow(text) {
@@ -465,7 +477,6 @@ export default {
         },
         title: duplicate ? after.title : '',
       })
-
       const shortcut = editField.shortcut
       if (shortcut) {
         const { id } = await this.$shortcut.createStory({ name: 'Episode ' + number, project_id: shortcut.project, epic_id: shortcut.epic })
@@ -473,7 +484,7 @@ export default {
           shortcutStoryID: id, state: 'specs', warnStorySpecsHaveChanged: false, warnEpisodeSpecsHaveChanged: false,
         }
       }
-      await this.$db.add('episode', null, variables, this.storyId)
+      await this.$db.add({ episode: { phase: { message: true } } }, 'story', null, variables, this.storyId)
     },
     deleteEpisode(episode) {
       // Optimistic
@@ -503,7 +514,14 @@ export default {
             } catch (err) {}
           }
         }
-        this.$db.delete('episode', episode, this.storyId)
+        const hierarchyData = {
+          episode: {
+            phase: { message: true },
+            challenge: { worksheet: true },
+            survey: { question: true },
+          },
+        }
+        this.$db.delete(hierarchyData, 'story', episode, this.storyId)
       }
     },
 

@@ -9,7 +9,9 @@
           <v-skeleton-loader v-for="n in 5" :key="n" type="list-item" />
         </div>
 
-        <div v-else-if="error">An error occurred!</div>
+        <div v-else-if="error">
+          An error occurred!
+        </div>
 
         <div v-else-if="data">
           <apollo-subscribe-to-more
@@ -47,7 +49,9 @@
             </template>
           </v-treeview>
         </div>
-        <v-btn block @click="addStory"> Add Story </v-btn>
+        <v-btn block @click="addStory">
+          Add Story
+        </v-btn>
       </v-navigation-drawer>
       <v-app-bar fixed app>
         <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
@@ -250,7 +254,8 @@ export default {
       return newStories
     },
     addStory() {
-      this.$db.add('story', null, { title: 'New Story', description: 'New Story Description' }, null)
+      const variables = { title: 'New Story', description: 'New Story Description' }
+      this.$db.add({ story: { episode: { phase: { message: true } } } }, null, null, variables, null)
     },
     navigate([selected], stories) {
       const isStory = stories.find(s => s.id === selected)

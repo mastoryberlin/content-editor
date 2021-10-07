@@ -161,10 +161,10 @@ export default {
         this.showAddIntentDialog = false
       }
       const variables = {
-        topic_id: this.topic.id,
+        topicId: this.topic.id,
         name: this.addIntentName,
       }
-      this.$db.add('intent', null, variables, null)
+      this.$db.add({ intent: true }, 'topic', null, variables, this.topic.id)
       if (!this.keepAddIntentDialogOpen) {
         this.addIntentName = ''
       }

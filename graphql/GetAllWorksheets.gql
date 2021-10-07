@@ -1,0 +1,6 @@
+query GetAllWorksheets($challengeId: uuid = "") {
+  geogebra_worksheet(where: {challenge_id: {_eq: $challengeId}}) {
+    id
+    number
+  }
+}

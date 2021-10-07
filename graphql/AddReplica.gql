@@ -1,5 +1,5 @@
-mutation AddReplica($subintent_id: uuid = "", $message: String = "") {
-  insert_replica_one(object: {subintent_id: $subintent_id, message: $message}) {
+mutation AddReplica($subintentId: uuid = "", $message: String = "") {
+  insert_replica_one(object: {subintent_id: $subintentId, message: $message}) {
     id
   }
 }

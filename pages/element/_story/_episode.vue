@@ -192,7 +192,7 @@
                       class="content-editor-draggable-add"
                       @click="addPhase({ after: phase, data })"
                     >
-                      <v-icon color="white">mdi-plus</v-icon>
+                      <v-icon color="white"> mdi-plus </v-icon>
                     </v-btn>
                   </v-container>
                 </v-sheet>
@@ -440,7 +440,7 @@ export default {
           meta: { mood: {}, topics: [], features: [], challenges: [] },
         })
       }
-      const request = await this.$db.add('phase', after, variables, this.episodeId)
+      const request = await this.$db.add({ phase: { message: true } }, 'episode', after, variables, this.episodeId)
       console.log('mutation AddPhase returned', request.data)
     },
     deletePhase(phase, data) {
@@ -462,9 +462,8 @@ export default {
           query: require('~/graphql/GetEpisode'),
           data,
         })
-
         // ... and perform the changes in the DB
-        this.$db.delete('phase', phase, this.episodeId)
+        this.$db.delete({ phase: { message: true } }, 'episode', phase, this.episodeId)
       }
     },
     ...mapMutations('autosave', [
@@ -542,7 +541,7 @@ export default {
           id: item.id,
           number: item.number,
         }
-        this.$db.delete('phase', variables, this.episodeId)
+        this.$db.delete({ phase: { message: true } }, 'episode', variables, this.episodeId)
         await this.$apollo.mutate({
           mutation: require('~/graphql/AddPhase'),
           variables: {
