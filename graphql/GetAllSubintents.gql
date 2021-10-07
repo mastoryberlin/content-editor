@@ -1,0 +1,5 @@
+query GetAllSubintents($intentId: uuid = "") {
+  subintent(where: {intent_id: {_eq: $intentId}}) {
+    id
+  }
+}

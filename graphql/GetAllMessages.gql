@@ -1,0 +1,6 @@
+query GetAllMessages($phaseId: uuid = "") {
+  prompt(where: {section_id: {_eq: $phaseId}}) {
+    id
+    number
+  }
+}

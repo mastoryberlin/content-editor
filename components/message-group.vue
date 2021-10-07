@@ -336,7 +336,7 @@ export default {
     async deleteMessage() {
       if (confirm('Are you sure you want to delete this message?')) {
         // this.updateEpisodeEditStateToSpecsIfNull(editField)
-        await this.$db.delete('message', this.message, this.message.section_id)
+        await this.$db.delete({ message: true }, 'phase', this.message, this.message.section_id)
       }
     },
     async changeMessage({ element, to }) {
@@ -361,7 +361,7 @@ export default {
       }
       variables.phaseId = after.section_id
       variables.number = after.number + 1
-      await this.$db.add('message', after, variables, after.section_id)
+      await this.$db.add({ message: true }, 'phase', null, variables, after.section_id)
     },
   },
 }

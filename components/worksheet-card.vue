@@ -288,7 +288,7 @@ export default {
           challengeId: this.worksheet.challenge_id,
           number: this.number,
         }
-        this.$db.delete('worksheet', variables, this.worksheet.challenge_id)
+        this.$db.delete({ worksheet: true }, 'challenge', variables, this.worksheet.challenge_id)
       }
     },
     loadGGB() {

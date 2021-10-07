@@ -1,0 +1,5 @@
+query GetAllChallenges($episodeId: uuid = "") {
+  challenge(where: {chapter_id: {_eq: $episodeId}}) {
+    id
+  }
+}

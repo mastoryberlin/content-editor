@@ -4,9 +4,7 @@
       <v-skeleton-loader v-for="n in 5" :key="n" type="list-item" />
     </template>
 
-    <template v-else-if="$apollo.error">
-      An error occurred!
-    </template>
+    <template v-else-if="$apollo.error"> An error occurred! </template>
 
     <privileged-area v-else needs="edit_episode_narrative" to="edit">
       <template v-if="phases">

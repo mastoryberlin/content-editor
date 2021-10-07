@@ -1,0 +1,9 @@
+mutation DeleteIntent($id: uuid!) {
+  delete_subintent(where: {intent_id: {_eq: $id}}) {
+    affected_rows
+  }
+
+  delete_intent_by_pk(id: $id) {
+    id
+  }
+}

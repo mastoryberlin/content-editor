@@ -160,17 +160,17 @@ export default {
         const variables = {
           id: this.id,
         }
-        this.$db.delete('survey', variables, null)
+        this.$db.delete({ survey: { question: true } }, null, variables, null)
       }
     },
     addQuestion() {
       const variables = {
-        survey_id: this.id,
+        surveyId: this.id,
         number: this.questionsCount + 1,
         question: this.questionToAdd,
         type: this.nextType,
       }
-      this.$db.add('question', null, variables, null) // TODO: no need parent
+      this.$db.add({ question: true }, 'survey', null, variables, this.id) // TODO: no need parent
       this.$refs.addQuestionField.$refs.input.select()
     },
     deleteQuestion(q) {
@@ -179,7 +179,7 @@ export default {
           id: q.id,
           number: q.number,
         }
-        this.$db.delete('question', variables, this.id)
+        this.$db.delete({ question: true }, null, variables, this.id)
       }
     },
     changeQuestionType(q, t) {
