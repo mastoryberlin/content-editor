@@ -370,11 +370,13 @@ export default {
     &-npc
       display: inline
   &-worksheet
-    &-html textarea
-      font-family: monospace
-      font-size: 10pt
+    &-html
+      background: #2d2d2d
+      color: #ccc
+      font-family: Fira code, Fira Mono, Consolas, Menlo, Courier, monospace
+      font-size: 11pt
       line-height: 1.5em
-      padding: 1em
+      padding: 5px
 .v-overlay__content
   text-align: center
   & > p

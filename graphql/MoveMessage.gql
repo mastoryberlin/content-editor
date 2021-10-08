@@ -1,0 +1,23 @@
+mutation MoveMessage($id: uuid!, $fromNumber: Int!, $toNumber: Int!, $fromPhase: uuid, $toPhase: uuid!, $fromParent: uuid = null, $toParent: uuid = null, $fromParentIsNull: Boolean = true, $toParentIsNull: Boolean = true) {
+  invalidateNumber: update_prompt_by_pk(pk_columns: {id: $id}, _set: {number: 0}) {
+    id
+    number
+  }
+  closeGapInFromParent: update_prompt(where: {parent: {_eq: $fromParent}, _and: {number: {_gt: $fromNumber}}}, _inc: {number: -1}) @skip(if: $fromParentIsNull) {
+    affected_rows
+  }
+  closeGapAtTopLevel: update_prompt(where: {parent: {_is_null: true}, _and: {section_id: {_eq: $fromPhase}, _and: {number: {_gt: $fromNumber}}}}, _inc: {number: -1}) @include(if: $fromParentIsNull) {
+    affected_rows
+  }
+  makeRoomInToParent: update_prompt(where: {parent: {_eq: $toParent}, _and: {number: {_gte: $toNumber}}}, _inc: {number: 1}) @skip(if: $toParentIsNull) {
+    affected_rows
+  }
+  makeRoomAtTopLevel: update_prompt(where: {parent: {_is_null: true}, _and: {section_id: {_eq: $toPhase}, _and: {number: {_gte: $toNumber}}}}, _inc: {number: 1}) @include(if: $toParentIsNull) {
+    affected_rows
+  }
+	modifyMessage: update_prompt_by_pk(pk_columns: {id: $id}, _set: {parent: $toParent, number: $toNumber, section_id: $toPhase}) {
+    id
+    parent
+    number
+  }
+}

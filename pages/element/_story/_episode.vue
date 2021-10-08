@@ -8,7 +8,9 @@
       <v-skeleton-loader v-for="n in 5" :key="n" type="list-item" />
     </div>
 
-    <div v-else-if="error">An error occurred!</div>
+    <div v-else-if="error">
+      An error occurred!
+    </div>
 
     <div v-else-if="data" class="content-editor">
       <apollo-subscribe-to-more
@@ -192,7 +194,9 @@
                       class="content-editor-draggable-add"
                       @click="addPhase({ after: phase, data })"
                     >
-                      <v-icon color="white"> mdi-plus </v-icon>
+                      <v-icon color="white">
+                        mdi-plus
+                      </v-icon>
                     </v-btn>
                   </v-container>
                 </v-sheet>
@@ -301,7 +305,7 @@
       <specs-have-changed-warning
         v-if="
           data.story_chapter_by_pk.story.edit.state !== 'specs' &&
-          data.story_chapter_by_pk.edit.warnStorySpecsHaveChanged
+            data.story_chapter_by_pk.edit.warnStorySpecsHaveChanged
         "
         title="The story specs for this episode have changed!"
         btn-text="Yes, the episode is alright like this"
