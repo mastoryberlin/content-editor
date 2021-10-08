@@ -1,4 +1,4 @@
-<template lang="html">
+<template>
   <v-card class="ma-4">
     <v-card-title>
       <small>A student might</small>
@@ -21,8 +21,7 @@
 
     <v-card-subtitle v-if="hasSubintents" v-text="'like this:'" />
     <v-alert v-else type="warning">
-      There are no example messages yet.
-      This interaction will be ignored.
+      There are no example messages yet. This interaction will be ignored.
     </v-alert>
 
     <v-card-text>
@@ -38,19 +37,23 @@
             </v-list-item-icon>
 
             <v-list-item-content>
-              <v-list-item-title>
-                “{{ replica.message }}”
-              </v-list-item-title>
+              <v-list-item-title> “{{ replica.message }}” </v-list-item-title>
             </v-list-item-content>
 
-            <v-hover v-slot="{hover}">
-              <v-icon :color="hover ? 'blue' : null" @click.stop="editReplica(replica, sub)">
+            <v-hover v-slot="{ hover }">
+              <v-icon
+                :color="hover ? 'blue' : null"
+                @click.stop="editReplica(replica, sub)"
+              >
                 mdi-pencil
               </v-icon>
             </v-hover>
 
-            <v-hover v-slot="{hover}">
-              <v-icon :color="hover ? 'red' : null" @click.stop="deleteReplica(replica)">
+            <v-hover v-slot="{ hover }">
+              <v-icon
+                :color="hover ? 'red' : null"
+                @click.stop="deleteReplica(replica)"
+              >
                 mdi-delete
               </v-icon>
             </v-hover>
@@ -75,22 +78,19 @@
         </template>
 
         <v-divider v-if="hasSubintents" />
-        <v-dialog
-          v-model="showAddSubintentDialog"
-          width="600"
-        >
-          <template #activator="{on, attrs}">
+        <v-dialog v-model="showAddSubintentDialog" width="600">
+          <template #activator="{ on, attrs }">
             <v-list-item v-bind="attrs" v-on="on">
               <v-list-item-icon><v-icon>mdi-plus</v-icon></v-list-item-icon>
-              <v-list-item-title>Add {{ hasSubintents ? 'another' : 'a' }} way of saying it</v-list-item-title>
+              <v-list-item-title>
+                Add {{ hasSubintents ? "another" : "a" }} way of saying it
+              </v-list-item-title>
             </v-list-item>
           </template>
 
           <v-form ref="addSubintentForm" @submit.prevent="addSubintent">
             <v-card>
-              <v-card-title>
-                Add a way of saying it
-              </v-card-title>
+              <v-card-title> Add a way of saying it </v-card-title>
 
               <v-card-text>
                 <p>
@@ -102,14 +102,17 @@
                     autofocus
                     persistent-hint
                     hint="Try to write as naturally as possible"
-                    :rules="[addSubintentReplicaMessage !== '' || 'This field may not be left empty']"
+                    :rules="[
+                      addSubintentReplicaMessage !== '' ||
+                        'This field may not be left empty',
+                    ]"
                   />
                 </p>
 
                 <p>
                   Next, think of an <strong>adjective</strong>
-                  that could be used as an adverb to describe
-                  this way of saying it:
+                  that could be used as an adverb to describe this way of saying
+                  it:
                   <v-combobox
                     v-model="addSubintentName"
                     auto-select-first
@@ -118,7 +121,10 @@
                     :filter="filter"
                     persistent-hint
                     hint="Examples: interested, lazy ..."
-                    :rules="[addSubintentName !== '' || 'This field may not be left empty']"
+                    :rules="[
+                      addSubintentName !== '' ||
+                        'This field may not be left empty',
+                    ]"
                     :search-input.sync="search"
                     @keyup.tab="autocomplete"
                   />
@@ -148,15 +154,10 @@
           </v-form>
         </v-dialog>
 
-        <v-dialog
-          v-model="showEditSubintentDialog"
-          width="600"
-        >
+        <v-dialog v-model="showEditSubintentDialog" width="600">
           <v-form ref="editSubintentForm" @submit.prevent="modifyReplica">
             <v-card>
-              <v-card-title>
-                Edit the way of saying it
-              </v-card-title>
+              <v-card-title> Edit the way of saying it </v-card-title>
 
               <v-card-text>
                 <p>
@@ -168,14 +169,17 @@
                     autofocus
                     persistent-hint
                     hint="Try to write as naturally as possible"
-                    :rules="[editSubintentReplicaMessage !== '' || 'This field may not be left empty']"
+                    :rules="[
+                      editSubintentReplicaMessage !== '' ||
+                        'This field may not be left empty',
+                    ]"
                   />
                 </p>
 
                 <p>
                   Next, think of an <strong>adjective</strong>
-                  that could be used as an adverb to describe
-                  this way of saying it:
+                  that could be used as an adverb to describe this way of saying
+                  it:
                   <v-combobox
                     v-model="editSubintentName"
                     auto-select-first
@@ -184,7 +188,10 @@
                     :filter="filter"
                     persistent-hint
                     hint="Examples: interested, lazy ..."
-                    :rules="[editSubintentName !== '' || 'This field may not be left empty']"
+                    :rules="[
+                      editSubintentName !== '' ||
+                        'This field may not be left empty',
+                    ]"
                     :search-input.sync="search"
                     @keyup.tab="editAutocomplete"
                   />
@@ -284,6 +291,8 @@ export default {
       }
     },
     async addSubintent() {
+      let id
+
       if (this.keepAddSubintentDialogOpen) {
         this.$refs.addSubintentForm.resetValidation()
         this.$refs.addSubintentFormReplicaField.select()
@@ -293,14 +302,14 @@ export default {
       }
       const addSubintentName = String(this.addSubintentName).trim()
       const existingSubintent = this.subintents.find(s => s.name === addSubintentName)
-      let id
       if (existingSubintent) {
         id = existingSubintent.id
       } else {
-        const resp = await this.$db.add('subintent', null, { name: addSubintentName }, this.intent.id)
+        const resp = await this.$db.add({ subintent: true }, 'intent', null, { name: addSubintentName }, this.intent.id)
         id = resp.data.insert_subintent_one.id
       }
-      this.$db.add('replica', null, { subintent_id: id, message: this.addSubintentReplicaMessage }, id)
+      const variables = { subintentId: id, message: this.addSubintentReplicaMessage }
+      this.$db.add({ replica: true }, 'subintent', null, variables, id)
       if (!this.keepAddSubintentDialogOpen) {
         this.addSubintentReplicaMessage = ''
         this.addSubintentName = ''
@@ -326,7 +335,7 @@ export default {
         if (existingSubintent) {
           subintentId = existingSubintent.id
         } else {
-          const resp = await this.$db.add('subintent', null, { name: editSubintentName }, this.intent.id)
+          const resp = await this.$db.add({ subintent: true }, 'intent', null, { name: editSubintentName }, this.intent.id)
           subintentId = resp.data.insert_subintent_one.id
         }
       }
@@ -344,7 +353,7 @@ export default {
     },
     async deleteReplica(replica) {
       if (confirm('Are you sure you want to delete this example?')) {
-        await this.$db.delete('replica', { id: replica.id }, null)
+        await this.$db.delete({ replica: true }, null, { id: replica.id }, null)
         this.deleteEmptySubintents()
       }
     },
@@ -357,7 +366,7 @@ export default {
         .filter(s => s.replicas_aggregate.aggregate.count === 0)
         .forEach((subintent) => {
           const { id } = subintent
-          this.$db.delete('subintent', { id }, null)
+          this.$db.delete({ subintent: true }, null, { id }, null)
         })
     },
 

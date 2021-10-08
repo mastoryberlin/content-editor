@@ -92,13 +92,14 @@ export default {
         if (v && v !== my.type) {
           if (v === 'nestable') {
             // Change from message type to logic block
-            this.$db.add('message', null, {
+            const variables = {
               sender_id: my.sender_id,
               type: my.type,
               text: my.text,
               attachment: my.attachment,
               parent: my.id,
-            }, my.section_id)
+            }
+            this.$db.add({ message: true }, 'phase', null, variables, my.section_id)
           } else if (my.type === 'nestable') {
             // Change FROM logic block to some message type
             // This is only possible for nestables with a single child msg.
@@ -114,7 +115,7 @@ export default {
                 senderId: child.sender_id,
               },
             })
-            this.$db.delete('message', child, my.section_id)
+            this.$db.delete({ message: true }, 'phase', child, my.section_id)
           }
           this.$apollo.mutate({
             mutation: require('~/graphql/UpdateMessageType'),

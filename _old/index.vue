@@ -1,12 +1,8 @@
-<template lang="html">
+<template>
   <div class="algebra1">
     <v-tabs v-model="tab" grow>
-      <v-tab>
-        Storyline
-      </v-tab>
-      <v-tab>
-        Chatbot Interactions
-      </v-tab>
+      <v-tab> Storyline </v-tab>
+      <v-tab> Chatbot Interactions </v-tab>
     </v-tabs>
 
     <v-tabs-items v-model="tab" class="algebra1-editor">
@@ -26,15 +22,13 @@
             color="green"
             @click="addPrompt(prompts.length)"
           >
-            <v-icon dark>
-              mdi-plus
-            </v-icon>
+            <v-icon dark> mdi-plus </v-icon>
           </v-btn>
         </div>
       </v-tab-item>
 
       <v-tab-item class="algebra1-editor-interactions">
-      <!--     <div class="text-center">
+        <!--     <div class="text-center">
             <h5 class="algebra1-editor-interactions-section-header" v-text="'NPC chatbot'" />
             <p>
               Select here which NPC to train:
@@ -137,12 +131,12 @@ export default {
   components: {
     // editor,
   },
-  async asyncData ({ $axios, params }) {
+  async asyncData({ $axios, params }) {
     const prompts = (
       await $axios.$get('prompts', {
         params: {
-          chapter: params.slug
-        }
+          chapter: params.slug,
+        },
       })
     ).prompts
 
@@ -150,7 +144,7 @@ export default {
 
     return {
       prompts,
-      promptHasChanged
+      promptHasChanged,
     }
   },
   data: () => ({
@@ -159,7 +153,7 @@ export default {
     //     password: '',
     //     showAccessDeniedAlert: false,
     //     autosaveInterval: 30000,
-    tab: 0
+    tab: 0,
   //     currentNPC: '',
   //     npcSpeedDial: false,
   //     npcData: {
@@ -208,12 +202,12 @@ export default {
   //     return this.content.meta
   //   },
   // },
-  mounted () {
+  mounted() {
     setInterval(() => {
       this.saveChanges()
     }, this.autosaveInterval)
   },
-  unmount () {
+  unmount() {
     this.saveChanges()
   },
   methods: {
@@ -257,7 +251,7 @@ export default {
   //     this.currentNPC = newNPC
   //     this.nlp = nlp
   //   },
-    saveChanges () {
+    saveChanges() {
       this.promptHasChanged
         .forEach(async (hasChanged, i) => {
           if (hasChanged) {
@@ -265,8 +259,8 @@ export default {
             await this.$axios.post('prompts', this.prompts[i], {
               params: {
                 chapter: this.$route.params.story,
-                id: i
-              }
+                id: i,
+              },
             })
           }
         })
@@ -301,12 +295,12 @@ export default {
       //         })
       //     }
     },
-    addPrompt (at) {
+    addPrompt(at) {
       const emptyPrompt = {
         who: 'unknown',
         type: 'text',
         msg: '',
-        comment: ''
+        comment: '',
       }
       this.prompts.splice(at, 0, emptyPrompt)
       this.promptHasChanged.splice(at, 0, true)
@@ -315,17 +309,17 @@ export default {
       }
       this.saveChanges()
     },
-    async deletePrompt (at) {
+    async deletePrompt(at) {
       this.prompts.splice(at, 1)
       this.promptHasChanged.splice(at, 1)
       await this.$axios.delete('prompts', {
         params: {
           chapter: this.$route.params.story,
-          id: at
-        }
+          id: at,
+        },
       })
     },
-    promptAction (actionType, promptIndex) {
+    promptAction(actionType, promptIndex) {
       switch (actionType) {
         case 'insertAbove':
           this.addPrompt(promptIndex)
@@ -365,7 +359,7 @@ export default {
           this.deletePrompt(promptIndex)
           break
       }
-    }
+    },
   //   async deleteIntent() {
   //     this.intents.splice(this.intents.indexOf(this.intent), 1)
   //     delete this.exampleMessages[this.intent]
@@ -375,7 +369,7 @@ export default {
   //       },
   //     })
   //   },
-  }
+  },
 }
 </script>
 

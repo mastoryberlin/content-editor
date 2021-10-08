@@ -9,7 +9,9 @@
           <v-skeleton-loader v-for="n in 5" :key="n" type="list-item" />
         </div>
 
-        <div v-else-if="error">An error occurred!</div>
+        <div v-else-if="error">
+          An error occurred!
+        </div>
 
         <div v-else-if="data">
           <apollo-subscribe-to-more
@@ -47,7 +49,9 @@
             </template>
           </v-treeview>
         </div>
-        <v-btn block @click="addStory"> Add Story </v-btn>
+        <v-btn block @click="addStory">
+          Add Story
+        </v-btn>
       </v-navigation-drawer>
       <v-app-bar fixed app>
         <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
@@ -250,7 +254,8 @@ export default {
       return newStories
     },
     addStory() {
-      this.$db.add('story', null, { title: 'New Story', description: 'New Story Description' }, null)
+      const variables = { title: 'New Story', description: 'New Story Description' }
+      this.$db.add({ story: { episode: { phase: { message: true } } } }, null, null, variables, null)
     },
     navigate([selected], stories) {
       const isStory = stories.find(s => s.id === selected)
@@ -310,6 +315,8 @@ export default {
 </script>
 
 <style lang="sass">
+video
+  width: 33%
 .v-treeview-node
   cursor: pointer
 .content-editor
@@ -337,6 +344,10 @@ export default {
       position: absolute
       bottom: -24px
       right: 24px
+      &-menu
+        position: absolute
+        bottom: -16px
+        right: 96px
     &-logic
       font-style: italic
     &-text-message
@@ -365,11 +376,13 @@ export default {
     &-npc
       display: inline
   &-worksheet
-    &-html textarea
-      font-family: monospace
-      font-size: 10pt
+    &-html
+      background: #2d2d2d
+      color: #ccc
+      font-family: Fira code, Fira Mono, Consolas, Menlo, Courier, monospace
+      font-size: 11pt
       line-height: 1.5em
-      padding: 1em
+      padding: 5px
 .v-overlay__content
   text-align: center
   & > p

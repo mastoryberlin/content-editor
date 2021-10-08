@@ -10,6 +10,9 @@
 
     <privileged-area v-else needs="edit_episode_math" to="edit">
       <template v-if="challenge">
+        <v-btn @click="deleteChallenge">
+          Delete challenge
+        </v-btn>
         <worksheet-card
           v-for="(worksheet, n) in worksheets"
           :key="worksheet.id"
@@ -86,14 +89,19 @@ export default {
       const variables = {
         episodeId: this.episodeId,
       }
-      await this.$db.add('challenge', null, variables, null)
+      await this.$db.add({ challenge: true }, 'episode', null, variables, this.episodeId)
+    },
+    deleteChallenge() {
+      if (confirm('Are you sure you want to delete this challenge')) {
+        this.$db.delete({ challenge: { worksheet: true } }, 'episode', { id: this.challenge.id }, null) // TODO: don't need parentId
+      }
     },
     addWorksheet(number = 1) {
       const variables = {
         challengeId: this.challenge.id,
         number,
       }
-      this.$db.add('worksheet', null, variables, null)
+      this.$db.add({ worksheet: true }, 'challenge', null, variables, this.challenge.id)
     },
   },
 }

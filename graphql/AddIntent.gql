@@ -1,5 +1,5 @@
-mutation AddIntent($topic_id: uuid = "", $name: String = "") {
-  insert_intent_one(object: {topic_id: $topic_id, name: $name}) {
+mutation AddIntent($topicId: uuid = "", $name: String = "") {
+  insert_intent_one(object: {topic_id: $topicId, name: $name}) {
     id
   }
 }

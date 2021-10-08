@@ -1,0 +1,5 @@
+mutation DeleteChallenge($id: uuid!) {
+  delete_challenge_by_pk(id: $id) {
+    id
+  }
+}

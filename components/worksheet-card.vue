@@ -59,15 +59,24 @@
               label="Output variables"
               hint="Enter the IDs of all GeoGebra objects in the worksheet which serve as output parameters"
             />
-            <v-textarea
-              :value="html"
+            <label>Modify this HTML code to create a custom wrapper page for the GeoGebra applet:</label>
+            <v-menu>
+              <template #activator="{on, attrs}">
+                <v-btn v-bind="attrs" v-on="on">
+                  <v-icon>mdi-menu</v-icon>
+                </v-btn>
+              </template>
+              <v-list>
+                <v-list-item @click="clearHTML">
+                  <v-list-item-title>Reset</v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-menu>
+            <prism-editor
+              v-model="html"
+              :highlight="highlighter"
               class="content-editor-worksheet-html"
-              label="Modify this HTML code to create a custom wrapper page for the GeoGebra applet"
-              auto-grow
-              rows="4"
-              clearable
-              @click:clear="clearHTML"
-              @change="html = $event"
+              @blur="updateHTML"
             />
           </v-col>
         </v-row>
@@ -91,8 +100,23 @@
 <script>
 /* global GGBApplet */
 /* global setupInteractions */
+
+// import Prism Editor
+import { PrismEditor } from 'vue-prism-editor'
+import 'vue-prism-editor/dist/prismeditor.min.css' // import the styles somewhere
+
+// import highlighting library (you can use any library you want just return html string)
+import { highlight, languages } from 'prismjs/components/prism-core'
+import 'prismjs/components/prism-clike'
+import 'prismjs/components/prism-javascript'
+import 'prismjs/components/prism-markup'
+import 'prismjs/themes/prism-tomorrow.css'
 import he from 'he'
+
 export default {
+  components: {
+    PrismEditor,
+  },
   props: {
     disabled: {
       type: Boolean,
@@ -111,6 +135,7 @@ export default {
     geogebra: null,
     forceUpdate: false,
     applet: null,
+    liveHTML: null,
   }),
   computed: {
     id() {
@@ -205,12 +230,12 @@ export default {
     customWrapper() {
       const { html, id } = this
       const preview = html.replace('id="ggb-element"', 'id="ggb-' + id + '"')
-      const script = he.unescape(
-        he.escape(html)
-          .match(/(?<=&lt;script&gt;)(?:(?:.|\n)*)(?=&lt;\/script&gt;)/gm)
-          .toString()
-      ).replace('function setupInteractions(', 'if (undefined === this.setupInteractions) {this.setupInteractions = {}}; this.setupInteractions["' + id + '"] = function setupInteractions(')
       try {
+        const script = he.unescape(
+          he.escape(html)
+            .match(/(?<=&lt;script&gt;)(?:(?:.|\n)*)(?=&lt;\/script&gt;)/gmi)
+            .toString()
+        ).replace('function setupInteractions(', 'if (undefined === this.setupInteractions) {this.setupInteractions = {}}; this.setupInteractions["' + id + '"] = function setupInteractions(')
         const fn = Function(script) // eslint-disable-line no-new-func
         fn()
       } catch (err) {
@@ -229,16 +254,10 @@ export default {
           '  }\n' +
           '  <' + '/script>\n' + // Have to split up script tag or else ESLint + Nuxt get confused
           '</div>'
-        return doc || defaultHTML
+        return this.liveHTML || doc || defaultHTML
       },
       set(v) {
-        this.$apollo.mutate({
-          mutation: require('~/graphql/UpdateWorksheetDocument'),
-          variables: {
-            id: this.id,
-            document: v,
-          },
-        })
+        this.liveHTML = v
       },
     },
   },
@@ -281,6 +300,27 @@ export default {
     this.applet = applet
   },
   methods: {
+    updateHTML() {
+      this.$apollo.mutate({
+        mutation: require('~/graphql/UpdateWorksheetDocument'),
+        variables: {
+          id: this.id,
+          document: this.liveHTML,
+        },
+      })
+    },
+    highlighter(code) {
+      const scriptParts = he.escape(code)
+        .match(/(?<=&lt;script&gt;)(?:(?:.|\n)*)(?=&lt;\/script&gt;)/gmi)
+      code = highlight(code, languages.markup, 'html')
+      if (scriptParts) {
+        scriptParts.forEach((js) => {
+          js = he.unescape(js)
+          code = code.replace(js, highlight(js, languages.js))
+        })
+      }
+      return code // returns html
+    },
     deleteWorksheet() {
       if (confirm('Are you sure you want to delete this worksheet?')) {
         const variables = {
@@ -288,7 +328,7 @@ export default {
           challengeId: this.worksheet.challenge_id,
           number: this.number,
         }
-        this.$db.delete('worksheet', variables, this.worksheet.challenge_id)
+        this.$db.delete({ worksheet: true }, 'challenge', variables, this.worksheet.challenge_id)
       }
     },
     loadGGB() {

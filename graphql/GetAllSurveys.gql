@@ -1,0 +1,5 @@
+query GetAllSurveys($episodeId: uuid = "") {
+  survey(where: {story_chapter_id: {_eq: $episodeId}}) {
+    id
+  }
+}

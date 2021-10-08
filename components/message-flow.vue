@@ -18,32 +18,38 @@
             <h2>#{{ phaseIndex + 1 }}: {{ phase.title }}</h2>
             <p>{{ phase.specs }}</p>
           </div>
-          <!-- :get-child-payload="setDragIndex" -->
           <container
             :key="phase.id + '-messages'"
             group-name="episode-messages"
             drag-handle-selector=".content-editor-draggable-handle"
+            :get-child-payload="(index) => {
+              const msg = topLevelMessages(phase)[index]
+              const {id, number} = msg
+              setDraggedMessageInfo({id, number, index})
+            }"
             @drag-start="
               setDragSource({
                 ...$event,
                 dragSource: phase,
+                fromPhase: phase.id,
+                fromParentIsNull: true
               })
             "
             @drop="
               moveMessage({
                 ...$event,
                 dragTarget: phase,
+                toPhase: phase.id,
+                toParentIsNull: true
               })
             "
           >
             <message-group
-              v-for="message in phases[phaseIndex].prompts.filter(
-                (p) => p.parent === null
-              )"
+              v-for="message in topLevelMessages(phase)"
               :key="message.id"
-              :all-messages-in-this-phase="phases[phaseIndex].prompts"
+              :all-messages-in-this-phase="phase.prompts"
               :message="message"
-              :deletable="phases[phaseIndex].prompts.length > 1"
+              :deletable="phase.prompts.length > 1"
               :disabled="editingProhibited"
               :course-name="storyId"
             />
@@ -70,7 +76,7 @@
 
 <script>
 import { Container } from 'vue-smooth-dnd'
-import { mapGetters } from 'vuex'
+import { mapGetters, mapMutations, mapActions } from 'vuex'
 
 export default {
   components: {
@@ -120,6 +126,18 @@ export default {
     },
   },
   methods: {
+    ...mapMutations([
+      'setDraggedMessageInfo',
+      'setDragSource',
+    ]),
+    ...mapActions([
+      'moveMessage',
+    ]),
+    topLevelMessages(phase) {
+      return phase.prompts.filter(
+        p => p.parent === null
+      )
+    },
     addSurvey() {
       this.$apollo.mutate({
         mutation: require('~/graphql/AddSurvey'),
