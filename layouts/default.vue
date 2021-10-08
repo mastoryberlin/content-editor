@@ -315,6 +315,8 @@ export default {
 </script>
 
 <style lang="sass">
+video
+  width: 33%
 .v-treeview-node
   cursor: pointer
 .content-editor
