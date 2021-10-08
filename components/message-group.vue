@@ -192,7 +192,6 @@
         </v-row>
         <v-btn
           fab
-          size="12"
           :disabled="disabled"
           color="green"
           class="content-editor-draggable-add"
@@ -202,6 +201,43 @@
             mdi-plus
           </v-icon>
         </v-btn>
+        <v-menu offset-x left>
+          <template #activator="{on, attrs}">
+            <v-btn
+              fab
+              x-small
+              :disabled="disabled"
+              class="content-editor-draggable-add-menu"
+              v-bind="attrs"
+              v-on="on"
+            >
+              <v-icon>mdi-dots-horizontal</v-icon>
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item v-for="item in addMenu" :key="item.title" @click="item.action(message, message.parent, message.section_id)">
+              <v-list-item-title v-text="item.title" />
+            </v-list-item>
+          </v-list>
+        </v-menu>
+        <v-dialog v-model="addMessagesFromFlowTextDialogVisible" max-width="80%">
+          <v-card elevation="7">
+            <v-card-title v-text="'Add messages from flow text script'" />
+            <v-card-text>
+              <v-textarea v-model="flowText" outlined clearable auto-grow autofocus />
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer />
+              <v-btn @click="addMessagesFromFlowTextDialogVisible = false">
+                Cancel
+              </v-btn>
+              <v-btn color="green" @click="addMessagesFromFlowText">
+                Create Messages
+              </v-btn>
+              <v-spacer />
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
       </v-container>
     </v-sheet>
   </draggable>
@@ -245,6 +281,12 @@ export default {
       uploadFailedAlert: null,
       url: null,
       preview: false,
+      addMessagesFromFlowTextDialogVisible: false,
+      addMessagesContext: null,
+      flowText: '',
+      addMenu: [
+        { title: 'Add messages from flow text script', action: this.showAddMessagesFromFlowTextDialog },
+      ],
     }
   },
   computed: {
@@ -283,6 +325,88 @@ export default {
     ...mapActions([
       'moveMessage',
     ]),
+    showAddMessagesFromFlowTextDialog(previousMessage, parentId, phaseId) {
+      this.addMessagesContext = { previousMessage, parentId, phaseId }
+      this.addMessagesFromFlowTextDialogVisible = true
+    },
+    async addMessagesFromFlowText() {
+      const ctx = this.addMessagesContext
+      if (ctx) {
+        const { previousMessage, parentId, phaseId } = ctx
+        const firstNumber = previousMessage.number + 1
+        const flowText = this.flowText
+        const matches = Array.from(flowText.matchAll(/(?<=^|\n)\s*(nick|alicia|vz|victoria|(?:the )?professor|(?:dr\.? )?cam(arena)?)\s*(?=\n)/gi, true))
+        const senderAliases = {
+          Professor: ['the professor', 'professor', 'camarena', 'dr camarena', 'dr. camarena'],
+          Alicia: ['alicia'],
+          Nick: ['nick'],
+          VZ: ['vz', 'victoria'],
+        }
+        const senderIds = Object.keys(senderAliases)
+        const messages = []
+        let parent = parentId
+        let logic
+        for (let i = 0; i < matches.length; i++) {
+          const match = matches[i]
+          if (messages.length === 0) {
+            logic = '*** THIS MESSAGE BLOCK WAS CREATED FROM A SCRIPT ***\n*** PLEASE GO THROUGH THE MESSAGES AND CORRECT THEM ***' +
+                  flowText.substr(0, match.index)
+            const { data: { addMessage: { id } } } = await this.$apollo.mutate({
+              mutation: require('~/graphql/AddMessage'),
+              variables: {
+                phaseId,
+                number: firstNumber,
+                logic,
+                type: 'nestable',
+                parent: parentId,
+                parentIsNull: parentId === null,
+              },
+            })
+            parent = id
+          }
+          const alias = match[1].toLowerCase()
+          let sender = senderIds.find(id => senderAliases[id].includes(alias))
+          logic = sender
+            ? ''
+            : '*** THIS MESSAGE WAS MARKED AS COMING FROM "' + match[1] + ' IN THE SCRIPT" - PLEASE SELECT THE CORRECT SENDER MANUALLY, THEN ADD FLOW CONTROL LOGIC! ***'
+          sender ||= 'Professor'
+          const nextIndex = i + 1
+          let text
+          const begin = match.index + match[0].length
+          if (nextIndex < matches.length) {
+            const end = matches[nextIndex].index
+            const len = end - begin
+            text = flowText.substr(begin, len)
+          } else {
+            text = flowText.substr(begin)
+          }
+          text = text.trim().replaceAll('\n', ' ')
+          console.log('Adding message #' + nextIndex + ' from ' + sender + ', logic: ' + logic, text)
+          messages.push({
+            sender_id: sender,
+            logic,
+            type: 'text',
+            text,
+            attachment: null,
+            section_id: phaseId,
+            parent,
+            number: nextIndex,
+          })
+        }
+        await this.$apollo.mutate({
+          mutation: require('~/graphql/AddMessages'),
+          variables: {
+            messages,
+            phaseId,
+            parent,
+            parentIsNull: parent === null,
+            firstNumber,
+            numberOfMessages: messages.length,
+          },
+        })
+      }
+      this.addMessagesFromFlowTextDialogVisible = false
+    },
     draggedMessage(index) {
       const msg = this.children[index]
       const id = msg.id

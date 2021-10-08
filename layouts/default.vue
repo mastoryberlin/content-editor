@@ -342,6 +342,10 @@ export default {
       position: absolute
       bottom: -24px
       right: 24px
+      &-menu
+        position: absolute
+        bottom: -16px
+        right: 96px
     &-logic
       font-style: italic
     &-text-message
