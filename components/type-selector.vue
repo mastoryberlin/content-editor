@@ -1,7 +1,6 @@
 <template lang="html">
   <div class="type-selector-wrapper">
-    <span>This block represents a&nbsp;</span>
-    <span v-if="disabled">a nestable logic block. You cannot change its type as long as multiple messages belong to it.</span>
+    <span v-if="disabled">You cannot change the type of this block as long as multiple messages belong to it.</span>
     <v-btn-toggle
       v-else
       :value="indexOfType"
@@ -90,17 +89,7 @@ export default {
       set(v) {
         const my = this.message
         if (v && v !== my.type) {
-          if (v === 'nestable') {
-            // Change from message type to logic block
-            const variables = {
-              sender_id: my.sender_id,
-              type: my.type,
-              text: my.text,
-              attachment: my.attachment,
-              parent: my.id,
-            }
-            this.$db.add({ message: true }, 'phase', null, variables, my.section_id)
-          } else if (my.type === 'nestable') {
+          if (my.type === 'nestable') {
             // Change FROM logic block to some message type
             // This is only possible for nestables with a single child msg.
             const child = this.children[0]
@@ -115,7 +104,7 @@ export default {
                 senderId: child.sender_id,
               },
             })
-            this.$db.delete({ message: true }, 'phase', child, my.section_id)
+            this.$db.delete({ message: true }, 'phase', child, my.section_id, { parent: my.id, parentIsNull: false })
           }
           this.$apollo.mutate({
             mutation: require('~/graphql/UpdateMessageType'),
@@ -124,6 +113,18 @@ export default {
               type: v,
             },
           })
+          if (v === 'nestable') {
+            // Change from message type to logic block
+            const variables = {
+              sender_id: my.sender_id,
+              type: my.type,
+              text: my.text,
+              attachment: my.attachment,
+              parent: my.id,
+              parentIsNull: false,
+            }
+            this.$db.add({ message: true }, 'phase', null, variables, my.section_id)
+          }
         }
       },
     },

@@ -17,6 +17,7 @@
           </v-col>
 
           <v-col class="content-editor-draggable-content">
+            #{{ message.number }}
             <div class="content-editor-draggable-header">
               <v-textarea
                 :value="message.logic"
@@ -32,6 +33,38 @@
                 label="Flow control logic"
                 @change="changeMessage({ element: 'logic', to: $event })"
               >
+                <template #prepend>
+                  <v-menu
+                    v-if="isNestable"
+                    bottom
+                    offset-y
+                  >
+                    <template #activator="menuActivator">
+                      <v-avatar
+                        v-bind="menuActivator.attrs"
+                        v-on="menuActivator.on"
+                      >
+                        <v-icon
+                          size="36"
+                          color="purple lighten-3"
+                        >
+                          mdi-arrow-decision
+                        </v-icon>
+                      </v-avatar>
+                    </template>
+                    <v-list>
+                      <v-list-item @click="explodeNestable">
+                        <v-list-item-title>Explode this block so all its child messages become independent</v-list-item-title>
+                      </v-list-item>
+                    </v-list>
+                  </v-menu>
+
+                  <sender-selector
+                    v-else
+                    :disabled="disabled"
+                    :message="message"
+                  />
+                </template>
                 <template #append-outer>
                   <v-tooltip bottom>
                     <template #activator="{ on, attrs }">
@@ -73,14 +106,10 @@
             </div>
 
             <type-selector
+              v-if="!isNestable || children.length < 2"
               :disabled="disabled"
               :message="message"
               :children="children"
-            />
-            <sender-selector
-              v-if="message.type !== 'nestable'"
-              :disabled="disabled"
-              :message="message"
             />
 
             <template v-if="enableFileUpload">
@@ -156,10 +185,14 @@
             />
 
             <container
-              v-else
+              v-if="isNestable"
               group-name="episode-messages"
               drag-handle-selector=".content-editor-draggable-handle"
-              :get-child-payload="draggedMessage"
+              :get-child-payload="(index) => {
+                const msg = children[index]
+                const {id, number} = msg
+                setDraggedMessageInfo({id, number, index})
+              }"
               @drag-start="
                 setDragSource({
                   ...$event,
@@ -296,6 +329,9 @@ export default {
     enableFileUpload() {
       return ['audio', 'video', 'image'].includes(this.message.type)
     },
+    isNestable() {
+      return this.message.type === 'nestable'
+    },
     showTextField() {
       return ['text', 'image', 'audio', 'video'].includes(this.message.type)
     },
@@ -406,11 +442,6 @@ export default {
       }
       this.addMessagesFromFlowTextDialogVisible = false
     },
-    draggedMessage(index) {
-      const msg = this.children[index]
-      const id = msg.id
-      this.setDraggedMessageInfo({ id, index })
-    },
     async upload() {
       this.loading = true
       const fd = new FormData()
@@ -459,7 +490,9 @@ export default {
     async deleteMessage() {
       if (confirm('Are you sure you want to delete this message?')) {
         // this.updateEpisodeEditStateToSpecsIfNull(editField)
-        await this.$db.delete({ message: true }, 'phase', this.message, this.message.section_id)
+        const parent = this.message.parent
+        const variables = { parent, parentIsNull: parent === null }
+        await this.$db.delete({ message: true }, 'phase', this.message, this.message.section_id, variables)
       }
     },
     async changeMessage({ element, to }) {
@@ -482,9 +515,13 @@ export default {
       } else {
         variables.parent = after.parent
       }
+      variables.parentIsNull = variables.parent === null
       variables.phaseId = after.section_id
       variables.number = after.number + 1
       await this.$db.add({ message: true }, 'phase', null, variables, after.section_id)
+    },
+    explodeNestable() {
+
     },
   },
 }
