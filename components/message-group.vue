@@ -525,7 +525,20 @@ export default {
       await this.$db.add({ message: true }, 'phase', null, variables, after.section_id)
     },
     explodeNestable() {
-
+      if (confirm('Are you sure you want to explode this message block? Undo is not yet available...')) {
+        const { id, parent, number, section_id } = this.message // eslint-disable-line camelcase
+        this.$apollo.mutate({
+          mutation: require('~/graphql/ExplodeMessageBlock'),
+          variables: {
+            id,
+            phaseId: section_id,
+            blockParent: parent,
+            blockParentIsNull: parent === null,
+            blockNumberMinusOne: number - 1,
+            numberOfMessages: this.children.length,
+          },
+        })
+      }
     },
     restoreNumbers() {
       this.children.forEach((msg, i) => {

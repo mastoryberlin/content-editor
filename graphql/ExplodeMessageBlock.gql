@@ -1,0 +1,19 @@
+mutation ExplodeMessageBlock($id: uuid!, $phaseId: uuid!, $blockParent: uuid = null, $blockParentIsNull: Boolean = true, $blockNumberMinusOne: Int!, $numberOfMessages: Int!) {
+  makeRoomTopLevel: update_prompt(where: {section_id: {_eq: $phaseId}, _and: {number: {_gt: $blockNumberMinusOne}, _and: {parent: {_is_null: true}}}}, _inc: {number: $numberOfMessages}) @include(if: $blockParentIsNull) {
+    affected_rows
+  }
+  makeRoomWithinSameParent: update_prompt(where: {section_id: {_eq: $phaseId}, _and: {number: {_gt: $blockNumberMinusOne}, _and: {parent: {_eq: $blockParent}}}}, _inc: {number: $numberOfMessages}) @skip(if: $blockParentIsNull) {
+    affected_rows
+  }
+
+  changeParentTopLevel: update_prompt(where: {parent: {_eq: $id}}, _set: {parent: null}, _inc: {number: $blockNumberMinusOne}) @include(if: $blockParentIsNull) {
+    affected_rows
+  }
+  changeParentNestedCase: update_prompt(where: {parent: {_eq: $id}}, _set: {parent: $blockParent}, _inc: {number: $blockNumberMinusOne}) @skip(if: $blockParentIsNull) {
+    affected_rows
+  }
+
+  delete_prompt_by_pk(id: $id) {
+    id
+  }
+}
