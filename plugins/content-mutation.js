@@ -66,7 +66,7 @@ export default ({ app }, inject) => {
           })
         }
         variables = { id, ...variablesForThisElement }
-        if (element.number && ['episode', 'phase', 'message', 'question', 'worksheet'].includes(key)) {
+        if (undefined === variablesForThisElement.number && !!element.number && ['episode', 'phase', 'message', 'question', 'worksheet'].includes(key)) {
           variables.number = element.number
         }
         if (!['story', 'survey', 'topic', 'replica', 'challenge', 'intent', 'subintent'].includes(key)) {

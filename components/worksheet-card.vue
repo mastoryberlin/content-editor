@@ -60,15 +60,15 @@
               hint="Enter the IDs of all GeoGebra objects in the worksheet which serve as output parameters"
             />
             <label>Modify this HTML code to create a custom wrapper page for the GeoGebra applet:</label>
-            <v-menu>
+            <v-menu offset-y>
               <template #activator="{on, attrs}">
                 <v-btn v-bind="attrs" v-on="on">
                   <v-icon>mdi-menu</v-icon>
                 </v-btn>
               </template>
               <v-list>
-                <v-list-item @click="clearHTML">
-                  <v-list-item-title>Reset</v-list-item-title>
+                <v-list-item v-for="item in htmlMenu" :key="item.title" @click="item.action">
+                  <v-list-item-title v-text="item.title" />
                 </v-list-item>
               </v-list>
             </v-menu>
@@ -130,13 +130,22 @@ export default {
   emits: [
     'add-worksheet',
   ],
-  data: () => ({
-    file: null,
-    geogebra: null,
-    forceUpdate: false,
-    applet: null,
-    liveHTML: null,
-  }),
+  data() {
+    return {
+      file: null,
+      geogebra: null,
+      forceUpdate: false,
+      applet: null,
+      liveHTML: null,
+      htmlMenu: [
+        { title: 'Insert button', action: () => { this.insertHTML('button') } },
+        { title: 'Insert number input', action: () => { this.insertHTML('number input') } },
+        { title: 'Insert range input', action: () => { this.insertHTML('range input') } },
+        { title: 'Insert text input', action: () => { this.insertHTML('text input') } },
+        { title: 'Reset', action: this.clearHTML },
+      ],
+    }
+  },
   computed: {
     id() {
       return this.worksheet.id
@@ -300,6 +309,38 @@ export default {
     this.applet = applet
   },
   methods: {
+    insertHTML(elementType) {
+      const id = prompt('Please enter an ID for the new ' + elementType + ':')
+      if (id) {
+        let html = '<' + elementType + ' id="' + id + '"'
+        let js = id + '.addEventListener('
+        switch (elementType) {
+          case 'button':
+            html += '>Click me!</button>'
+            js += "'click', () => {\n      ggbApplet.evalCommand('P_{" + id + "} = (0, 0)')\n    })"
+            break
+          case 'number input':
+            html = html.replace('number input', 'input type="number"') + ' min="-10" max="10" value="0">'
+            js += "'change', (e) => {\n      const myNumber = e.target.value\n      ggbApplet.evalCommand('P_{" + id + "} = (0, ' + myNumber + ')')\n    })"
+            break
+          case 'range input':
+            html = html.replace('range input', 'input type="range"') + ' min="-10" max="10" step="0.01" value="0">'
+            js += "'input', (e) => {\n      const myNumber = e.target.value\n      ggbApplet.evalCommand('P_{" + id + "} = (0, ' + myNumber + ')')\n    })"
+            break
+          case 'text input':
+            html = html.replace('number input', 'input type="text"') + '>'
+            js += "'change', (e) => {\n      const myText = e.target.value\n    })"
+            break
+          default:
+            html += '></' + elementType + '>'
+            js = ''
+        }
+        this.liveHTML = this.html
+          .replace(/(<script>)/i, html + '\n  $1')
+          .replace(/(}\n\s*<\/script>)/i, '  var ' + id + ' = document.getElementById(\'' + id + '\')\n    ' + js + '\n  $1')
+        this.updateHTML()
+      }
+    },
     updateHTML() {
       this.$apollo.mutate({
         mutation: require('~/graphql/UpdateWorksheetDocument'),
@@ -357,6 +398,7 @@ export default {
         'Any HTML code entered so far will be permanently lost!'
       )) {
         this.html = null
+        this.liveHTML = null
       }
     },
   },
