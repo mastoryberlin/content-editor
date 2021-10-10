@@ -366,10 +366,9 @@ export default {
           }
           const alias = match[1].toLowerCase()
           let sender = senderIds.find(id => senderAliases[id].includes(alias))
-          logic = sender
-            ? ''
-            : '*** THIS MESSAGE WAS MARKED AS COMING FROM "' + match[1] + ' IN THE SCRIPT" - PLEASE SELECT THE CORRECT SENDER MANUALLY, THEN ADD FLOW CONTROL LOGIC! ***'
-          sender ||= 'Professor'
+          const unknownSenderHint = '*** ' + 'THIS MESSAGE WAS MARKED AS COMING FROM "' + match[1] + '" IN THE SCRIPT - PLEASE SELECT THE CORRECT SENDER MANUALLY, THEN ADD FLOW CONTROL LOGIC!' + ' ***'
+          logic = sender ? '' : unknownSenderHint
+          if (!sender) { sender = 'Professor' }
           const nextIndex = i + 1
           let text
           const begin = match.index + match[0].length
@@ -381,7 +380,7 @@ export default {
             text = flowText.substr(begin)
           }
           text = text.trim().replaceAll('\n', ' ')
-          console.log('Adding message #' + nextIndex + ' from ' + sender + ', logic: ' + logic, text)
+          // console.log('Adding message #' + nextIndex + ' from ' + sender + ', logic: ' + logic, text)
           messages.push({
             sender_id: sender,
             logic,
