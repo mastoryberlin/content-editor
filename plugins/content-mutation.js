@@ -46,7 +46,7 @@ export default ({ app }, inject) => {
       return resp
     },
 
-    async delete(hierarchyData, parent, element, parentId) {
+    async delete(hierarchyData, parent, element, parentId, variablesForThisElement = {}) {
       const keys = Object.keys(hierarchyData)
       const id = element.id
 
@@ -65,7 +65,7 @@ export default ({ app }, inject) => {
             this.delete(hierarchyData[key], key, el, id)
           })
         }
-        variables = { id }
+        variables = { id, ...variablesForThisElement }
         if (element.number && ['episode', 'phase', 'message', 'question', 'worksheet'].includes(key)) {
           variables.number = element.number
         }

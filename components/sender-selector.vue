@@ -1,11 +1,60 @@
 <template lang="html">
-  <div class="sender-selector-wrapper">
-    <span>&nbsp;from&nbsp;</span>
-    <v-btn-toggle
-      :value="Object.keys(senderIds).indexOf(type)"
-      @change="type = Object.keys(senderIds)[$event]"
+  <v-menu
+    bottom
+    offset-y
+  >
+    <template #activator="menuActivator">
+      <v-avatar
+        v-bind="menuActivator.attrs"
+        v-on="menuActivator.on"
+      >
+        <img
+          :src="`/npcs/${senderId.toLowerCase()}.png`"
+          :alt="senderId"
+        >
+      </v-avatar>
+    </template>
+    <v-card>
+      <v-container>
+        <v-hover
+          v-for="m in Object.keys(senderIds).filter(k => k != senderId)"
+          v-slot="{hover}"
+          :key="m"
+        >
+          <v-row
+            no-gutters
+            class="pa-3"
+            :class="hover ? 'mood-selector-mood-hover' : null"
+          >
+            <v-col
+              cols="12"
+              @click="senderId = m"
+            >
+              <v-tooltip top>
+                <template #activator="npcSelectorActivator">
+                  <v-avatar
+                    v-bind="npcSelectorActivator.attrs"
+                    size="48"
+                    v-on="npcSelectorActivator.on"
+                  >
+                    <v-img
+                      :src="`/npcs/${m.toLowerCase()}.png`"
+                      :alt="m"
+                    />
+                  </v-avatar>
+                </template>
+                <span v-text="m" />
+              </v-tooltip>
+            </v-col>
+          </v-row>
+        </v-hover>
+      </v-container>
+    </v-card>
+  </v-menu>
+  <!-- <v-btn-toggle
+      :value="Object.keys(senderIds).indexOf(senderId)"
+      @change="senderId = Object.keys(senderIds)[$event]"
     >
-      <!-- class="type-selector-type" -->
       <v-btn
         v-for="t in Object.keys(senderIds)"
         :key="t"
@@ -14,10 +63,10 @@
       >
         {{ senderIds[t].icon }}
 
-        <span v-show="type === t" v-text="senderIds[t].tooltip" />
+        <span v-show="senderId === t" v-text="senderIds[t].tooltip" />
       </v-btn>
     </v-btn-toggle>
-  </div>
+  </div> -->
 </template>
 
 <script>
@@ -39,26 +88,18 @@ export default {
       },
       Alicia: {
         icon: 'alicia',
-
       },
       Nick: {
-
         icon: 'nick',
-
       },
       VZ: {
-
         icon: 'vz',
-
       },
     },
     open: false,
   }),
   computed: {
-    displayType() {
-      return 'This message has the type ' + this.message.type
-    },
-    type: {
+    senderId: {
       get() {
         return this.message.sender_id
       },
