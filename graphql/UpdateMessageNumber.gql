@@ -1,0 +1,5 @@
+mutation UpdateMessageNumber($id: uuid!, $number: Int!) {
+  update_prompt_by_pk(pk_columns: {id: $id}, _set: {number: $number}) {
+    type
+  }
+}

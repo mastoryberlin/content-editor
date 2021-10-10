@@ -8,6 +8,7 @@ export default {
       fromPhase: null,
       fromParentIsNull: false,
     },
+    selected: [],
     // isCommittingChanges: false,
   }),
   mutations: {
@@ -24,6 +25,22 @@ export default {
         state.dragInfo.fromPhase = fromPhase
         state.dragInfo.fromParentIsNull = fromParentIsNull
       }
+    },
+    select: (state, id) => {
+      const sel = state.selected
+      if (!sel.includes(id)) {
+        sel.push(id)
+      }
+    },
+    unselect: (state, id) => {
+      const sel = state.selected
+      const index = sel.indexOf(id)
+      if (index !== null) {
+        sel.splice(index, 1)
+      }
+    },
+    clearSelection: (state) => {
+      state.selected = []
     },
     // setEditedBy: (state, { who, element }) => {
     //   const parts = element.split('/')

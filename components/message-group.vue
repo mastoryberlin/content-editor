@@ -14,6 +14,23 @@
             >
               mdi-drag
             </v-icon>
+            <v-checkbox v-model="checked" />
+            <v-tooltip bottom>
+              <template #activator="{ on, attrs }">
+                <v-hover v-slot="{ hover }">
+                  <v-icon
+                    v-if="checked"
+                    :color="hover ? 'red' : null"
+                    v-bind="attrs"
+                    v-on="on"
+                    @click="deleteSelected"
+                  >
+                    mdi-delete
+                  </v-icon>
+                </v-hover>
+              </template>
+              <span>Delete all {{ selected.length }} selected messages</span>
+            </v-tooltip>
           </v-col>
 
           <v-col class="content-editor-draggable-content">
@@ -53,8 +70,8 @@
                       </v-avatar>
                     </template>
                     <v-list>
-                      <v-list-item @click="explodeNestable">
-                        <v-list-item-title>Explode this block so all its child messages become independent</v-list-item-title>
+                      <v-list-item v-for="(item, i) in nestableMenu" :key="i" @click="item.action">
+                        <v-list-item-title v-text="item.title" />
                       </v-list-item>
                     </v-list>
                   </v-menu>
@@ -277,7 +294,7 @@
 </template>
 
 <script>
-import { mapMutations, mapActions } from 'vuex'
+import { mapState, mapMutations, mapActions } from 'vuex'
 import { Container, Draggable } from 'vue-smooth-dnd'
 
 export default {
@@ -320,9 +337,28 @@ export default {
       addMenu: [
         { title: 'Add messages from flow text script', action: this.showAddMessagesFromFlowTextDialog },
       ],
+      nestableMenu: [
+        { title: 'Explode this block so all child messages become independent', action: this.explodeNestable },
+        { title: 'Restore message order in this block (click this when encountering Drag&Drop malfunction)', action: this.restoreNumbers },
+      ],
     }
   },
   computed: {
+    ...mapState([
+      'selected',
+    ]),
+    checked: {
+      get() {
+        return this.selected.includes(this.message)
+      },
+      set(v) {
+        if (v) {
+          this.select(this.message)
+        } else {
+          this.unselect(this.message)
+        }
+      },
+    },
     children() {
       return this.allMessagesInThisPhase.filter(m => m.parent === this.message.id)
     },
@@ -357,6 +393,9 @@ export default {
     ...mapMutations([
       'setDraggedMessageInfo',
       'setDragSource',
+      'select',
+      'unselect',
+      'clearSelection',
     ]),
     ...mapActions([
       'moveMessage',
@@ -521,7 +560,42 @@ export default {
       await this.$db.add({ message: true }, 'phase', null, variables, after.section_id)
     },
     explodeNestable() {
-
+      if (confirm('Are you sure you want to explode this message block? Undo is not yet available...')) {
+        const { id, parent, number, section_id } = this.message // eslint-disable-line camelcase
+        this.$apollo.mutate({
+          mutation: require('~/graphql/ExplodeMessageBlock'),
+          variables: {
+            id,
+            phaseId: section_id,
+            blockParent: parent,
+            blockParentIsNull: parent === null,
+            blockNumberMinusOne: number - 1,
+            numberOfMessages: this.children.length,
+          },
+        })
+      }
+    },
+    restoreNumbers() {
+      this.children.forEach((msg, i) => {
+        this.$apollo.mutate({
+          mutation: require('~/graphql/UpdateMessageNumber'),
+          variables: {
+            id: msg.id,
+            number: i + 1,
+          },
+        })
+      })
+    },
+    deleteSelected() {
+      const sel = this.selected
+      if (confirm('Are you sure you want to delete all ' + sel.length + ' selected messages?')) {
+        sel.forEach((msg) => {
+          const parent = msg.parent
+          const variables = { parent, parentIsNull: parent === null }
+          this.$db.delete({ message: true }, 'phase', msg, msg.section_id, variables)
+        })
+        this.clearSelection()
+      }
     },
   },
 }
