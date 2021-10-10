@@ -1,0 +1,11 @@
+query GetPhases {
+  story_section(order_by: {number: asc}) {
+    title
+    id
+    number
+    chapter_id
+    prompts(order_by: {number: asc}) {
+      id
+    }
+  }
+}

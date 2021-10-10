@@ -1,0 +1,11 @@
+query GetMessages {
+  prompt {
+    id
+    type
+    text
+    attachment
+    parent
+    number
+    section_id
+  }
+}
