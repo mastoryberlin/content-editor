@@ -53,8 +53,8 @@
                       </v-avatar>
                     </template>
                     <v-list>
-                      <v-list-item @click="explodeNestable">
-                        <v-list-item-title>Explode this block so all its child messages become independent</v-list-item-title>
+                      <v-list-item v-for="(item, i) in nestableMenu" :key="i" @click="item.action">
+                        <v-list-item-title v-text="item.title" />
                       </v-list-item>
                     </v-list>
                   </v-menu>
@@ -320,6 +320,10 @@ export default {
       addMenu: [
         { title: 'Add messages from flow text script', action: this.showAddMessagesFromFlowTextDialog },
       ],
+      nestableMenu: [
+        { title: 'Explode this block so all child messages become independent', action: this.explodeNestable },
+        { title: 'Restore message order in this block (click this when encountering Drag&Drop malfunction)', action: this.restoreNumbers },
+      ],
     }
   },
   computed: {
@@ -522,6 +526,17 @@ export default {
     },
     explodeNestable() {
 
+    },
+    restoreNumbers() {
+      this.children.forEach((msg, i) => {
+        this.$apollo.mutate({
+          mutation: require('~/graphql/UpdateMessageNumber'),
+          variables: {
+            id: msg.id,
+            number: i + 1,
+          },
+        })
+      })
     },
   },
 }
