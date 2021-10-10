@@ -1,4 +1,4 @@
-mutation UpdateWorksheetDocument($id: uuid!, $document: xml) {
+mutation UpdateWorksheetDocument($id: uuid!, $document: String) {
   update_geogebra_worksheet_by_pk(pk_columns: {id: $id}, _set: {document: $document}) {
     id
   }

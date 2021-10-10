@@ -1,5 +1,5 @@
 <template>
-  <draggable>
+  <draggable :class="'content-editor-draggable-' + message.type">
     <v-sheet
       elevation="2"
       rounded
@@ -424,8 +424,8 @@ export default {
         for (let i = 0; i < matches.length; i++) {
           const match = matches[i]
           if (messages.length === 0) {
-            logic = '*** THIS MESSAGE BLOCK WAS CREATED FROM A SCRIPT ***\n*** PLEASE GO THROUGH THE MESSAGES AND CORRECT THEM ***' +
-                  flowText.substr(0, match.index)
+            logic = '*** THIS MESSAGE BLOCK WAS CREATED FROM A SCRIPT ***\n*** PLEASE GO THROUGH THE MESSAGES AND CORRECT THEM ***\n\n' +
+                    flowText.substr(0, match.index)
             const { data: { addMessage: { id } } } = await this.$apollo.mutate({
               mutation: require('~/graphql/AddMessage'),
               variables: {
