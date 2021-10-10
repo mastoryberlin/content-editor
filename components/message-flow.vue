@@ -48,6 +48,7 @@
               v-for="message in topLevelMessages(phase)"
               :key="message.id"
               :all-messages-in-this-phase="phase.prompts"
+              :npcs-available-in-this-phase="availableNPCs[phase.id]"
               :message="message"
               :deletable="phase.prompts.length > 1"
               :disabled="editingProhibited"
@@ -62,13 +63,6 @@
           />
           <finish-work-btn :tab-type="'message-flow'" :button-type="'commit'" />
         </div>
-
-        <!-- <finish-work-btn
-      v-if="data.story_chapter_by_pk.edit.state === 'details'"
-        :may-commit="mayCommitMessageFlow"
-        :loading="isCommittingMessageFlow"
-        @commit="commitMessageFlow"
-      /> -->
       </template>
     </privileged-area>
   </div>
@@ -107,6 +101,20 @@ export default {
         },
       },
     },
+    npcs: {
+      query: require('~/graphql/GetCharacters'),
+      variables() {
+        return { storyId: this.storyId, storyIsNull: false }
+      },
+      update: data => data.inStory,
+    },
+    fallbackNPCs: {
+      query: require('~/graphql/GetCharacters'),
+      variables() {
+        return { storyId: null, storyIsNull: true }
+      },
+      update: data => data.fallback,
+    },
   },
   data: () => ({
   }),
@@ -117,6 +125,18 @@ export default {
       const to = 'edit'
       const { may, storyId } = this
       return to === 'edit' && !may(needs, storyId)
+    },
+    availableNPCs() {
+      let npcs = this.npcs
+      if (npcs.length === 0) { npcs = this.fallbackNPCs }
+      npcs = npcs.map(npc => npc.id)
+      return Object.fromEntries(
+        this.phases.map((phase) => {
+          const { id, meta } = phase
+          const avail = npcs.filter(npc => meta.mood[npc] !== 'unavailable')
+          return [id, avail]
+        })
+      )
     },
     storyId() {
       return this.$route.params.story
