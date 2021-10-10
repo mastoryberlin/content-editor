@@ -186,8 +186,13 @@
                 />
               </div>
               <div v-else-if="message.type === 'image'">
-                <v-img max-width="500px" :src="url || message.attachment" />
+                <v-img
+                  max-width="500px"
+                  :src="url || message.attachment"
+                />
               </div>
+
+              <a v-if="message.attachment" target="_blank" :href="message.attachment">Download link</a>
             </template>
 
             <v-textarea
