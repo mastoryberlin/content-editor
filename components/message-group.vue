@@ -14,6 +14,23 @@
             >
               mdi-drag
             </v-icon>
+            <v-checkbox v-model="checked" />
+            <v-tooltip bottom>
+              <template #activator="{ on, attrs }">
+                <v-hover v-slot="{ hover }">
+                  <v-icon
+                    v-if="checked"
+                    :color="hover ? 'red' : null"
+                    v-bind="attrs"
+                    v-on="on"
+                    @click="deleteSelected"
+                  >
+                    mdi-delete
+                  </v-icon>
+                </v-hover>
+              </template>
+              <span>Delete all {{ selected.length }} selected messages</span>
+            </v-tooltip>
           </v-col>
 
           <v-col class="content-editor-draggable-content">
@@ -277,7 +294,7 @@
 </template>
 
 <script>
-import { mapMutations, mapActions } from 'vuex'
+import { mapState, mapMutations, mapActions } from 'vuex'
 import { Container, Draggable } from 'vue-smooth-dnd'
 
 export default {
@@ -327,6 +344,21 @@ export default {
     }
   },
   computed: {
+    ...mapState([
+      'selected',
+    ]),
+    checked: {
+      get() {
+        return this.selected.includes(this.message)
+      },
+      set(v) {
+        if (v) {
+          this.select(this.message)
+        } else {
+          this.unselect(this.message)
+        }
+      },
+    },
     children() {
       return this.allMessagesInThisPhase.filter(m => m.parent === this.message.id)
     },
@@ -361,6 +393,9 @@ export default {
     ...mapMutations([
       'setDraggedMessageInfo',
       'setDragSource',
+      'select',
+      'unselect',
+      'clearSelection',
     ]),
     ...mapActions([
       'moveMessage',
@@ -550,6 +585,17 @@ export default {
           },
         })
       })
+    },
+    deleteSelected() {
+      const sel = this.selected
+      if (confirm('Are you sure you want to delete all ' + sel.length + ' selected messages?')) {
+        sel.forEach((msg) => {
+          const parent = msg.parent
+          const variables = { parent, parentIsNull: parent === null }
+          this.$db.delete({ message: true }, 'phase', msg, msg.section_id, variables)
+        })
+        this.clearSelection()
+      }
     },
   },
 }
