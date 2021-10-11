@@ -278,8 +278,6 @@ export default {
       id: 'ggbApplet-' + id,
       language: 'en',
       scaleContainerClass: 'ggb-applet',
-      autoHeight: true,
-      allowUpscale: true,
       country: 'US',
       appletOnLoad: (api) => {
         this.geogebra = api

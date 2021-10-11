@@ -56,12 +56,10 @@
             />
           </container>
         </template>
+
         <div class="d-flex flex-row justify-space-between ma-5">
-          <finish-work-btn
-            :tab-type="'message-flow'"
-            :button-type="'issue-pr'"
-          />
-          <finish-work-btn :tab-type="'message-flow'" :button-type="'commit'" />
+          <finish-work-btn tab-type="message-flow" button-type="commit" />
+          <finish-work-btn tab-type="message-flow" button-type="issue-pr" />
         </div>
       </template>
     </privileged-area>

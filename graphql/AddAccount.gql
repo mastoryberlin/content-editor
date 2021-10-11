@@ -1,0 +1,9 @@
+mutation AddAccount($firstName: String!, $lastName: String!, $email: String! = "") {
+  insert_account_one(object: {email: $email, first_name: $firstName, last_name: $lastName}) {
+    last_name
+    first_name
+    id
+    token
+    email
+  }
+}
