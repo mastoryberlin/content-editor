@@ -17,7 +17,7 @@
     <v-card>
       <v-container>
         <v-hover
-          v-for="m in Object.keys(senderIds).filter(k => k != senderId)"
+          v-for="m in npcsAvailableInThisPhase.filter(k => k != senderId)"
           v-slot="{hover}"
           :key="m"
         >
@@ -78,6 +78,10 @@ export default {
     },
     message: {
       type: Object,
+      required: true,
+    },
+    npcsAvailableInThisPhase: {
+      type: Array,
       required: true,
     },
   },

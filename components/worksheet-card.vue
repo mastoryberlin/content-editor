@@ -238,13 +238,15 @@ export default {
     },
     customWrapper() {
       const { html, id } = this
-      const preview = html.replace('id="ggb-element"', 'id="ggb-' + id + '"')
+      const preview = html.replace('id="ggb-element"', 'id="ggb-' + id + '" class="ggb-applet"')
       try {
-        const script = he.unescape(
-          he.escape(html)
-            .match(/(?<=&lt;script&gt;)(?:(?:.|\n)*)(?=&lt;\/script&gt;)/gmi)
-            .toString()
-        ).replace('function setupInteractions(', 'if (undefined === this.setupInteractions) {this.setupInteractions = {}}; this.setupInteractions["' + id + '"] = function setupInteractions(')
+        const script = html
+          .match(/(?<=<script>)(?:(?:.|\n)*)(?=<\/script>)/gmi)
+          .toString()
+          .replace(
+            'function setupInteractions(',
+            'if (undefined === this.setupInteractions) {this.setupInteractions = {}}; this.setupInteractions["' + id + '"] = function setupInteractions('
+          )
         const fn = Function(script) // eslint-disable-line no-new-func
         fn()
       } catch (err) {
@@ -274,9 +276,8 @@ export default {
     const { id, html, worksheet: { ggb } } = this
     const params = {
       id: 'ggbApplet-' + id,
-      width: 800,
-      height: 600,
       language: 'en',
+      scaleContainerClass: 'ggb-applet',
       country: 'US',
       appletOnLoad: (api) => {
         this.geogebra = api

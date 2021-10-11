@@ -1,0 +1,9 @@
+query GetAccounts {
+  account(order_by: {first_name: asc, last_name: asc}) {
+    last_name
+    first_name
+    id
+    token
+    email
+  }
+}

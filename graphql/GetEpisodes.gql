@@ -1,0 +1,12 @@
+query GetEpisodes {
+  story_chapter(order_by: {title: asc}) {
+    title
+    id
+    number
+    story_id
+    sections(order_by: {number: asc}) {
+      id
+      title
+    }
+  }
+}

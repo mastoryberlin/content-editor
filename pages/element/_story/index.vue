@@ -225,13 +225,7 @@
             </draggable>
           </container>
 
-          <finish-work-btn
-            v-if="story.edit.state === 'specs'"
-            :may-commit="mayCommit"
-            commit-message-ext="to enable editing individual episodes"
-            :loading="isCommittingStorySpecs"
-            @commit="commitStorySpecs"
-          />
+          <finish-work-btn tab-type="story-specs" button-type="commit" />
         </v-tab-item>
 
         <v-tab-item class="content-editor-meta">

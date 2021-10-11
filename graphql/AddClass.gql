@@ -1,0 +1,7 @@
+mutation AddClass($name: String = "", $teacher_id: uuid = "") {
+  insert_class_one(object: {name: $name, teacher_id: $teacher_id}) {
+    id
+    name
+    teacher_id
+  }
+}

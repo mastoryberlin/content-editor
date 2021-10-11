@@ -4,6 +4,7 @@ query GetEpisodeMessages($id: uuid!) {
       id
       title
       specs
+      meta
       prompts(order_by: {number: asc}) {
         id
         attachment

@@ -128,6 +128,12 @@
                 <v-list-item-title>Manage accounts</v-list-item-title>
               </v-list-item>
               <v-list-item
+                v-if="Object.keys(privileges).includes('superadmin')"
+                @click="$router.push('/maintenance')"
+              >
+                <v-list-item-title>Backend Maintenance</v-list-item-title>
+              </v-list-item>
+              <v-list-item
                 v-for="(item, index) in menu"
                 :key="index"
                 @click="item.action"

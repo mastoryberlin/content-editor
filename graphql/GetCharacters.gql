@@ -1,0 +1,10 @@
+query GetCharacters($storyId: uuid, $storyIsNull: Boolean = true) {
+  inStory: character(where: {story_id: {_eq: $storyId}}) @skip(if: $storyIsNull) {
+    id
+    picture_url
+  }
+  fallback: character(where: {story_id: {_is_null: true}}) @include(if: $storyIsNull) {
+    id
+    picture_url
+  }
+}

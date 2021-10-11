@@ -80,6 +80,7 @@
                     v-else
                     :disabled="disabled"
                     :message="message"
+                    :npcs-available-in-this-phase="npcsAvailableInThisPhase"
                   />
                 </template>
                 <template #append-outer>
@@ -186,8 +187,13 @@
                 />
               </div>
               <div v-else-if="message.type === 'image'">
-                <v-img max-width="500px" :src="url || message.attachment" />
+                <v-img
+                  max-width="500px"
+                  :src="url || message.attachment"
+                />
               </div>
+
+              <a v-if="message.attachment" target="_blank" :href="message.attachment">Download link</a>
             </template>
 
             <v-textarea
@@ -231,6 +237,7 @@
                 v-for="submessage in children"
                 :key="submessage.id"
                 :all-messages-in-this-phase="allMessagesInThisPhase"
+                :npcs-available-in-this-phase="npcsAvailableInThisPhase"
                 :message="submessage"
                 :deletable="children.length > 1"
                 :course-name="courseName"
@@ -308,6 +315,10 @@ export default {
       required: true,
     },
     allMessagesInThisPhase: {
+      type: Array,
+      required: true,
+    },
+    npcsAvailableInThisPhase: {
       type: Array,
       required: true,
     },

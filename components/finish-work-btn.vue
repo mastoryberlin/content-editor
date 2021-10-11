@@ -93,11 +93,12 @@ export default {
           title: this.changeText,
         }
       } else if (this.buttonType === 'commit') {
+        const episodeId = this.episodeId
         payload = {
           storyId: this.storyId,
-          episodeId: this.episodeId,
           commitMessage: this.changeText,
         }
+        if (episodeId) { payload.episodeId = episodeId }
       }
       const path = 'https://' + process.env.NUXT_ENV_PROC_URL + '/content-editor/' + this.buttonType + '/' + this.tabType
       this.$axios.post(path, payload)
