@@ -21,7 +21,9 @@
       <v-container>
         <v-row cols="12">
           <v-col md="12" lg="8">
+            <v-overlay v-if="disabled" opacity="0" absolute />
             <div v-html="customWrapper" />
+
             <!-- This is the GeoGebra applet to display the uploaded worksheet -->
             <!-- <div :id="'ggb-' + id" /> -->
           </v-col>
@@ -60,7 +62,10 @@
               hint="Enter the IDs of all GeoGebra objects in the worksheet which serve as output parameters"
             />
             <label>Modify this HTML code to create a custom wrapper page for the GeoGebra applet:</label>
-            <v-menu offset-y>
+            <v-menu
+              offset-y
+              :disabled="disabled"
+            >
               <template #activator="{on, attrs}">
                 <v-btn v-bind="attrs" v-on="on">
                   <v-icon>mdi-menu</v-icon>
@@ -74,6 +79,7 @@
             </v-menu>
             <prism-editor
               v-model="html"
+              :readonly="disabled"
               :highlight="highlighter"
               class="content-editor-worksheet-html"
               @blur="updateHTML"

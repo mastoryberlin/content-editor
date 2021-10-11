@@ -70,6 +70,9 @@ export default {
     challenge: null,
   }),
   computed: {
+    storyId() {
+      return this.$route.params.story
+    },
     episodeId() {
       return this.$route.params.episode
     },
@@ -79,9 +82,8 @@ export default {
     ...mapGetters('user', ['may']),
     editingProhibited() {
       const needs = 'edit_episode_math'
-      const to = 'edit'
       const { may, storyId } = this
-      return to === 'edit' && !may(needs, storyId)
+      return !may(needs, storyId)
     },
   },
   methods: {
