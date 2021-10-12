@@ -10,6 +10,8 @@ subscription GetChallenge($episodeId: uuid!) {
       inputs
       outputs
       document
+      show_toolbar
+      custom_toolbar
       short_description
       long_description
       challenge_id
