@@ -61,6 +61,14 @@
               label="Output variables"
               hint="Enter the IDs of all GeoGebra objects in the worksheet which serve as output parameters"
             />
+
+            <v-radio-group v-model="toolbar" label="Show toolbar" row>
+              <v-radio value="none" label="None" />
+              <v-radio value="default" label="Default" />
+              <v-radio value="custom" label="Custom" />
+            </v-radio-group>
+            <v-text-field v-model="customToolbar" label="Custom toolbar code" persistent-hint hint="See https://wiki.geogebra.org/en/Reference:GeoGebra_App_Parameters" />
+
             <label>Modify this HTML code to create a custom wrapper page for the GeoGebra applet:</label>
             <v-menu
               offset-y
@@ -158,6 +166,54 @@ export default {
     },
     number() {
       return this.worksheet.number
+    },
+    toolbar: {
+      get() {
+        return this.worksheet.show_toolbar
+          ? (this.worksheet.custom_toolbar === null ? 'default' : 'custom')
+          : 'none'
+      },
+      set(v) {
+        if (v !== this.toolbar) {
+          let ct
+          switch (v) {
+            case 'none':
+            case 'default':
+              ct = null
+              break
+            case 'custom':
+              ct = this.customToolbar || ''
+              break
+          }
+          this.$apollo.mutate({
+            mutation: require('~/graphql/UpdateWorksheetToolbar'),
+            variables: {
+              id: this.id,
+              show_toolbar: v !== 'none',
+              custom_toolbar: ct,
+            },
+          })
+          this.forceUpdate = !this.forceUpdate
+        }
+      },
+    },
+    customToolbar: {
+      get() {
+        return this.worksheet.custom_toolbar
+      },
+      set(v) {
+        if (v !== this.customToolbar) {
+          this.$apollo.mutate({
+            mutation: require('~/graphql/UpdateWorksheetToolbar'),
+            variables: {
+              id: this.id,
+              show_toolbar: this.toolbar !== 'none',
+              custom_toolbar: v,
+            },
+          })
+          this.forceUpdate = !this.forceUpdate
+        }
+      },
     },
     title() {
       if (undefined === this.number) {
@@ -279,7 +335,7 @@ export default {
     },
   },
   mounted() {
-    const { id, html, worksheet: { ggb } } = this
+    const { id, html, worksheet: { ggb, show_toolbar, custom_toolbar } } = this // eslint-disable-line camelcase
     const params = {
       id: 'ggbApplet-' + id,
       language: 'en',
@@ -310,6 +366,16 @@ export default {
     }
     if (ggb) {
       params.ggbBase64 = ggb
+    }
+    if (show_toolbar) { // eslint-disable-line camelcase
+      params.showToolbar = true
+      params.enableUndoRedo = true
+    } else {
+      params.showToolbar = false
+      params.enableUndoRedo = false
+    }
+    if (custom_toolbar !== null) { // eslint-disable-line camelcase
+      params.customToolbar = custom_toolbar // eslint-disable-line camelcase
     }
     const applet = new GGBApplet(params, true)
     applet.inject('ggb-' + id)
@@ -356,6 +422,7 @@ export default {
           document: this.liveHTML,
         },
       })
+      this.forceUpdate = !this.forceUpdate
     },
     highlighter(code) {
       const scriptParts = he.escape(code)
@@ -380,7 +447,7 @@ export default {
       }
     },
     loadGGB() {
-      const { file, geogebra, forceUpdate } = this
+      const { file, geogebra } = this
       if (!!file && !!geogebra) {
         console.log('Loading GGB file ' + file.name)
         const reader = new FileReader()
@@ -394,7 +461,7 @@ export default {
               ggb: ggbBase64,
             },
           })
-          this.forceUpdate = !forceUpdate
+          this.forceUpdate = !this.forceUpdate
         }
         reader.readAsBinaryString(file)
       }
@@ -406,6 +473,7 @@ export default {
       )) {
         this.html = null
         this.liveHTML = null
+        this.forceUpdate = !this.forceUpdate
       }
     },
   },

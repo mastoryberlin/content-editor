@@ -1,0 +1,6 @@
+mutation UpdateWorksheetMeta($id: uuid!, $show_toolbar: Boolean = true, $custom_toolbar: String = null) {
+  update_geogebra_worksheet_by_pk(pk_columns: {id: $id}, _set: {show_toolbar: $show_toolbar, custom_toolbar: $custom_toolbar}) {
+    show_toolbar
+    custom_toolbar
+  }
+}
