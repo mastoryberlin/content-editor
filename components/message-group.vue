@@ -90,7 +90,7 @@
                         <v-icon
                           v-bind="attrs"
                           class="ml-2"
-                          :color="hover ? 'blue' : 'grey lighten-2'"
+                          :color="hover ? 'blue' : 'grey lighten-1'"
                           v-on="on"
                           @click="
                             addMessage({ after: message, duplicate: true })
@@ -109,7 +109,7 @@
                         <v-icon
                           v-bind="attrs"
                           class="ml-2"
-                          :color="hover ? 'red' : 'grey lighten-2'"
+                          :color="hover ? 'red' : 'grey lighten-1'"
                           v-on="on"
                           @click="deleteMessage(message)"
                         >
@@ -123,12 +123,50 @@
               </v-textarea>
             </div>
 
-            <type-selector
-              v-if="!isNestable || children.length < 2"
-              :disabled="disabled"
-              :message="message"
-              :children="children"
-            />
+            <div class="d-flex">
+              <type-selector
+                v-if="!isNestable || children.length < 2"
+                :disabled="disabled"
+                :message="message"
+                :children="children"
+              />
+
+              <v-textarea
+                v-show="null !== message.comment"
+                ref="commentField"
+                :value="message.comment"
+                class="content-editor-draggable-comment mx-5"
+                outlined
+                rounded
+                :disabled="disabled"
+                single-line
+                full-width
+                rows="1"
+                auto-grow
+                background-color="yellow lighten-3"
+                label="Comment"
+                @change="changeMessage({ element: 'comment', to: $event })"
+              >
+                <template #append-outer>
+                  <v-tooltip bottom>
+                    <template #activator="{on, attrs}">
+                      <v-hover v-slot="{ hover }">
+                        <v-icon v-bind="attrs" :color="hover ? 'red' : 'grey lighten-1'" v-on="on" @click="deleteComment">
+                          mdi-delete
+                        </v-icon>
+                      </v-hover>
+                    </template>
+                    <span>Delete comment</span>
+                  </v-tooltip>
+                </template>
+              </v-textarea>
+              <v-btn v-if="null === message.comment" class="mx-5" @click="addComment">
+                <v-icon left color="yellow darken-3">
+                  mdi-pencil
+                </v-icon>
+                Add a comment
+              </v-btn>
+            </div>
 
             <template v-if="enableFileUpload">
               <v-file-input
@@ -544,6 +582,18 @@ export default {
         const variables = { parent, parentIsNull: parent === null }
         await this.$db.delete({ message: true }, 'phase', this.message, this.message.section_id, variables)
       }
+    },
+    async deleteComment() {
+      if (this.message.comment.trim() === '' ||
+        confirm('Are you sure you want to delete the comment section for this message?\nThe text will be irreversibly erased!')) {
+        await this.changeMessage({ element: 'comment', to: null })
+      }
+    },
+    async addComment() {
+      await this.changeMessage({ element: 'comment', to: '' })
+      // TODO: Focus the comment field
+      // await this.$nextTick()
+      // document.getElementsByClassName('content-editor-draggable-comment')[0].focus()
     },
     async changeMessage({ element, to }) {
       const variables = {
