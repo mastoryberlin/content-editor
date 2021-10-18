@@ -135,6 +135,7 @@
     </v-alert>
 
     <input id="imageUploader" type="file" accept="image/png,image/jpeg,image/gif,image/x-png" style="visibility: hidden;" @change="uploadImage">
+    <a id="ggbDownloader" style="visibility: hidden;" />
   </v-card>
 </template>
 
@@ -438,7 +439,7 @@ export default {
             js += "'change', (e) => {\n      const myText = e.target.value\n    })"
             break
           case 'img':
-            html += ' src="' + param + '">'
+            html += ' src="' + param + '" style="width: 95%">'
             js = ''
             break
           default:
@@ -503,19 +504,15 @@ export default {
         reader.readAsBinaryString(file)
       }
     },
-    downloadGGB() {
-      if (this.ggb) {
-        const element = document.createElement('a')
-        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent('example'))
-        element.setAttribute('download', this.title + '.ggb')
-        element.style.display = 'none'
-
-        document.body.appendChild(element)
-        element.click()
-
-        document.body.removeChild(element)
-      }
-    },
+    // downloadGGB() {
+    //   const { worksheet: { ggb } } = this
+    //   if (ggb) {
+    //     const el = document.getElementById('ggbDownloader')
+    //     el.setAttribute('href', 'data:application/zip;charset=utf-8,' + atob(ggb))
+    //     el.setAttribute('download', this.title + '.ggb')
+    //     el.click()
+    //   }
+    // },
     clearHTML() {
       if (confirm(
         'Are you sure you want to reset the custom HTML wrapper?\n' +
