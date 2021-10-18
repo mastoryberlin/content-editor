@@ -83,6 +83,26 @@
                     :npcs-available-in-this-phase="npcsAvailableInThisPhase"
                   />
                 </template>
+
+                <template #append>
+                  <v-tooltip bottom>
+                    <template #activator="{on, attrs}">
+                      <v-hover v-slot="{hover}">
+                        <v-icon
+                          v-bind="attrs"
+                          class="ml-2"
+                          :color="hover ? 'black' : 'grey lighten-1'"
+                          v-on="on"
+                          @click="codegen"
+                        >
+                          mdi-code-greater-than
+                        </v-icon>
+                      </v-hover>
+                    </template>
+                    <span>Auto-generate CDM code</span>
+                  </v-tooltip>
+                </template>
+
                 <template #append-outer>
                   <v-tooltip bottom>
                     <template #activator="{ on, attrs }">
@@ -121,6 +141,19 @@
                   </v-tooltip>
                 </template>
               </v-textarea>
+
+              <div
+                v-show="null !== message.code"
+                class="my-3"
+              >
+                <prism-editor
+                  v-model="code"
+                  :readonly="disabled"
+                  :highlight="highlighter"
+                  class="content-editor-draggable-code"
+                  @blur="changeMessage({element: 'code', to: code})"
+                />
+              </div>
             </div>
 
             <div class="d-flex">
@@ -138,7 +171,6 @@
                 class="content-editor-draggable-comment mx-5"
                 outlined
                 rounded
-                :disabled="disabled"
                 single-line
                 full-width
                 rows="1"
@@ -160,7 +192,11 @@
                   </v-tooltip>
                 </template>
               </v-textarea>
-              <v-btn v-if="null === message.comment" class="mx-5" @click="addComment">
+              <v-btn
+                v-if="null === message.comment"
+                class="mx-5"
+                @click="addComment"
+              >
                 <v-icon left color="yellow darken-3">
                   mdi-pencil
                 </v-icon>
@@ -341,11 +377,22 @@
 <script>
 import { mapState, mapMutations, mapActions } from 'vuex'
 import { Container, Draggable } from 'vue-smooth-dnd'
+// import Prism Editor
+import { PrismEditor } from 'vue-prism-editor'
+import 'vue-prism-editor/dist/prismeditor.min.css' // import the styles somewhere
+
+// import highlighting library (you can use any library you want just return html string)
+import { highlight, languages } from 'prismjs/components/prism-core'
+import 'prismjs/components/prism-clike'
+import 'prismjs/components/prism-ruby'
+import 'prismjs/components/prism-crystal'
+import 'prismjs/themes/prism-tomorrow.css'
 
 export default {
   components: {
     Container,
     Draggable,
+    PrismEditor,
   },
   props: {
     message: {
@@ -383,6 +430,7 @@ export default {
       addMessagesFromFlowTextDialogVisible: false,
       addMessagesContext: null,
       flowText: '',
+      code: this.message.code || '',
       addMenu: [
         { title: 'Add messages from flow text script', action: this.showAddMessagesFromFlowTextDialog },
       ],
@@ -657,6 +705,13 @@ export default {
         })
         this.clearSelection()
       }
+    },
+    highlighter(code) {
+      code = highlight(code, languages.crystal)
+      return code // returns html
+    },
+    codegen() {
+
     },
   },
 }

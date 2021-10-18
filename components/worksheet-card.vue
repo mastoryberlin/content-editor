@@ -36,7 +36,20 @@
               show-size
               accept=".ggb"
               @change="loadGGB"
-            />
+            >
+              <!-- <template #append-outer>
+                <v-tooltip bottom>
+                  <template #activator="{on, attrs}">
+                    <v-hover v-slot="{hover}">
+                      <v-icon v-bind="attrs" :color="hover ? 'blue' : 'grey'" v-on="on" @click="downloadGGB">
+                        mdi-download
+                      </v-icon>
+                    </v-hover>
+                  </template>
+                  <span>Download as GeoGebra file</span>
+                </v-tooltip>
+              </template> -->
+            </v-file-input>
             <v-autocomplete
               v-model="inputs"
               auto-select-first
@@ -85,13 +98,15 @@
                 </v-list-item>
               </v-list>
             </v-menu>
-            <prism-editor
-              v-model="html"
-              :readonly="disabled"
-              :highlight="highlighter"
-              class="content-editor-worksheet-html"
-              @blur="updateHTML"
-            />
+            <div class="">
+              <prism-editor
+                v-model="html"
+                :readonly="disabled"
+                :highlight="highlighter"
+                class="content-editor-worksheet-html"
+                @blur="updateHTML"
+              />
+            </div>
           </v-col>
         </v-row>
       </v-container>
@@ -108,6 +123,18 @@
         mdi-plus
       </v-icon>
     </v-btn>
+
+    <v-alert
+      v-if="uploadFailedAlert"
+      v-model="uploadFailedAlert.show"
+      type="error"
+      dismissible
+    >
+      There was a problem uploading the file:
+      {{ uploadFailedAlert.errorMessage }}
+    </v-alert>
+
+    <input id="imageUploader" type="file" accept="image/png,image/jpeg,image/gif,image/x-png" style="visibility: hidden;" @change="uploadImage">
   </v-card>
 </template>
 
@@ -151,16 +178,22 @@ export default {
       forceUpdate: false,
       applet: null,
       liveHTML: null,
+      loading: false,
+      uploadFailedAlert: null,
       htmlMenu: [
         { title: 'Insert button', action: () => { this.insertHTML('button') } },
         { title: 'Insert number input', action: () => { this.insertHTML('number input') } },
         { title: 'Insert range input', action: () => { this.insertHTML('range input') } },
         { title: 'Insert text input', action: () => { this.insertHTML('text input') } },
+        { title: 'Upload image', action: this.pickImageForUpload },
         { title: 'Reset', action: this.clearHTML },
       ],
     }
   },
   computed: {
+    storyId() {
+      return this.$route.params.story
+    },
     id() {
       return this.worksheet.id
     },
@@ -382,7 +415,7 @@ export default {
     this.applet = applet
   },
   methods: {
-    insertHTML(elementType) {
+    insertHTML(elementType, param) {
       const id = prompt('Please enter an ID for the new ' + elementType + ':')
       if (id) {
         let html = '<' + elementType + ' id="' + id + '"'
@@ -403,6 +436,10 @@ export default {
           case 'text input':
             html = html.replace('number input', 'input type="text"') + '>'
             js += "'change', (e) => {\n      const myText = e.target.value\n    })"
+            break
+          case 'img':
+            html += ' src="' + param + '">'
+            js = ''
             break
           default:
             html += '></' + elementType + '>'
@@ -466,6 +503,19 @@ export default {
         reader.readAsBinaryString(file)
       }
     },
+    downloadGGB() {
+      if (this.ggb) {
+        const element = document.createElement('a')
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent('example'))
+        element.setAttribute('download', this.title + '.ggb')
+        element.style.display = 'none'
+
+        document.body.appendChild(element)
+        element.click()
+
+        document.body.removeChild(element)
+      }
+    },
     clearHTML() {
       if (confirm(
         'Are you sure you want to reset the custom HTML wrapper?\n' +
@@ -474,6 +524,36 @@ export default {
         this.html = null
         this.liveHTML = null
         this.forceUpdate = !this.forceUpdate
+      }
+    },
+    pickImageForUpload() {
+      const el = document.getElementById('imageUploader')
+      el.click()
+    },
+    async uploadImage(e) {
+      const files = e.target.files
+      if (files) {
+        const file = files[0]
+        this.loading = true
+        const fd = new FormData()
+        fd.append('image', file, file.name)
+        try {
+          const result = await this.$axios.$post('https://' + process.env.NUXT_ENV_PROC_URL + '/content-editor/upload', fd, { params: { c: this.storyId } })
+          this.loading = false
+          if (result.success) {
+            this.insertHTML('img', result.url)
+          } else {
+            this.uploadFailedAlert = {
+              show: true,
+              errorMessage: result.msg,
+            }
+          }
+        } catch (ex) {
+          this.uploadFailedAlert = {
+            show: true,
+            errorMessage: JSON.stringify(ex),
+          }
+        }
       }
     },
   },
