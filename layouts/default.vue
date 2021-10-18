@@ -356,6 +356,13 @@ video
         right: 96px
     &-logic
       font-style: italic
+    &-code
+      background: #2d2d2d
+      color: #ccc
+      font-family: Fira code, Fira Mono, Consolas, Menlo, Courier, monospace
+      font-size: 11pt
+      line-height: 1.5em
+      padding: 5px
     &-text-message
       &-bg
         background-color: #e6e6ff !important

@@ -9,6 +9,9 @@ subscription RefreshEpisodeMessages($id: uuid!) {
         id
         attachment
         logic
+        comment
+        code
+        intent_classification
         sender_id
         text
         type

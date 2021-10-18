@@ -1,0 +1,5 @@
+mutation UpdateMessageCode($id: uuid!, $code: String = "") {
+  update_prompt_by_pk(pk_columns: {id: $id}, _set: {code: $code}) {
+    code
+  }
+}
