@@ -162,6 +162,7 @@
                 :disabled="disabled"
                 :message="message"
                 :children="children"
+                :phase="phase"
               />
 
               <v-textarea
@@ -313,6 +314,7 @@
                 :all-messages-in-this-phase="allMessagesInThisPhase"
                 :npcs-available-in-this-phase="npcsAvailableInThisPhase"
                 :message="submessage"
+                :phase="phase"
                 :deletable="children.length > 1"
                 :course-name="courseName"
                 :disabled="disabled"
@@ -396,6 +398,10 @@ export default {
   },
   props: {
     message: {
+      type: Object,
+      required: true,
+    },
+    phase: {
       type: Object,
       required: true,
     },
@@ -626,6 +632,19 @@ export default {
     async deleteMessage() {
       if (confirm('Are you sure you want to delete this message?')) {
         // this.updateEpisodeEditStateToSpecsIfNull(editField)
+
+        // Optimistic
+        const data = this.phase
+        let index = 0
+        data.prompts.every((prompt, idx) => {
+          index = idx
+          if (prompt.id === this.message.id) {
+            return false
+          }
+          return true
+        })
+        data.prompts.splice(index, 1)
+
         const parent = this.message.parent
         const variables = { parent, parentIsNull: parent === null }
         await this.$db.delete({ message: true }, 'phase', this.message, this.message.section_id, variables)
@@ -666,6 +685,28 @@ export default {
       variables.parentIsNull = variables.parent === null
       variables.phaseId = after.section_id
       variables.number = after.number + 1
+      
+      // Optimistic
+      const data = this.phase
+      const index = variables.number - 1
+      const fakeId = '123e4567-e89b-12d3-a456-426614174000'
+      data.prompts.splice(
+        index,
+        0,
+        {
+          id: fakeId,
+          attachment: duplicate ? after.attachment : null,
+          logic: duplicate ? after.logic : '',
+          number: variables.number,
+          parent: variables.parent,
+          section_id: after.section_id,
+          sender_id: after.sender_id,
+          text: duplicate ? after.text : '',
+          type: duplicate ? after.type : 'text',
+        }
+      )
+      data.prompts.sort((a, b) => parseFloat(a.number) - parseFloat(b.number))
+
       await this.$db.add({ message: true }, 'phase', null, variables, after.section_id)
     },
     explodeNestable() {
