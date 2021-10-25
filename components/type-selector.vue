@@ -34,6 +34,10 @@ export default {
       type: Object,
       required: true,
     },
+    phase: {
+      type: Object,
+      required: true,
+    },
     children: {
       type: Array,
       default: () => [],
@@ -88,6 +92,7 @@ export default {
       },
       set(v) {
         const my = this.message
+        const data = this.phase
         if (v && v !== my.type) {
           if (my.type === 'nestable') {
             // Change FROM logic block to some message type
@@ -113,6 +118,20 @@ export default {
               type: v,
             },
           })
+
+          // Optimistic
+          setTimeout(() => {
+            let index = 0
+            data.prompts.every((prompt, idx) => {
+              index = idx
+              if (prompt.id === my.id) {
+                return false
+              }
+              return true
+            })
+            data.prompts[index].type = v
+          }, 150)
+
           if (v === 'nestable') {
             // Change from message type to logic block
             const variables = {
@@ -124,6 +143,11 @@ export default {
               parentIsNull: false,
             }
             this.$db.add({ message: true }, 'phase', null, variables, my.section_id)
+
+            // Optimistic
+            setTimeout(() => {
+              data.prompts.push(variables)
+            }, 150)
           }
         }
       },

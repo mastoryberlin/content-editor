@@ -1,5 +1,8 @@
 export default {
+  strict: false,
   state: () => ({
+    phases: null,
+    currentPhases: null,
     dragInfo: {
       dragSource: null,
       removedIndex: null,
@@ -25,6 +28,12 @@ export default {
         state.dragInfo.fromPhase = fromPhase
         state.dragInfo.fromParentIsNull = fromParentIsNull
       }
+    },
+    updateCurrentPhases: (state, val) => {
+      state.currentPhases = val
+    },
+    updatePhases: (state, val) => {
+      state.phases = val
     },
     select: (state, id) => {
       const sel = state.selected
@@ -249,7 +258,8 @@ export default {
     //   const response = await this.app.apolloProvider.defaultClient.query({query: require("~/graphql/GetStories")})
     //   commit("apolloTest", response.data.story)
     // },
-    moveMessage({ state }, { dragTarget, addedIndex, toPhase, toParentIsNull }) {
+    moveMessage({ state, commit }, { dragTarget, addedIndex, toPhase, toParentIsNull }) {
+      const phases = state.phases
       const { messageId, dragSource, removedIndex, fromNumber, fromPhase, fromParentIsNull } = state.dragInfo
       // console.log('moveMessage called with dragSource.id: ' + dragSource.id + ', dragTarget.id: ' + dragTarget.id + ', ri: ' + removedIndex + ', ai: ' + addedIndex)
       if (removedIndex !== undefined && addedIndex !== null &&
@@ -257,6 +267,90 @@ export default {
         const fromParent = fromParentIsNull ? null : dragSource.id
         const toParent = toParentIsNull ? null : dragTarget.id
         const toNumber = addedIndex + 1
+
+        // Optimistic
+        console.log(fromNumber, toNumber)
+        let addedData = null
+        let toParentIndex = null
+        let toPhasesIndex = null
+        let fromPhasesIndex = null
+        const childs = []
+        phases.forEach((phase, idx) => {
+          let promptsIndex = null
+          if (phase.id === toPhase) {
+            toPhasesIndex = idx
+          }
+          if (phase.id === fromPhase) {
+            fromPhasesIndex = idx
+          }
+          phases[idx].prompts.forEach((prompt, i) => {
+            if (prompt.id === messageId) {
+              promptsIndex = i
+            }
+            if (prompt.id === toParent) {
+              toParentIndex = prompt.number - 1
+            }
+            if (prompt.parent === messageId) {
+              childs.push(prompt)
+            }
+          })
+          if (promptsIndex !== null) {
+            addedData = {
+              ...phases[idx].prompts[promptsIndex],
+              parent: toParent,
+              number: addedIndex + 1,
+            }
+            // remove
+            phases[idx].prompts.splice(promptsIndex, 1)
+          }
+        })
+        // sync numbers
+        phases.forEach((phase, idx) => {
+          if (idx === fromPhasesIndex) {
+            phase.prompts.forEach((prompt) => {
+              if (prompt.parent === fromParent) {
+                if (prompt.number - 1 > removedIndex) {
+                  prompt.number -= 1
+                }
+              }
+            })
+          }
+          if (idx === toPhasesIndex) {
+            phase.prompts.forEach((prompt) => {
+              if (toParentIndex === null && prompt.parent === null) {
+                // no parent
+                if (prompt.number - 1 >= addedIndex) {
+                  prompt.number += 1
+                }
+              } else if (prompt.parent === toParent) {
+                // has parent
+                if (prompt.number - 1 >= addedIndex) {
+                  prompt.number += 1
+                }
+              }
+            })
+          }
+        })
+        // add
+        phases[toPhasesIndex].prompts.splice(addedIndex, 0, addedData)
+        if (childs.length > 0) {
+          // remove previous childs
+          childs.forEach((childs) => {
+            phases[fromPhasesIndex].prompts = phases[fromPhasesIndex].prompts.filter((prompt) => {
+              return prompt.id !== childs.id
+            })
+          })
+          // add childs
+          phases[toPhasesIndex].prompts = phases[toPhasesIndex].prompts.concat(childs)
+        }
+        // End Optimistic
+
+        phases.forEach((_, idx) => {
+          phases[idx].prompts.sort((a, b) => parseFloat(a.number) - parseFloat(b.number))
+        })
+
+        commit('updateCurrentPhases', phases)
+
         // console.log('MoveMessage: id: ' + messageId + ', fromNumber: ' + fromNumber + ', toNumber: ' + toNumber + ', fromPhase: ' + fromPhase + ', toPhase: ' + toPhase + ', fromParent: ' + fromParent + ', toParent: ' + toParent + ', fromParentIsNull: ' + fromParentIsNull + ', toParentIsNull: ' + toParentIsNull)
         this.app.apolloProvider.defaultClient.mutate({
           mutation: require('~/graphql/MoveMessage'),
