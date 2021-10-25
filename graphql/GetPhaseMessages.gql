@@ -1,0 +1,23 @@
+query GetPhaseMessages($id: uuid!) {
+  story_section_by_pk(id: $id) {
+    id
+    title
+    specs
+    meta
+    number
+    prompts(order_by: {number: asc}) {
+      id
+      attachment
+      logic
+      comment
+      code
+      intent_classification
+      sender_id
+      text
+      type
+      parent
+      number
+      section_id
+    }
+  }
+}

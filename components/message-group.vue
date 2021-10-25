@@ -15,11 +15,10 @@
               mdi-drag
             </v-icon>
             <v-checkbox v-model="checked" />
-            <v-tooltip bottom>
+            <v-tooltip v-if="checked" bottom>
               <template #activator="{ on, attrs }">
                 <v-hover v-slot="{ hover }">
                   <v-icon
-                    v-if="checked"
                     :color="hover ? 'red' : null"
                     v-bind="attrs"
                     v-on="on"
@@ -308,7 +307,7 @@
                 })
               "
             >
-              <message-group
+              <lazy-message-group
                 v-for="submessage in children"
                 :key="submessage.id"
                 :all-messages-in-this-phase="allMessagesInThisPhase"
@@ -685,7 +684,7 @@ export default {
       variables.parentIsNull = variables.parent === null
       variables.phaseId = after.section_id
       variables.number = after.number + 1
-      
+
       // Optimistic
       const data = this.phase
       const index = variables.number - 1
