@@ -9,53 +9,8 @@
     </template>
 
     <privileged-area v-else needs="edit_episode_narrative" to="edit">
-      <template v-if="phases">
-        <template v-for="(phase, phaseIndex) in phases">
-          <div
-            :key="phase.id + '-fixed'"
-            class="my-7 pa-4 content-editor-specs-fixed"
-          >
-            <h2>#{{ phaseIndex + 1 }}: {{ phase.title }}</h2>
-            <p>{{ phase.specs }}</p>
-          </div>
-          <container
-            :key="phase.id + '-messages'"
-            group-name="episode-messages"
-            drag-handle-selector=".content-editor-draggable-handle"
-            :get-child-payload="(index) => {
-              const msg = topLevelMessages(phase)[index]
-              const {id, number} = msg
-              setDraggedMessageInfo({id, number, index})
-            }"
-            @drag-start="
-              setDragSource({
-                ...$event,
-                dragSource: phase,
-                fromPhase: phase.id,
-                fromParentIsNull: true
-              })
-            "
-            @drop="
-              moveMessage({
-                ...$event,
-                dragTarget: phase,
-                toPhase: phase.id,
-                toParentIsNull: true
-              })
-            "
-          >
-            <message-group
-              v-for="message in topLevelMessages(phase)"
-              :key="message.id"
-              :all-messages-in-this-phase="phase.prompts"
-              :npcs-available-in-this-phase="availableNPCs[phase.id]"
-              :message="message"
-              :deletable="phase.prompts.length > 1"
-              :disabled="editingProhibited"
-              :course-name="storyId"
-            />
-          </container>
-        </template>
+      <template v-if="data">
+        <lazy-phase-block v-for="phase in data" :key="phase.id" :phase-id="phase.id" :disabled="editingProhibited" />
 
         <div class="d-flex flex-row justify-space-between ma-5">
           <finish-work-btn tab-type="message-flow" button-type="commit" />
@@ -67,34 +22,30 @@
 </template>
 
 <script>
-import { Container } from 'vue-smooth-dnd'
-import { mapGetters, mapMutations, mapActions } from 'vuex'
+import { mapState, mapGetters, mapMutations } from 'vuex'
 
 export default {
-  components: {
-    Container,
-  },
-  props: {
-    episode: {
-      type: Object,
-      required: true,
-    },
-  },
+  // props: {
+  //   episode: {
+  //     type: Object,
+  //     required: true,
+  //   },
+  // },
   apollo: {
     phases: {
-      query: require('~/graphql/GetEpisodeMessages'),
+      query: require('~/graphql/GetEpisodePhases'),
       variables() {
         return { id: this.episodeId }
       },
       update: data => data.story_chapter_by_pk.sections,
       subscribeToMore: {
-        document: require('~/graphql/RefreshEpisodeMessages'),
+        document: require('~/graphql/RefreshEpisodePhases'),
         variables() {
           return { id: this.episodeId }
         },
         updateQuery: (previousResult, { subscriptionData }) => {
           const newResult = { ...previousResult }
-          newResult.story_chapter_by_pk.sections = JSON.parse(JSON.stringify(subscriptionData.data.story_chapter_by_pk.sections))
+          newResult.story_chapter_by_pk.sections = [...subscriptionData.data.story_chapter_by_pk.sections]
           return newResult
         },
       },
@@ -115,26 +66,24 @@ export default {
     },
   },
   data: () => ({
+    // timeout: null,
   }),
   computed: {
+    ...mapState(['currentPhases']),
     ...mapGetters('user', ['may']),
+    data() {
+      if (this.currentPhases) {
+        this.updatePhases(this.currentPhases)
+        return this.currentPhases
+      }
+      this.updatePhases(this.phases)
+      return this.phases
+    },
     editingProhibited() {
       const needs = 'edit_episode_narrative'
       const to = 'edit'
       const { may, storyId } = this
       return to === 'edit' && !may(needs, storyId)
-    },
-    availableNPCs() {
-      let npcs = this.npcs
-      if (npcs.length === 0) { npcs = this.fallbackNPCs }
-      npcs = npcs.map(npc => npc.id)
-      return Object.fromEntries(
-        this.phases.map((phase) => {
-          const { id, meta } = phase
-          const avail = npcs.filter(npc => meta.mood[npc] !== 'unavailable')
-          return [id, avail]
-        })
-      )
     },
     storyId() {
       return this.$route.params.story
@@ -143,30 +92,22 @@ export default {
       return this.$route.params.episode
     },
   },
+  watch: {
+    phases(val) {
+      // this.$apollo.queries.phases.skip = true
+      if (this.timeout) {
+        clearTimeout(this.timeout)
+      }
+      this.timeout = setTimeout(() => {
+        this.updateCurrentPhases(this.phases)
+      }, 1000)
+    },
+  },
   methods: {
     ...mapMutations([
-      'setDraggedMessageInfo',
-      'setDragSource',
+      'updatePhases',
+      'updateCurrentPhases',
     ]),
-    ...mapActions([
-      'moveMessage',
-    ]),
-    topLevelMessages(phase) {
-      return phase.prompts.filter(
-        p => p.parent === null
-      )
-    },
-    addSurvey() {
-      this.$apollo.mutate({
-        mutation: require('~/graphql/AddSurvey'),
-        variables: {
-          episodeId: this.episodeId,
-        },
-      })
-    },
   },
 }
 </script>
-
-<style lang="css" scoped>
-</style>
