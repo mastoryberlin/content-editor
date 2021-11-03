@@ -65,7 +65,7 @@ export default {
             .meta
             .features = f
         } else {
-          data.story_by_pk.chapters
+          data.chapters
             .find(chapter => chapter.sections[0].id === this.phase.id)
             .sections[0]
             .meta

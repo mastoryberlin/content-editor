@@ -54,7 +54,7 @@
           <v-col
             cols="2"
             :class="hover ? 'mood-selector-mood-hover' : null"
-            @click="mood = m"
+            @click="changeMood(m)"
           >
             <v-tooltip top>
               <template #activator="moodActivator">
@@ -112,7 +112,10 @@ export default {
         return mood[this.npc] || 'happy'
       },
       set(v) {
-        const mood = this.phase.meta.mood
+        let mood = this.phase.meta.mood
+        if (typeof mood[this.npc] === 'undefined') {
+          mood = JSON.parse(JSON.stringify(this.phase.meta.mood))
+        }
         mood[this.npc] = v
         this.$apollo.mutate({
           mutation: require('~/graphql/UpdatePhaseMood'),
@@ -122,6 +125,11 @@ export default {
     },
     available() {
       return this.mood !== 'unavailable'
+    },
+  },
+  methods: {
+    changeMood(m) {
+      this.mood = m
     },
   },
 }
