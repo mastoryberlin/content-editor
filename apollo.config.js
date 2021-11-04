@@ -17,33 +17,20 @@ const getHeaders = () => {
   return headers
 }
 
+const path = process.env.NUXT_ENV_HASURA_URL + process.env.NUXT_ENV_HASURA_ENDPOINT
 const httpLink = new HttpLink({
-  uri: 'https://' + process.env.NUXT_ENV_HASURA_URL + process.env.NUXT_ENV_HASURA_ENDPOINT,
+  uri: 'https://' + path,
   // credentials: 'same-origin',
   headers: getHeaders()
 })
 
 let link
 if (process.server) {
-  // Server side
-  //   const ws = require('ws')
-  //   wsLink = new WebSocketLink({
-  //     uri: 'wss://' + process.env.NUXT_ENV_HASURA_URL + process.env.NUXT_ENV_HASURA_ENDPOINT,
-  //     options: {
-  //       reconnect: true,
-  //       connectionParams () {
-  //         return {
-  //           headers: getHeaders()
-  //         }
-  //       }
-  //     },
-  //     webSocketImpl: ws
-  //   })
   link = httpLink
 } else {
   // Client side
   const wsLink = new WebSocketLink({
-    uri: 'wss://' + process.env.NUXT_ENV_HASURA_URL + process.env.NUXT_ENV_HASURA_ENDPOINT,
+    uri: 'wss://' + path,
     options: {
       reconnect: true,
       connectionParams () {
