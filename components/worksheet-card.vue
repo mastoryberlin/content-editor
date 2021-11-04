@@ -22,7 +22,27 @@
         <v-row cols="12">
           <v-col md="12" lg="8">
             <v-overlay v-if="disabled" opacity="0" absolute />
-            <div v-html="customWrapper" />
+            <!-- <iframe ref="ggbIFrame" :srcdoc="customWrapper" /> -->
+            <div class="my-4">
+              <v-select
+                v-model="deviceSize"
+                class="d-inline-flex"
+                :items="deviceSizes"
+                label="Emulate device"
+                hint="Pick a mobile device here to emulate its screen size"
+                persistent-hint
+              />
+              <v-switch v-model="landscapeMode" class="d-inline-flex mx-5" label="Landscape mode" />
+            </div>
+
+            <geoplot-preview
+              class="my-4"
+              :ggb-base64="ggb"
+              :size="previewSize"
+              :wrapper-page="html"
+              :show-toolbar="worksheet.show_toolbar"
+              :custom-toolbar="worksheet.custom_toolbar"
+            />
 
             <!-- This is the GeoGebra applet to display the uploaded worksheet -->
             <!-- <div :id="'ggb-' + id" /> -->
@@ -80,7 +100,7 @@
               <v-radio value="default" label="Default" />
               <v-radio value="custom" label="Custom" />
             </v-radio-group>
-            <v-text-field v-model="customToolbar" label="Custom toolbar code" persistent-hint hint="See https://wiki.geogebra.org/en/Reference:GeoGebra_App_Parameters" />
+            <v-text-field v-model="customToolbar" class="mb-7" label="Custom toolbar code" persistent-hint hint="Separate with '|' character; see https://wiki.geogebra.org/en/Reference:Toolbar for a list of codes" />
 
             <label>Modify this HTML code to create a custom wrapper page for the GeoGebra applet:</label>
             <v-menu
@@ -104,6 +124,7 @@
                 :readonly="disabled"
                 :highlight="highlighter"
                 class="content-editor-worksheet-html"
+                @input="isHTMLChanged = true"
                 @blur="updateHTML"
               />
             </div>
@@ -140,8 +161,8 @@
 </template>
 
 <script>
-/* global GGBApplet */
-/* global setupInteractions */
+// /* global GGBApplet */
+// /* global setupInteractions */
 
 // import Prism Editor
 import { PrismEditor } from 'vue-prism-editor'
@@ -181,6 +202,9 @@ export default {
       liveHTML: null,
       loading: false,
       uploadFailedAlert: null,
+      landscapeMode: false,
+      deviceSize: [360, 780],
+      rawDeviceSizes: require('~/device-sizes.json'),
       htmlMenu: [
         { title: 'Insert button', action: () => { this.insertHTML('button') } },
         { title: 'Insert number input', action: () => { this.insertHTML('number input') } },
@@ -195,8 +219,31 @@ export default {
     storyId() {
       return this.$route.params.story
     },
+    ggb() {
+      return this.worksheet.ggb
+    },
     id() {
       return this.worksheet.id
+    },
+    deviceSizes() {
+      const { rawDeviceSizes } = this
+      return rawDeviceSizes
+        .sort((deviceA, deviceB) => {
+          const areaA = deviceA.value[0] * deviceA.value[1]
+          const areaB = deviceB.value[0] * deviceB.value[1]
+          return areaA < areaB
+            ? -1
+            : areaA > areaB ? 1 : 0
+        })
+        .map((d) => {
+          const m = { ...d }
+          m.text = d.text + ' (' + d.value[0] + 'x' + d.value[1] + ')'
+          return m
+        })
+    },
+    previewSize() {
+      const { landscapeMode, deviceSize } = this
+      return landscapeMode ? [deviceSize[1], deviceSize[0]] : deviceSize
     },
     number() {
       return this.worksheet.number
@@ -333,21 +380,24 @@ export default {
       },
     },
     customWrapper() {
-      const { html, id } = this
-      const preview = html.replace('id="ggb-element"', 'id="ggb-' + id + '" class="ggb-applet"')
-      try {
-        const script = html
-          .match(/(?<=<script>)(?:(?:.|\n)*)(?=<\/script>)/gmi)
-          .toString()
-          .replace(
-            'function setupInteractions(',
-            'if (undefined === this.setupInteractions) {this.setupInteractions = {}}; this.setupInteractions["' + id + '"] = function setupInteractions('
-          )
-        const fn = Function(script) // eslint-disable-line no-new-func
-        fn()
-      } catch (err) {
-        console.log(err)
-      }
+      // const { html, id } = this
+      // const preview = html.replace('id="ggb-element"', 'id="ggb-' + id + '" class="ggb-applet"')
+      // try {
+      //   const script = html
+      //     .match(/(?<=<script>)(?:(?:.|\n)*)(?=<\/script>)/gmi)
+      //     .toString()
+      //     .replace(
+      //       'function setupInteractions(',
+      //       'if (undefined === this.setupInteractions) {this.setupInteractions = {}}; this.setupInteractions["' + id + '"] = function setupInteractions('
+      //     )
+      //   const fn = Function(script) // eslint-disable-line no-new-func
+      //   fn()
+      // } catch (err) {
+      //   console.log(err)
+      // }
+      const { html } = this
+      const preview = '<!DOCTYPE html>\n<html lang="en" dir="ltr">\n  <head>\n    <meta charset="utf-8">\n  </head>\n  <body onload="setupInteractions">\n' +
+        html + '  </body>\n</html>'
       return preview
     },
     html: {
@@ -367,53 +417,6 @@ export default {
         this.liveHTML = v
       },
     },
-  },
-  mounted() {
-    const { id, html, worksheet: { ggb, show_toolbar, custom_toolbar } } = this // eslint-disable-line camelcase
-    const params = {
-      id: 'ggbApplet-' + id,
-      language: 'en',
-      scaleContainerClass: 'ggb-applet',
-      country: 'US',
-      appletOnLoad: (api) => {
-        this.geogebra = api
-        const script = he.unescape(
-          he.escape(html)
-            .match(/(?<=&lt;script&gt;)(?:(?:.|\n)*)(?=&lt;\/script&gt;)/gm)
-            .toString()
-        ).replace('function setupInteractions(', 'if (undefined === this.setupInteractions) {this.setupInteractions = {}}; this.setupInteractions["' + id + '"] = function setupInteractions(')
-        try {
-          const fn = Function(script) // eslint-disable-line no-new-func
-          fn()
-        } catch (err) {
-          console.log(err)
-        }
-
-        if (setupInteractions && setupInteractions[id]) { // eslint-disable-line no-undef
-          try {
-            setupInteractions[id](api) // eslint-disable-line no-undef
-          } catch (err) {
-            console.log(err)
-          }
-        }
-      },
-    }
-    if (ggb) {
-      params.ggbBase64 = ggb
-    }
-    if (show_toolbar) { // eslint-disable-line camelcase
-      params.showToolbar = true
-      params.enableUndoRedo = true
-    } else {
-      params.showToolbar = false
-      params.enableUndoRedo = false
-    }
-    if (custom_toolbar !== null) { // eslint-disable-line camelcase
-      params.customToolbar = custom_toolbar // eslint-disable-line camelcase
-    }
-    const applet = new GGBApplet(params, true)
-    applet.inject('ggb-' + id)
-    this.applet = applet
   },
   methods: {
     insertHTML(elementType, param) {
@@ -435,7 +438,7 @@ export default {
             js += "'input', (e) => {\n      const myNumber = e.target.value\n      ggbApplet.evalCommand('P_{" + id + "} = (0, ' + myNumber + ')')\n    })"
             break
           case 'text input':
-            html = html.replace('number input', 'input type="text"') + '>'
+            html = html.replace('text input', 'input type="text"') + '>'
             js += "'change', (e) => {\n      const myText = e.target.value\n    })"
             break
           case 'img':
@@ -449,18 +452,22 @@ export default {
         this.liveHTML = this.html
           .replace(/(<script>)/i, html + '\n  $1')
           .replace(/(}\n\s*<\/script>)/i, '  var ' + id + ' = document.getElementById(\'' + id + '\')\n    ' + js + '\n  $1')
+        this.isHTMLChanged = true
         this.updateHTML()
       }
     },
     updateHTML() {
-      this.$apollo.mutate({
-        mutation: require('~/graphql/UpdateWorksheetDocument'),
-        variables: {
-          id: this.id,
-          document: this.liveHTML,
-        },
-      })
-      this.forceUpdate = !this.forceUpdate
+      if (this.isHTMLChanged) {
+        this.$apollo.mutate({
+          mutation: require('~/graphql/UpdateWorksheetDocument'),
+          variables: {
+            id: this.id,
+            document: this.liveHTML,
+          },
+        })
+        this.forceUpdate = !this.forceUpdate
+        this.isHTMLChanged = false
+      }
     },
     highlighter(code) {
       const scriptParts = he.escape(code)
@@ -485,13 +492,13 @@ export default {
       }
     },
     loadGGB() {
-      const { file, geogebra } = this
-      if (!!file && !!geogebra) {
+      const { file } = this
+      if (file) {
         console.log('Loading GGB file ' + file.name)
         const reader = new FileReader()
         reader.onload = (e) => {
           const ggbBase64 = btoa(e.target.result)
-          geogebra.setBase64(ggbBase64)
+          // geogebra.setBase64(ggbBase64)
           this.$apollo.mutate({
             mutation: require('~/graphql/UpdateWorksheetGgb'),
             variables: {

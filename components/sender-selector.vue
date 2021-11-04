@@ -9,7 +9,7 @@
         v-on="menuActivator.on"
       >
         <img
-          :src="`/npcs/${senderId.toLowerCase()}.png`"
+          :src="npcs[senderId]"
           :alt="senderId"
         >
       </v-avatar>
@@ -38,7 +38,7 @@
                     v-on="npcSelectorActivator.on"
                   >
                     <v-img
-                      :src="`/npcs/${m.toLowerCase()}.png`"
+                      :src="npcs[m]"
                       :alt="m"
                     />
                   </v-avatar>
@@ -51,25 +51,10 @@
       </v-container>
     </v-card>
   </v-menu>
-  <!-- <v-btn-toggle
-      :value="Object.keys(senderIds).indexOf(senderId)"
-      @change="senderId = Object.keys(senderIds)[$event]"
-    >
-      <v-btn
-        v-for="t in Object.keys(senderIds)"
-        :key="t"
-        :disabled="disabled"
-        class="sender-selector-option"
-      >
-        {{ senderIds[t].icon }}
-
-        <span v-show="senderId === t" v-text="senderIds[t].tooltip" />
-      </v-btn>
-    </v-btn-toggle>
-  </div> -->
 </template>
 
 <script>
+import {mapGetters} from 'vuex'
 export default {
   props: {
     disabled: {
@@ -86,23 +71,12 @@ export default {
     },
   },
   data: () => ({
-    senderIds: {
-      Professor: {
-        icon: 'professor',
-      },
-      Alicia: {
-        icon: 'alicia',
-      },
-      Nick: {
-        icon: 'nick',
-      },
-      VZ: {
-        icon: 'vz',
-      },
-    },
     open: false,
   }),
   computed: {
+    ...mapGetters('story', [
+      'npcs'
+    ]),
     senderId: {
       get() {
         return this.message.sender_id

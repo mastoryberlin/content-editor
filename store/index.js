@@ -254,10 +254,20 @@ export default {
     // },
   },
   actions: {
-    // async nuxtServerInit ({ commit }) {
-    //   const response = await this.app.apolloProvider.defaultClient.query({query: require("~/graphql/GetStories")})
-    //   commit("apolloTest", response.data.story)
-    // },
+    async nuxtServerInit({ commit }, { params }) {
+      const storyId = params.story
+      commit('story/setID', storyId)
+      if (storyId) {
+        const response = await this.app.apolloProvider.defaultClient.query({
+          query: require('~/graphql/GetCharacters'),
+          variables: {
+            storyId,
+            storyIsNull: false,
+          },
+        })
+        commit('story/setCharacters', response.data.inStory)
+      }
+    },
     moveMessage({ state, commit }, { dragTarget, addedIndex, toPhase, toParentIsNull }) {
       // const phases = state.phases
       const { messageId, dragSource, removedIndex, fromNumber, fromPhase, fromParentIsNull } = state.dragInfo
