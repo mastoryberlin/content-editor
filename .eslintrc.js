@@ -29,5 +29,8 @@ module.exports = {
       named: 'never',
       asyncArrow: 'always',
     }],
+    'vue/valid-v-slot': ['error', {
+      allowModifiers: true
+    }],
   }
 }

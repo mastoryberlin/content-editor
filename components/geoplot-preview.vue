@@ -81,9 +81,6 @@ const previewHTML = `<html lang="en">
       if (typeof window.setupInteractions === "function") {
         window.setupInteractions(api);
       }
-      // if (typeof window.clientListener === "function") {
-        api.registerClientListener("clientListener");
-      // }
     }
 
     window.addEventListener("load", function() {
