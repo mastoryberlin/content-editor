@@ -77,7 +77,7 @@ export default {
       return this.$route.params.episode
     },
     worksheets() {
-      return this.challenge.geogebra_worksheets
+      return [...this.challenge.geogebra_worksheets]
     },
     ...mapGetters('user', ['may']),
     editingProhibited() {

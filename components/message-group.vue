@@ -443,6 +443,11 @@ export default {
         { title: 'Explode this block so all child messages become independent', action: this.explodeNestable },
         { title: 'Restore message order in this block (click this when encountering Drag&Drop malfunction)', action: this.restoreNumbers },
       ],
+      acceptedFiles: {
+        image: 'image/png, image/jpeg, image/gif',
+        audio: 'audio/x-mpeg',
+        video: 'video/mp4',
+      },
     }
   },
   computed: {
@@ -472,13 +477,6 @@ export default {
     },
     showTextField() {
       return ['text', 'image', 'audio', 'video'].includes(this.message.type)
-    },
-    acceptedFiles() {
-      return {
-        image: 'image/png, image/jpeg, image/gif',
-        audio: 'audio/x-mpeg',
-        video: 'video/mp4',
-      }
     },
   },
   watch: {
