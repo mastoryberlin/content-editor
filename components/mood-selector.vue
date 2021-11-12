@@ -54,7 +54,7 @@
           <v-col
             cols="2"
             :class="hover ? 'mood-selector-mood-hover' : null"
-            @click="mood = m"
+            @click="changeMood(m)"
           >
             <v-tooltip top>
               <template #activator="moodActivator">
@@ -87,6 +87,14 @@ export default {
       type: Object,
       required: true,
     },
+    data: {
+      type: Object,
+      required: true,
+    },
+    index: {
+      type: Number,
+      required: true,
+    },
   },
   data: () => ({
     moods: [
@@ -106,22 +114,32 @@ export default {
     printableMood() {
       return this.mood.replace('-', ' ')
     },
-    mood: {
-      get() {
-        const mood = this.phase.meta.mood
-        return mood[this.npc] || 'happy'
-      },
-      set(v) {
-        const mood = this.phase.meta.mood
-        mood[this.npc] = v
-        this.$apollo.mutate({
-          mutation: require('~/graphql/UpdatePhaseMood'),
-          variables: { id: this.phase.id, mood: { mood } },
-        })
-      },
+    mood() {
+      const mood = this.phase.meta.mood
+      return mood[this.npc] || 'happy'
     },
     available() {
       return this.mood !== 'unavailable'
+    },
+  },
+  methods: {
+    changeMood(m) {
+      const data = this.data
+      const index = this.index
+      let mood = null
+      if (data.story_chapter_by_pk) {
+        data.story_chapter_by_pk.sections[index].meta.mood[this.npc] = m
+        data.story_chapter_by_pk = JSON.parse(JSON.stringify(data.story_chapter_by_pk))
+        mood = data.story_chapter_by_pk.sections[index].meta.mood
+      } else {
+        data.chapters[index].sections[0].meta.mood[this.npc] = m
+        data.chapters = JSON.parse(JSON.stringify(data.chapters))
+        mood = data.chapters[index].sections[0].meta.mood
+      }
+      this.$apollo.mutate({
+        mutation: require('~/graphql/UpdatePhaseMood'),
+        variables: { id: this.phase.id, mood: { mood } },
+      })
     },
   },
 }

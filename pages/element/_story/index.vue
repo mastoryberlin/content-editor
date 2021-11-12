@@ -1,6 +1,6 @@
 <template>
   <div>
-    <privileged-area v-if="story" needs="edit_episode_specs" to="edit">
+    <privileged-area v-if="data" needs="edit_episode_specs" to="edit">
       <v-tabs v-model="tab">
         <v-tab v-text="'Specs'" />
         <v-tab v-text="'Meta'" />
@@ -46,7 +46,7 @@
             <freeflow-specs-field
               scope="story"
               field="description"
-              :data-object="story"
+              :data-object="data"
               :ref-id="storyId"
               @generate-specs="generateSpecsFromFreeflow"
             />
@@ -193,16 +193,20 @@
                             :key="character"
                           >
                             <mood-selector
+                              v-if="episode.sections[0]"
                               :phase="episode.sections[0]"
                               :npc="character"
+                              :data="data"
+                              :index="i"
                             />
                           </v-col>
                         </v-row>
 
                         <v-row>
                           <features-selector
+                            v-if="episode.sections[0]"
                             :phase="episode.sections[0]"
-                            :data="story"
+                            :data="data"
                           />
                         </v-row>
                       </v-container>
@@ -277,6 +281,7 @@ export default {
     isCommittingStorySpecs: false,
     isReopeningStorySpecs: false,
     story: null,
+    optimisticStory: null,
   }),
   apollo: {
     story: {
@@ -302,17 +307,20 @@ export default {
     title: 'Story View',
   },
   computed: {
+    data() {
+      return this.optimisticStory || this.story
+    },
     storyId() {
       return this.$route.params.story
     },
     title() {
-      return this.story.title
+      return this.data.title
     },
     description() {
-      return this.story.description
+      return this.data.description
     },
     episodes() {
-      return this.story.chapters
+      return this.data.chapters
     },
     privileges() {
       const priv = this.$store.state.user.privileges
@@ -327,6 +335,16 @@ export default {
     },
     mayCommit() {
       return this.privileges && this.privileges.includes('CommitStorySpecs')
+    },
+  },
+  watch: {
+    story(val) {
+      if (this.timeout) {
+        clearTimeout(this.timeout)
+      }
+      this.timeout = setTimeout(() => {
+        this.optimisticStory = val
+      }, 1000)
     },
   },
   methods: {
@@ -430,7 +448,7 @@ export default {
       const fakeSections = {
         episodeId: fakeId,
         number: 1,
-        meta: JSON.parse(JSON.stringify(after.sections[after.sections.length - 1].meta)),
+        meta: JSON.parse(JSON.stringify(after.sections[0].meta)),
       }
       const variables = {
         storyId: this.storyId,
@@ -449,6 +467,7 @@ export default {
           sections: [fakeSections],
         })
       } else {
+        fakeSections.meta.mood = {}
         this.story.chapters.splice(number - 1, 0, {
           edit: after.edit,
           id: fakeId,
@@ -458,19 +477,8 @@ export default {
           sections: [fakeSections],
         })
       }
-      // Optimistic sidebar
-      const apolloClient = this.$apollo.provider.defaultClient
-      const getStories = apolloClient.readQuery({
-        query: require('~/graphql/GetStories'),
-      })
-      getStories.story[0].chapters.splice(number - 1, 0, {
-        edit: after.edit,
-        id: fakeId,
-        story: {
-          id: fakeId,
-        },
-        title: duplicate ? after.title : '',
-      })
+      this.optimisticStory = this.story
+
       const shortcut = editField.shortcut
       if (shortcut) {
         const { id } = await this.$shortcut.createStory({ name: 'Episode ' + number, project_id: shortcut.project, epic_id: shortcut.epic })
@@ -481,23 +489,6 @@ export default {
       await this.$db.add({ episode: { phase: { message: true } } }, 'story', null, variables, this.storyId)
     },
     deleteEpisode(episode) {
-      // Optimistic
-      let index = 0
-      this.story.chapters.every((chapter, idx) => {
-        index = idx
-        if (chapter.id === episode.id) {
-          return false
-        }
-        return true
-      })
-      this.story.chapters.splice(index, 1)
-      // Optimistic sidebar
-      const apolloClient = this.$apollo.provider.defaultClient
-      const getStories = apolloClient.readQuery({
-        query: require('~/graphql/GetStories'),
-      })
-      getStories.story[0].chapters.splice(index, 1)
-
       const title = episode.title === '' ? '' : ', "' + episode.title + '"'
       if (confirm('Are you sure you want to delete episode ' + episode.number + title + '?')) {
         if (episode.edit) {
@@ -508,6 +499,19 @@ export default {
             } catch (err) {}
           }
         }
+
+        // Optimistic
+        let index = 0
+        this.story.chapters.every((chapter, idx) => {
+          index = idx
+          if (chapter.id === episode.id) {
+            return false
+          }
+          return true
+        })
+        this.story.chapters.splice(index, 1)
+        this.optimisticStory = this.story
+
         const hierarchyData = {
           episode: {
             phase: { message: true },
@@ -519,46 +523,42 @@ export default {
       }
     },
 
-    applyDrag(getStory, getStories, { removedIndex, addedIndex, payload }) {
+    applyDrag(getStory, { removedIndex, addedIndex, payload }) {
       const getStoryResult = [...getStory]
-      const getStoriesResult = [...getStories]
       let getStoryToAdd = payload
-      let getStoriesToAdd = payload
       if (removedIndex !== null) {
+        const fromNumber = removedIndex + 1
+        const toNumber = addedIndex + 1
+        for (const story of getStoryResult) {
+          if (story.number > fromNumber && story.number <= toNumber) {
+            story.number -= 1
+          }
+          if (story.number >= toNumber && story.number < fromNumber) {
+            story.number += 1
+          }
+        }
         getStoryToAdd = getStoryResult.splice(removedIndex, 1)[0]
-        getStoriesToAdd = getStoriesResult.splice(removedIndex, 1)[0]
       }
       if (addedIndex !== null) {
+        getStoryToAdd.number = addedIndex + 1
         getStoryResult.splice(addedIndex, 0, getStoryToAdd)
-        getStoriesResult.splice(addedIndex, 0, getStoriesToAdd)
       }
-      return {
-        getStoryResult,
-        getStoriesResult,
-      }
+      return getStoryResult
     },
 
     async onDrop({ removedIndex, addedIndex, payload }) {
       try {
-        const apolloClient = this.$apollo.provider.defaultClient
-        const getStories = apolloClient.readQuery({
-          query: require('~/graphql/GetStories'),
-        })
-
         if (removedIndex !== addedIndex) {
           // Optimistic
-          const { getStoryResult, getStoriesResult } = this.applyDrag(
+          const getStoryResult = this.applyDrag(
             this.story.chapters,
-            getStories.story[0].chapters,
             { removedIndex, addedIndex, payload }
           )
           this.story.chapters = getStoryResult
-          // Optimistic sidebar
-          getStories.story[0].chapters = getStoriesResult
 
           const from = removedIndex + 1
           const to = addedIndex + 1
-          console.log('dragdrop episode', from, to)
+          // await console.log('dragdrop episode', payload.episodeId, this.storyId, from, to, getStoryResult)
           await this.$apollo.mutate({
             mutation: require('~/graphql/MoveEpisode'),
             variables: {
