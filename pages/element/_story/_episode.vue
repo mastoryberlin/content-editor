@@ -39,7 +39,8 @@
               orientation="vertical"
               drag-handle-selector=".content-editor-draggable-handle"
               group-name="episode-specs"
-              @drop="onDrop"
+              :get-child-payload="(index) => ({ phaseId: data.story_chapter_by_pk.sections[index].id })"
+              @drop="onDrop($event, data)"
             >
               <draggable
                 v-for="(phase, phaseIndex) in data.story_chapter_by_pk.sections"
@@ -166,7 +167,7 @@
                               ]"
                               :key="character"
                             >
-                              <mood-selector :phase="phase" :npc="character" />
+                              <mood-selector :phase="phase" :npc="character" :data="data" :index="phaseIndex" />
                             </v-col>
                           </v-row>
 
@@ -331,6 +332,8 @@ export default {
   data: () => ({
     isCommittingEpisodeSpecs: false,
     isCommittingMessageFlow: false,
+    countRefreshEpisode: 0,
+    enableRefreshEpisode: true,
   }),
   head() {
     return {
@@ -355,6 +358,17 @@ export default {
       return this.privileges && this.privileges.includes('CommitEpisodeSpecs')
     },
   },
+  watch: {
+    countRefreshEpisode() {
+      this.enableRefreshEpisode = false
+      if (this.timeout) {
+        clearTimeout(this.timeout)
+      }
+      this.timeout = setTimeout(() => {
+        this.enableRefreshEpisode = true
+      }, 1000)
+    },
+  },
   methods: {
     addTabToURL(index) {
       console.log('Called addTabToURL ', index)
@@ -372,6 +386,7 @@ export default {
     refreshEpisode(previousResult, { subscriptionData }) {
       if (previousResult) {
         console.log('refreshEpisode', { previousResult, subscriptionData })
+        this.countRefreshEpisode += 1
         const newQueryResult = subscriptionData.data.story_chapter_by_pk
         const newPhases = newQueryResult.sections
         const newEpisode = {
@@ -418,7 +433,6 @@ export default {
       const variables = {
         episodeId: this.episodeId,
         number,
-        meta: JSON.parse(JSON.stringify(after.meta)),
         topic_whitelist: [...after.topic_whitelist],
       }
       const idxClone = after.number ? after.number - 1 : 0
@@ -432,6 +446,7 @@ export default {
           ...cloneData,
           id: fakeId,
         })
+        variables.meta = JSON.parse(JSON.stringify(after.meta))
       } else {
         data.story_chapter_by_pk.sections.splice(number - 1, 0, {
           ...cloneData,
@@ -510,72 +525,48 @@ export default {
       this.addTabToURL(0)
     },
     applyDrag(arr, { removedIndex, addedIndex, payload }) {
-      console.log(removedIndex, addedIndex, payload)
       const result = [...arr]
       let itemToAdd = payload
       if (removedIndex !== null) {
+        const fromNumber = removedIndex + 1
+        const toNumber = addedIndex + 1
+        for (const item of result) {
+          if (item.number > fromNumber && item.number <= toNumber) {
+            item.number -= 1
+          }
+          if (item.number >= toNumber && item.number < fromNumber) {
+            item.number += 1
+          }
+        }
         itemToAdd = result.splice(removedIndex, 1)[0]
       }
       if (addedIndex !== null) {
+        itemToAdd.number = addedIndex + 1
         result.splice(addedIndex, 0, itemToAdd)
       }
-      return {
-        item: itemToAdd,
-        arr: result,
-      }
+      return result
     },
-    async onDrop({ removedIndex, addedIndex, payload }) {
-      const apolloClient = this.$apollo.provider.defaultClient
-      const data = apolloClient.readQuery({
-        query: require('~/graphql/GetEpisode'),
-        variables: { id: this.episodeId },
-      })
+    async onDrop({ removedIndex, addedIndex, payload }, data) {
       if (removedIndex !== addedIndex) {
-        const { item, arr } = this.applyDrag(
+        const result = this.applyDrag(
           data.story_chapter_by_pk.sections,
           { removedIndex, addedIndex, payload }
         )
-        data.story_chapter_by_pk.sections = arr
-        apolloClient.writeQuery({
-          query: require('~/graphql/GetEpisode'),
-          data,
-        })
-        const difference = addedIndex - removedIndex
-        const variables = {
-          id: item.id,
-          number: item.number,
-        }
-        this.$db.delete({ phase: { message: true } }, 'episode', variables, this.episodeId)
+        data.story_chapter_by_pk.sections = result
+        const from = removedIndex + 1
+        const to = addedIndex + 1
+
         await this.$apollo.mutate({
-          mutation: require('~/graphql/AddPhase'),
+          mutation: require('~/graphql/MovePhase'),
           variables: {
+            id: payload.phaseId,
             episodeId: this.episodeId,
-            number: item.number + difference,
-            meta: JSON.parse(JSON.stringify(item.meta)),
-            title: item.title,
-            specs: item.specs,
-            topic_whitelist: item.topic_whitelist,
+            from,
+            to,
           },
         })
       }
     },
-    // onDrop ({ removedIndex, addedIndex, payload }) {
-    //   console.log(removedIndex, addedIndex, payload)
-    //   if (removedIndex !== addedIndex) {
-    //     const from = removedIndex + 1
-    //     const to = addedIndex + 1
-    //     console.log('dragdrop phase', from, to)
-    //     await this.$apollo.mutate({
-    //       mutation: require('~/graphql/MovePhase'),
-    //       variables: {
-    //         id: payload.phaseId,
-    //         episodeId: this.episodeId,
-    //         from,
-    //         to
-    //       }
-    //     })
-    //   }
-    // }
   },
 }
 </script>

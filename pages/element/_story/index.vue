@@ -197,6 +197,7 @@
                               :phase="episode.sections[0]"
                               :npc="character"
                               :data="data"
+                              :index="i"
                             />
                           </v-col>
                         </v-row>
@@ -466,6 +467,7 @@ export default {
           sections: [fakeSections],
         })
       } else {
+        fakeSections.meta.mood = {}
         this.story.chapters.splice(number - 1, 0, {
           edit: after.edit,
           id: fakeId,
