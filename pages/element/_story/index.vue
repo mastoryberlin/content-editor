@@ -332,7 +332,6 @@ export default {
   methods: {
     deleteStory() {
       if (confirm('Are you sure you want to delete this story?')) {
-        // TODO: don't need parentId
         const hierarchyData = {
           story: {
             episode: {

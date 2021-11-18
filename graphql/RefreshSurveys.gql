@@ -7,6 +7,8 @@ subscription RefreshSurveys($episodeId: uuid!) {
       number
       question
       type
+      info
     }
+    title
   }
 }

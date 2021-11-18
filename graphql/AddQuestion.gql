@@ -1,5 +1,8 @@
-mutation AddQuestion($surveyId: uuid!, $number: Int!, $question: String!, $note: String = "", $type: String = "text") {
-  insert_survey_question_one(object: {survey_id: $surveyId, question: $question, number: $number, note: $note, type: $type}) {
+mutation AddQuestion($surveyId: uuid!, $number: Int!, $question: String!, $note: String = "", $type: String = "text", $info: jsonb = {}) {
+  update_survey_question(where: {survey_id: {_eq: $surveyId}, _and: {number: {_gte: $number}}}, _inc: {number: 1}) {
+    affected_rows
+  }
+  insert_survey_question_one(object: {survey_id: $surveyId, question: $question, number: $number, note: $note, type: $type, info: $info}) {
     id
   }
 }

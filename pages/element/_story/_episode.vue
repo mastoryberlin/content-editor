@@ -23,7 +23,7 @@
         <v-tab v-text="'Message Flow'" />
         <v-tab v-text="'Chatbot Interaction'" />
         <v-tab v-text="'Math Challenges'" />
-        <v-tab v-text="'Tests &amp; Feedback'" />
+        <v-tab v-text="'Surveys'" />
         <v-tab v-text="'Meta'" />
       </v-tabs>
 
@@ -255,14 +255,14 @@
         </v-tab-item>
 
         <!-- =============================================================================== -->
-        <!-- TESTS & FEEDBACK TAB -->
+        <!-- SURVEYS TAB -->
         <!-- =============================================================================== -->
 
         <v-tab-item class="content-editor-feedback">
           <episode-tab
             :episode="data.story_chapter_by_pk"
             detail="feedback"
-            tab="test-and-feedback"
+            tab="surveys"
             @goto-episode-specs="activateSpecsTab"
           />
         </v-tab-item>
@@ -324,14 +324,15 @@ export default {
     Container,
     Draggable,
   },
-  asyncData({ route }) {
-    const tab = route.query.t || 0
-    return { tab }
+  data() {
+    let tab = Number.parseInt(this.$route.query.t || 0)
+    if (tab < 0) { tab = 0 } else if (tab > 5) { tab = 5 }
+    return {
+      tab,
+      isCommittingEpisodeSpecs: false,
+      isCommittingMessageFlow: false,
+    }
   },
-  data: () => ({
-    isCommittingEpisodeSpecs: false,
-    isCommittingMessageFlow: false,
-  }),
   head() {
     return {
       title: 'Episode View', // TODO: One day, move apollo query into <script> to make it accessible from here and change title to sth like "Episode 1"

@@ -62,10 +62,7 @@ export default {
   },
   methods: {
     addSurvey() {
-      const variables = {
-        episodeId: this.episodeId,
-      }
-      this.$db.add({ survey: true }, 'episode', null, variables, this.episodeId)
+      this.$db.add({ survey: true }, 'episode', null, {}, this.episodeId)
     },
   },
 }
