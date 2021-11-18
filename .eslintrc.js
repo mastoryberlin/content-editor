@@ -32,5 +32,6 @@ module.exports = {
     'vue/valid-v-slot': ['error', {
       allowModifiers: true
     }],
+    'camelcase': 'off'
   }
 }

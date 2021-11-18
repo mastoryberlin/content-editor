@@ -1,0 +1,5 @@
+mutation UpdateSurvey($id: uuid!, $title: String!, $note: String = null) {
+  update_survey_by_pk(pk_columns: {id: $id}, _set: {title: $title, note: $note}) {
+    id
+  }
+}

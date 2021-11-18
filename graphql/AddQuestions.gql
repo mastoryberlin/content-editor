@@ -1,0 +1,5 @@
+mutation AddQuestions($questions: [survey_question_insert_input!]!) {
+  insert_survey_question(objects: $questions) {
+    affected_rows
+  }
+}
