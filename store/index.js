@@ -12,9 +12,13 @@ export default {
       fromParentIsNull: false,
     },
     selected: [],
+    visitedTabs: {},
     // isCommittingChanges: false,
   }),
   mutations: {
+    storeTab: (state, { path, tab }) => {
+      state.visitedTabs[path] = tab
+    },
     setDraggedMessageInfo: (state, { id, number, index }) => {
       console.log('setDraggedMessageInfo called with id: ' + id + ', index: ' + index)
       state.dragInfo.messageId = id

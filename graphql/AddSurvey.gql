@@ -1,4 +1,4 @@
-mutation AddSurvey($episodeId: uuid!, $title: String = null) {
+mutation AddSurvey($episodeId: uuid!, $title: String! = "") {
   insert_survey_one(object: {story_chapter_id: $episodeId, title: $title}) {
     id
   }

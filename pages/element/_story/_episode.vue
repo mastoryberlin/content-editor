@@ -262,7 +262,7 @@
           <episode-tab
             :episode="data.story_chapter_by_pk"
             detail="feedback"
-            tab="surveys"
+            tab="survey-tab"
             @goto-episode-specs="activateSpecsTab"
           />
         </v-tab-item>
@@ -324,6 +324,7 @@ export default {
     Container,
     Draggable,
   },
+  middleware: ['tabbed'],
   data() {
     let tab = Number.parseInt(this.$route.query.t || 0)
     if (tab < 0) { tab = 0 } else if (tab > 5) { tab = 5 }
