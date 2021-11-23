@@ -17,9 +17,13 @@
           :number="n"
           @add-survey="addSurvey"
         />
-        <span v-if="surveys.length === 0" @click="addSurvey">
-          Click here to add a survey for this episode.
-        </span>
+        <div v-if="surveys.length === 0" class="d-flex">
+          <v-spacer />
+          <v-btn color="success" @click="addSurvey">
+            <v-icon>mdi-plus</v-icon>Create a survey
+          </v-btn>
+          <v-spacer />
+        </div>
       </template>
     </privileged-area>
   </div>

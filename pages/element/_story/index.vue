@@ -270,6 +270,7 @@ export default {
     Container,
     Draggable,
   },
+  middleware: ['tabbed'],
   data: () => ({
     tab: 0,
     noUpdatesFrom: { id: null, field: null },
