@@ -27,6 +27,7 @@ export default {
   },
 
   server: {
+    host: '0',
     port: 5000,
   },
 
